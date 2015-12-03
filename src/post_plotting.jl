@@ -36,8 +36,8 @@ function post_plotting(para::parameter, nend::Array, pressure, power, layer::Int
             C4U .* para.gauss_dist;
     plot(para.f_dist_ctr, n30_J5);
     hold;
-    plot(para.f_dist_ctr, nend[(12:n_rot:n_rot*para.num_freq) + index_offset] + n3_J5);
-    plot(para.f_dist_ctr, nend[(11:n_rot:n_rot*para.num_freq) + index_offset] + n3_J4);
+    plot(para.f_dist_ctr, nend[(12:n_rot:n_rot*para.num_freq) + index_offset] + n3_J5); #
+    plot(para.f_dist_ctr, (nend[(11:n_rot:n_rot*para.num_freq)+ index_offset] + n3_J4)*g_U/g_L) #
     xlabel("frequency, or velocity");
     ylabel("population (m^-3)")
     legend(["no pump", "pump = $power W"])
@@ -48,8 +48,8 @@ function post_plotting(para::parameter, nend::Array, pressure, power, layer::Int
 #         xlabel("rotational level label")
     semilogy(para.ntotal/2*[f_G, f_3, f_6, f_23, f_36, f_26, f_G, f_3],"o-")
     hold
-    semilogy(nend[index_offset+n_rot*para.num_freq+1:n_rot*para.num_freq+8+index_offset] +
-    para.ntotal/2*[f_G, f_3, f_6, f_23, f_36, f_26, f_G, f_3],"o-")
+    semilogy(nend[index_offset+n_rot*para.num_freq+1:n_rot*para.num_freq+n_vib+index_offset] +
+    para.ntotal/2*[f_G, f_3, f_6, f_23, f_36, f_26, f_G, f_3, f_6, f_23, f_36, f_26],"o-")
     xlabel("thermal pools")
 #     legend(["no pump", "pump = $power W"])
 

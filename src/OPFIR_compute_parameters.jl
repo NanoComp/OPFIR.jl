@@ -37,7 +37,8 @@ function OPFIR_compute_parameters(pressure, power, num_layers)
     # constants in pumping
     # in m-3 microsec-1 ;
     # pump0 = (3.487e-7/1e6/df) * power/(pi*(radius/100)^2)/(h*f₀)/norm_time / g_L;
-    pump0 = 9.4e6*power*1e7/(radius^2)/Δ_f₀D*0.2756^2 *exp(-log(2)*((f_pump-f₀)/Δ_f₀D)^2)/norm_time
+    # pump0 = 9.4e13 * power/(radius^2)/Δ_f₀D * 0.098^2 * exp(-log(2)*((f_pump-f₀)/Δ_f₀D)^2)/norm_time
+    pump0 = 9.4e13 * power/(radius^2)/Δ_f₀D * (0.2756^2*16.0/45) * exp(-log(2)*((f_pump-f₀)/Δ_f₀D)^2)/norm_time
     # println(pump0)
     # println((3.487e-7/1e6/df) * power/(pi*(radius/100)^2)/(h*f₀)/norm_time / g_L)
     pumpR::Array = pump0 * SHB;

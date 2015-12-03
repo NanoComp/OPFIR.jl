@@ -36,8 +36,8 @@ function OPFIR_fixedpoint(sol_0, para)
     rhs[1] = 0
     rhs[end] = 0
 
-    # sol_1 = - matrix \ rhs
-    sol_1 = - SM_solve(matrix, 2, [1, size(matrix,1)], rhs)
+    sol_1 = - matrix \ rhs
+    # sol_1 = - SM_solve(matrix, 2, [1, size(matrix,1)], rhs)
     println("norm of sol diff = ", norm(sol_1 - sol_0) / norm(sol_1))
     # println("peak of Nu(v) = ", maximum(sol_0[(12:n_rot:n_rot*para.num_freq)]))
     return sol_1

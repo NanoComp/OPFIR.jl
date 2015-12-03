@@ -50,6 +50,6 @@ function OPFIR_gain(para::parameter, sol::Array)
     return gain
 end
 
-function derv_bessel(nu,X)
-    return 0.5.*(besselj(nu-1,X)-besselj(nu+1,X));
+function derv_bessel(ν,x)
+    return 0.5.*(besselj(ν-1,x)-besselj(ν+1,x));
 end
