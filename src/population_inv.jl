@@ -1,4 +1,4 @@
-function pop_inv_dir_layer(para::parameter, sol::Array, layer::Int64)
+function pop_inv_dir_layer(para::Param, sol::AbstractVector, layer::Integer)
     layer_unknown::Int64 = n_rot*para.num_freq + n_vib;
     index_offset = layer_unknown * (layer-1);
     pop_inv = 0;

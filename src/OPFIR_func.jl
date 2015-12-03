@@ -1,4 +1,4 @@
-function OPFIR_func(pressure, power, num_layers, niter::Int64)
+function func(pressure, power, num_layers, niter::Int64)
     ######################## calculate parameters ##########################
     para = OPFIR_compute_parameters(pressure, power, num_layers);
     layer_unknown = n_rot*para.num_freq + n_vib
