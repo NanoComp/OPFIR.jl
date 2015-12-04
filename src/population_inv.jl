@@ -20,6 +20,14 @@ function get_Nu_vs_freq_layer(para::parameter, sol::Array, layer::Int64)
     return Nu
 end
 
+function get_total_Nu_dist_layer(para, sol, layer)
+    layer_unknown::Int64 = n_rot*para.num_freq + n_vib
+    index_p = layer_unknown * layer - n_vib + 2
+    Nu_sol = get_Nu_vs_freq_layer(para, sol, layer)
+    Nu = Nu_sol + C5U * (para.ntotal * f_3/2 + sol[index_p]) .* para.gauss_dist
+    return Nu
+end
+
 function get_Nl_vs_freq_layer(para::parameter, sol::Array, layer::Int64)
     layer_unknown::Int64 = n_rot*para.num_freq + n_vib;
     index_offset = layer_unknown * (layer-1);
@@ -28,6 +36,14 @@ function get_Nl_vs_freq_layer(para::parameter, sol::Array, layer::Int64)
         index_l = index_offset + (i-1) * n_rot + 2;
         Nl[i] = sol[index_l]
     end
+    return Nl
+end
+
+function get_total_Nl_dist_layer(para, sol, layer)
+    layer_unknown::Int64 = n_rot*para.num_freq + n_vib
+    index_p = layer_unknown * layer - n_vib + 1
+    Nl_sol = get_Nl_vs_freq_layer(para, sol, layer)
+    Nl = Nl_sol + (para.ntotal * f_G/2 + sol[index_p]) .* para.gauss_dist
     return Nl
 end
 
@@ -47,7 +63,7 @@ function get_inv_U(para::parameter, sol::Array, layer::Int64)
     Nu_sol = get_Nu_vs_freq_layer(para, sol, layer)
     Nu_1_sol = get_rot_vs_freq_layer(para, sol, layer, 11)
     index_p = layer_unknown * layer - n_vib + 2
-    Nu = Nu_sol + C5U * (para.ntotal * f_3/2 + sol[index_p]) .* para.gauss_dist
+    Nu = get_total_Nu_dist_layer(para, sol, layer)
     Nu_1 = Nu_1_sol + C4U * (para.ntotal * f_3/2 + sol[index_p]) .* para.gauss_dist
     return (Nu - Nu_1*g_U/g_L)
 end
@@ -57,7 +73,7 @@ function get_inv_L(para::parameter, sol::Array, layer::Int64)
     Nl_sol = get_Nl_vs_freq_layer(para, sol, layer)
     Nl_1_sol = get_rot_vs_freq_layer(para, sol, layer, 3)
     index_p = layer_unknown * layer - n_vib + 1
-    Nl = Nl_sol + C4L * (para.ntotal * f_G/2 + sol[index_p]) .* para.gauss_dist
+    Nl = get_total_Nl_dist_layer(para, sol, layer)
     Nl_1 = Nl_1_sol + C5L * (para.ntotal * f_G/2 + sol[index_p]) .* para.gauss_dist
     return (Nl_1 - Nl*g_U/g_L)
 end

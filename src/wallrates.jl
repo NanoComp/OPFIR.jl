@@ -20,7 +20,7 @@ function fn_2(v, mass, kBT, l)
     return l./v * 4*π*(mass/2/π/kBT)^(3/2).*(v).^2.*exp(-mass*(v).^2/2/kBT);
 end
 
-function WallRate(radius, pressure, r_int, ntotal)
+function WallRate(radius, pressure, r_int, ntotal, M, T, NA, v, σ_GKC)
     r₀ = radius/100; # cm to m
     mass = M/1000/NA; # kg per molecule
     τ_GKC = 1/(ntotal*v*σ_GKC*(1e-10)^2); # sec
@@ -61,19 +61,19 @@ function WallRate(radius, pressure, r_int, ntotal)
         g_0(θ) = g(θ, MFP, r₀, x);
 
         tmp0 = hcubature(f1_0,[θ_min; α_min], [θ_max; 1])
-        distance_num[k] = real(tmp0[1]);
-        tmp0 = hcubature(g_0,[θ_min; α_min], [θ_max; 1]);
-        distance_den[k] = real(tmp0[1]);
-        distance[k] = distance_num[k]/distance_den[k];
+        distance_num[k] = real(tmp0[1])
+        tmp0 = hcubature(g_0,[θ_min; α_min], [θ_max; 1])
+        distance_den[k] = real(tmp0[1])
+        distance[k] = distance_num[k]/distance_den[k]
     end
 
-    τ = zeros(1,length(r_int));
+    τ = zeros(1,length(r_int))
     for k in index[end]+1:length(r_int)
-        l = distance[k];
-        fn_0(v) = fn_2(v, mass, kBT, distance[k]);
-        τ[k], = quadgk(fn_0, 0.0, Inf);
+        l = distance[k]
+        fn_0(v) = fn_2(v, mass, kBT, distance[k])
+        τ[k], = quadgk(fn_0, 0.0, Inf)
     end
-    kwall = zeros(1,length(r_int));
-    kwall[index[end]+1:end] = surf_fraction[index[end]+1:end]./τ[index[end]+1:end]/1e6;
-    return kwall;
+    kwall = zeros(size(r_int))
+    kwall[index[end]+1:end] = surf_fraction[index[end]+1:end]./τ[index[end]+1:end]/1e6
+    return kwall
 end

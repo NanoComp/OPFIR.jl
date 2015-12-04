@@ -1,4 +1,4 @@
-function SM_solve(A, rank, row_ind::Array, b)
+function SM_solve(A, rank, row_ind, b)
     n = size(A, 1)
     A0 = copy(A)
     if rank==1
