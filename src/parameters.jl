@@ -268,7 +268,8 @@ function Params(DefaultT=Float64;
     fp_lasing = f_NT_ampl(f_dist_dir_lasing, Δ_f_NT, f_dir_lasing)
 
     # pump rate in m-3 microsec-1:
-    pump0 = 9.4e13 * power/(radius^2)/Δ_f₀D * (0.2756^2*16.0/45) * exp(-log(2)*((f_pump-f₀)/Δ_f₀D)^2)/norm_time
+    pump0 = 9.4e13 * power/(radius^2)/Δ_f₀D * (0.2756^2*16.0/45) *
+            exp(-log(2)*((f_pump-f₀)/Δ_f₀D)^2)/norm_time
     pumpR = pump0 * SHB
 
     Δr = radius/100 / num_layers # in m
@@ -386,6 +387,6 @@ end
 
 function f_NT_ampl(ν, Δ_f_NT, f_pump)
     SHB = Δ_f_NT^2 ./ ((ν - f_pump).^2 + Δ_f_NT^2)
-    SHB = SHB/sum(SHB)
+    # SHB = SHB/sum(SHB)
     return SHB
 end
