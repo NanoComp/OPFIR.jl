@@ -130,12 +130,13 @@ function gain_dir_layer(p, sol, layer)
     return inv
 end
 
-function inv_U_ω_layer(p, sol, layer; ω=p.f_dist_dir_lasing)
+function gain_profile_layer(p, sol, layer; ω=p.f_dist_dir_lasing)
     dist = Array(Float64, length(ω))
     inv_U = inv_U_dist_layer(p, sol, layer)
     for i in 1:length(ω)
         ωi = ω[i]
         ω_dist = f_NT_ampl(ω, p.Δ_f_NT, ωi)
+        ω_dist = ω_dist/sum(ω_dist)
         dist[i] = sum(inv_U .* ω_dist)
     end
     return dist

@@ -165,6 +165,7 @@ type Params{T<:Real}
 
     niter::Integer
     lin_solver::AbstractString
+    model_flag::Integer
 end
 
 function Params(DefaultT=Float64;
@@ -202,7 +203,6 @@ function Params(DefaultT=Float64;
     f_dir_lasing = 245.38e9,
     f_ref_lasing = 248.56e9,
     n_rot = 18,
-    n_vib = 12,
     mu0 = 4e-7*pi,
     eps0 = 8.85e-12,
     # mode_num: 1: TE01 / 2: TE12 / 3: TE02 / 4: TE22 / 5: TE11 / 6: TE21 / 7: TM01 / 8: TM11
@@ -217,8 +217,14 @@ function Params(DefaultT=Float64;
     power = 10.0,
     num_layers = 10,
     niter = 10,
-    lin_solver = "Default"
+    lin_solver = "Default",
+    model_flag = 1
     )
+    if model_flag == 1
+        n_vib = 12
+    elseif model_flag == 2
+        n_vib = 6
+    end
 
     kBT = kB*T*8065.73
     v_avg = 205*sqrt(T/M)
@@ -237,12 +243,14 @@ function Params(DefaultT=Float64;
     ### parameters that are directly related to pressure and power:
     ntotal = 9.66e24 * pressure * 1e-3 / T # with unit m^-3
 
-    k63 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time/2 # in 1/microsec
-    k36 = exp(-(E6-E3)/kBT) * k63 * 2
-    k3623 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time
-    k2336 = exp(-(E36-E23)/kBT) * k3623
-    k2636 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time
-    k3626 = exp(-(E26-E36)/kBT) * k2636
+    if model_flag == 1
+        k63 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time/2 # in 1/microsec
+        k36 = exp(-(E6-E3)/kBT) * k63 * 2
+        k3623 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time
+        k2336 = exp(-(E36-E23)/kBT) * k3623
+        k2636 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time
+        k3626 = exp(-(E26-E36)/kBT) * k2636
+    end
     kro = ntotal * v_avg * σ_VS * (1e-10)^2 / norm_time
 
     Δ_fP = 15e6*(pressure/1e3)
@@ -266,6 +274,7 @@ function Params(DefaultT=Float64;
     p_dist = lorentz_dist(f_dist_ctr, Δ_f_NT, f_pump)
     SHB = f_NT_ampl(f_dist_ctr, Δ_f_NT, f_pump)
     fp_lasing = f_NT_ampl(f_dist_dir_lasing, Δ_f_NT, f_dir_lasing)
+    fp_lasing = fp_lasing/sum(fp_lasing)
 
     # pump rate in m-3 microsec-1:
     pump0 = 9.4e13 * power/(radius^2)/Δ_f₀D * (0.2756^2*16.0/45) *

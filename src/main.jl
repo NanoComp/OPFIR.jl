@@ -1,6 +1,6 @@
-function func(pressure, power, num_layers)
+function func(pressure, power, num_layers, model_flag)
 
-    p = Params(pressure=pressure, power=power, num_layers=num_layers)
+    p = Params(pressure=pressure, power=power, num_layers=num_layers, model_flag=model_flag)
     sol_0 = zeros(p.num_layers * p.layer_unknown)
 
     println("matrix size is ", size(sol_0,1))
