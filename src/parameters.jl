@@ -266,6 +266,7 @@ function Params(DefaultT=Float64;
     p_dist = lorentz_dist(f_dist_ctr, Δ_f_NT, f_pump)
     SHB = f_NT_ampl(f_dist_ctr, Δ_f_NT, f_pump)
     fp_lasing = f_NT_ampl(f_dist_dir_lasing, Δ_f_NT, f_dir_lasing)
+    fp_lasing = fp_lasing/sum(fp_lasing)
 
     # pump rate in m-3 microsec-1:
     pump0 = 9.4e13 * power/(radius^2)/Δ_f₀D * (0.2756^2*16.0/45) *
