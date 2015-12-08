@@ -263,272 +263,274 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
     ### transitions between thermal pools ###
     ## A type:
     for ri in 1:p.num_layers
+        rot_idx = 1
         # V0 A type:
-        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 1
+        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
+        rot_idx += 1
+
         val =  -p.kwall[ri] + p.f_G * p.kwall[ri]
         s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
         val = p.f_G * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
-        val = p.f_G * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+2, val, s)
-        val = p.f_G * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+3, val, s)
-        val = p.f_G * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+4, val, s)
-        val = p.f_G * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+5, val, s)
+        if p.model_flag==1
+            for col in [row+1; row+2; row+3; row+4; row+5]
+                s = put_row_col_val(rowind, colind, value, row, col, val, s)
+            end
+        elseif p.model_flag==2
+            for col in [row+1; row+2]
+                s = put_row_col_val(rowind, colind, value, row, col, val, s)
+            end
+        end
 
         # V3 A type:
-        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 2
+        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
+        rot_idx += 1
+
         val = - p.kwall[ri] + p.f_3 * p.kwall[ri]
         s = put_row_col_val(rowind, colind, value, row, row, val, s)
+
         val = p.f_3 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
-        val = p.f_3 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
-        val = p.f_3 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+2, val, s)
-        val = p.f_3 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+3, val, s)
-        val = p.f_3 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+4, val, s)
+        if p.model_flag==1
+            for col in [row-1; row+1; row+2; row+3; row+4]
+                s = put_row_col_val(rowind, colind, value, row, col, val, s)
+            end
+        elseif p.model_flag==2
+            for col in [row-1; row+1]
+                s = put_row_col_val(rowind, colind, value, row, col, val, s)
+            end
+        end
 
         #### transtion between V3 and V6 ####
-        val = -p.k36
-        s = put_row_col_val(rowind, colind, value, row, row, val, s)
-        val = +p.k63
-        s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
+        if p.model_flag==1
+            val = -p.k36
+            s = put_row_col_val(rowind, colind, value, row, row, val, s)
+            val = +p.k63
+            s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
+        elseif p.model_flag==2
+            # put it in the rhs
+        end
+        # V6 or V_Σ A type:
+        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
+        rot_idx += 1
 
-        # V6 A type:
-        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 3
         val = -p.kwall[ri] + p.f_6 * p.kwall[ri]
         s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
         val = p.f_6 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-2, val, s)
-        val = p.f_6 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
-        val = p.f_6 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
-        val = p.f_6 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+2, val, s)
-        val = p.f_6 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+3, val, s)
+        if p.model_flag==1
+            for col in [row-2; row-1; row+1; row+2; row+3]
+                s = put_row_col_val(rowind, colind, value, row, col, val, s)
+            end
+        elseif p.model_flag==2
+            for col in [row-2; row-1]
+                s = put_row_col_val(rowind, colind, value, row, col, val, s)
+            end
+        end
 
         #### transtion between V3 and V6: ####
-        val = -p.k63
-        s = put_row_col_val(rowind, colind, value, row, row, val, s)
-        val = +p.k36
-        s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
+        if p.model_flag==1
+            val = -p.k63
+            s = put_row_col_val(rowind, colind, value, row, row, val, s)
+            val = +p.k36
+            s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
+        elseif p.model_flag==2
+            # put it in the rhs
+        end
 
-        # V23 A type:
-        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 4
-        val = -p.kwall[ri] + p.f_23 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row, val, s)
+        if p.model_flag==1
+            # V23 A type:
+            row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
+            rot_idx += 1
 
-        val = p.f_23 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-3, val, s)
-        val = p.f_23 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-2, val, s)
-        val = p.f_23 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
-        val = p.f_23 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
-        val = p.f_23 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+2, val, s)
+            val = -p.kwall[ri] + p.f_23 * p.kwall[ri]
+            s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
-        #### transitions between V23 and V36 ####
-        val = -p.k2336
-        s = put_row_col_val(rowind, colind, value, row, row, val, s)
-        val = +p.k3623
-        s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
+            val = p.f_23 * p.kwall[ri]
+            for col in [row-3; row-2; row-1; row+1; row+2]
+                s = put_row_col_val(rowind, colind, value, row, col, val, s)
+            end
+            #### transitions between V23 and V36 ####
+            val = -p.k2336
+            s = put_row_col_val(rowind, colind, value, row, row, val, s)
+            val = +p.k3623
+            s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
 
-        # V36 A type:
-        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 5
-        val = -p.kwall[ri] + p.f_36 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row, val, s)
+            # V36 A type:
+            row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
+            rot_idx += 1
 
-        val = p.f_36 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-4, val, s)
-        val = p.f_36 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-3, val, s)
-        val = p.f_36 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-2, val, s)
-        val = p.f_36 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
-        val = p.f_36 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
+            val = -p.kwall[ri] + p.f_36 * p.kwall[ri]
+            s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
-        #### transition between V36 and V23, V26 ####
-        val = -p.k3623 - p.k3626
-        s = put_row_col_val(rowind, colind, value, row, row, val, s)
-        val = +p.k2336
-        s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
-        val = +p.k2636
-        s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
+            val = p.f_36 * p.kwall[ri]
+            for col in [row-4; row-3; row-2; row-1; row+1]
+                s = put_row_col_val(rowind, colind, value, row, col, val, s)
+            end
 
-        # V26 A type:
-        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 6
-        val = -p.kwall[ri] + p.f_26 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row, val, s)
+            #### transition between V36 and V23, V26 ####
+            val = -p.k3623 - p.k3626
+            s = put_row_col_val(rowind, colind, value, row, row, val, s)
+            val = +p.k2336
+            s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
+            val = +p.k2636
+            s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
 
-        val = p.f_26 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-5, val, s)
-        val = p.f_26 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-4, val, s)
-        val = p.f_26 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-3, val, s)
-        val = p.f_26 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-2, val, s)
-        val = p.f_26 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
+            # V26 A type:
+            row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
+            rot_idx += 1
 
-        #### transition between V26 and V36: ####
-        val = -p.k2636
-        s = put_row_col_val(rowind, colind, value, row, row, val, s)
-        val = +p.k3626
-        s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
-    end
+            val = -p.kwall[ri] + p.f_26 * p.kwall[ri]
+            s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
-    ## E type:
-    for ri in 1:p.num_layers
+            val = p.f_26 * p.kwall[ri]
+            for col in [row-5; row-4; row-3; row-2; row-1]
+                s = put_row_col_val(rowind, colind, value, row, col, val, s)
+            end
+
+            #### transition between V26 and V36: ####
+            val = -p.k2636
+            s = put_row_col_val(rowind, colind, value, row, row, val, s)
+            val = +p.k3626
+            s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
+        end
+
+################################################################################
         # V0 E type:
-        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 7
+        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
+        rot_idx += 1
+
         val = -p.kwall[ri] + p.f_G * p.kwall[ri]
         s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
         val = p.f_G * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
-        val = p.f_G * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+2, val, s)
-        val = p.f_G * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+3, val, s)
-        val = p.f_G * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+4, val, s)
-        val = p.f_G * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+5, val, s)
+        if p.model_flag==1
+            for col in [row+1; row+2; row+3; row+4; row+5]
+                s = put_row_col_val(rowind, colind, value, row, col, val, s)
+            end
+        elseif p.model_flag==2
+            for col in [row+1; row+2]
+                s = put_row_col_val(rowind, colind, value, row, col, val, s)
+            end
+        end
 
         # V3 E type:
-        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 8
+        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
+        rot_idx += 1
+
         val = - p.kwall[ri] + p.f_3 * p.kwall[ri]
         s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
         val = p.f_3 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
-        val = p.f_3 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
-        val = p.f_3 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+2, val, s)
-        val = p.f_3 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+3, val, s)
-        val = p.f_3 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+4, val, s)
+        if p.model_flag==1
+            for col in [row-1; row+1; row+2; row+3; row+4]
+                s = put_row_col_val(rowind, colind, value, row, col, val, s)
+            end
+        elseif p.model_flag==2
+            for col in [row-1; row+1]
+                s = put_row_col_val(rowind, colind, value, row, col, val, s)
+            end
+        end
 
         #### transtion between V3 and V6 ####
-        val = -p.k36
-        s = put_row_col_val(rowind, colind, value, row, row, val, s)
-        val = +p.k63
-        s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
+        if p.model_flag==1
+            val = -p.k36
+            s = put_row_col_val(rowind, colind, value, row, row, val, s)
+            val = +p.k63
+            s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
+        elseif p.model_flag==2
+            # put in the rhs
+        end
 
         # V6 E type:
-        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 9
+        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
+        rot_idx += 1
+
         val = -p.kwall[ri] + p.f_6 * p.kwall[ri]
         s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
         val = p.f_6 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-2, val, s)
-        val = p.f_6 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
-        val = p.f_6 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
-        val = p.f_6 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+2, val, s)
-        val = p.f_6 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+3, val, s)
+        if p.model_flag==1
+            for col in [row-2; row-1; row+1; row+2; row+3]
+                s = put_row_col_val(rowind, colind, value, row, col, val, s)
+            end
+        elseif p.model_flag==2
+            for col in [row-2; row-1]
+                s = put_row_col_val(rowind, colind, value, row, col, val, s)
+            end
+        end
 
         #### transtion between V3 and V6: ####
-        val = -p.k63
-        s = put_row_col_val(rowind, colind, value, row, row, val, s)
-        val = +p.k36
-        s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
+        if p.model_flag==1
+            val = -p.k63
+            s = put_row_col_val(rowind, colind, value, row, row, val, s)
+            val = +p.k36
+            s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
+        elseif p.model_flag==2
+            # put it in the rhs
+        end
 
-        # V23 E type:
-        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 10
-        val = -p.kwall[ri] + p.f_23 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row, val, s)
+        if p.model_flag==1
+            # V23 E type:
+            row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
+            rot_idx += 1
 
-        val = p.f_23 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-3, val, s)
-        val = p.f_23 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-2, val, s)
-        val = p.f_23 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
-        val = p.f_23 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
-        val = p.f_23 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+2, val, s)
+            val = -p.kwall[ri] + p.f_23 * p.kwall[ri]
+            s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
-        #### transitions between V23 and V36 ####
-        val = -p.k2336
-        s = put_row_col_val(rowind, colind, value, row, row, val, s)
-        val = +p.k3623
-        s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
+            val = p.f_23 * p.kwall[ri]
+            for col in [row-3; row-2; row-1; row+1; row+2]
+                s = put_row_col_val(rowind, colind, value, row, col, val, s)
+            end
+            #### transitions between V23 and V36 ####
+            val = -p.k2336
+            s = put_row_col_val(rowind, colind, value, row, row, val, s)
+            val = +p.k3623
+            s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
 
-        # V36 E type:
-        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 11
-        val = -p.kwall[ri] + p.f_36 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row, val, s)
+            # V36 E type:
+            row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
+            rot_idx += 1
 
-        val = p.f_36 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-4, val, s)
-        val = p.f_36 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-3, val, s)
-        val = p.f_36 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-2, val, s)
-        val = p.f_36 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
-        val = p.f_36 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
+            val = -p.kwall[ri] + p.f_36 * p.kwall[ri]
+            s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
-        #### transition between V36 and V23, V26 ####
-        val = -p.k3623 - p.k3626
-        s = put_row_col_val(rowind, colind, value, row, row, val, s)
-        val = +p.k2336
-        s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
-        val = +p.k2636
-        s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
+            val = p.f_36 * p.kwall[ri]
+            for col in [row-4; row-3; row-2; row-1; row+1]
+                s = put_row_col_val(rowind, colind, value, row, col, val, s)
+            end
 
-        # V26 E type:
-        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 12
-        val = -p.kwall[ri] + p.f_26 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row, val, s)
+            #### transition between V36 and V23, V26 ####
+            val = -p.k3623 - p.k3626
+            s = put_row_col_val(rowind, colind, value, row, row, val, s)
+            val = +p.k2336
+            s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
+            val = +p.k2636
+            s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
 
-        val = p.f_26 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-5, val, s)
-        val = p.f_26 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-4, val, s)
-        val = p.f_26 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-3, val, s)
-        val = p.f_26 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-2, val, s)
-        val = p.f_26 * p.kwall[ri]
-        s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
+            # V26 E type:
+            row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
+            rot_idx += 1
 
-        #### transition between V26 and V36: ####
-        val = -p.k2636
-        s = put_row_col_val(rowind, colind, value, row, row, val, s)
-        val = +p.k3626
-        s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
+            val = -p.kwall[ri] + p.f_26 * p.kwall[ri]
+            s = put_row_col_val(rowind, colind, value, row, row, val, s)
+
+            val = p.f_26 * p.kwall[ri]
+            for col in [row-5; row-4; row-3; row-2; row-1]
+                s = put_row_col_val(rowind, colind, value, row, col, val, s)
+            end
+
+            #### transition between V26 and V36: ####
+            val = -p.k2636
+            s = put_row_col_val(rowind, colind, value, row, row, val, s)
+            val = +p.k3626
+            s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
+        end
     end
 
-    ########################## add the diffusion term ####################################
+    ########################## add the diffusion term ##########################
 
     for ri in 2:p.num_layers-1
         index_diffu = p.layer_unknown * (ri-1) + 1 : p.layer_unknown * ri
-        ## close diffusion for the 2 E type levels:
-        # index_diffu = p.layer_unknown * (ri-1) + 1 : p.layer_unknown * ri - 2
-
         for k in index_diffu
             row = k
             col = row - p.layer_unknown
@@ -545,8 +547,6 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
     end
 
     for k in 1:p.layer_unknown
-    ## close the diffusion for the 2 E type levels
-    # for k in 1:p.layer_unknown - 2
         row = k
         val = p.D*(-1.0/(p.Δr)^2 - 1.0/2.0/p.Δr/p.r_int[1])
         s = put_row_col_val(rowind, colind, value, row, row, val, s)
@@ -558,8 +558,6 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
 
     ################ question: BC for the wall? #######
     for k in p.layer_unknown*(p.num_layers-1)+1:p.layer_unknown*p.num_layers
-    ## close diffusion for the 2 E type levels:
-    # for k in p.layer_unknown*(p.num_layers-1)+1:p.layer_unknown*p.num_layers-2
         row = k
         col = row - p.layer_unknown
         val = p.D*(-1.0/(2*p.Δr*p.r_int[end]) + 1.0/(p.Δr)^2)
@@ -578,8 +576,8 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         offset = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot
         N0A = sol_0[offset + 1]
         N3A = sol_0[offset + 2]
-        N0E = sol_0[offset + 6 + 1]
-        N3E = sol_0[offset + 6 + 2]
+        N0E = sol_0[offset + p.n_vib÷2 + 1]
+        N3E = sol_0[offset + p.n_vib÷2 + 2]
         ## V0A:
         row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 1
 
@@ -587,42 +585,42 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
         val = -p.kvs * N0A_0
-        s = put_row_col_val(rowind, colind, value, row, row+6+1, val, s)
+        s = put_row_col_val(rowind, colind, value, row, row+p.n_vib÷2+1, val, s)
 
         val = + p.kvs * N3A + p.kvs * N3A_0
-        s = put_row_col_val(rowind, colind, value, row, row+6, val, s)
+        s = put_row_col_val(rowind, colind, value, row, row+p.n_vib÷2, val, s)
 
         val = + p.kvs * N0E_0
         s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
 
         ## V3E
-        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 6 + 2
+        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + p.n_vib÷2 + 2
 
         val = -p.kvs * N0A - p.kvs * N0A_0
         s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
         val = -p.kvs * N3E_0
-        s = put_row_col_val(rowind, colind, value, row, row-6-1, val, s)
+        s = put_row_col_val(rowind, colind, value, row, row-p.n_vib÷2-1, val, s)
 
         val = + p.kvs * N3A_0
         s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
 
         val = + p.kvs * N0E + p.kvs * N0E_0
-        s = put_row_col_val(rowind, colind, value, row, row-6, val, s)
+        s = put_row_col_val(rowind, colind, value, row, row-p.n_vib÷2, val, s)
 
         ## V0E:
-        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 6 + 1
+        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + p.n_vib÷2 + 1
         val = -p.kvs * N3A - p.kvs * N3A_0
         s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
         val = -p.kvs * N0E_0
-        s = put_row_col_val(rowind, colind, value, row, row-6+1, val, s)
+        s = put_row_col_val(rowind, colind, value, row, row-p.n_vib÷2+1, val, s)
 
         val = +p.kvs * N0A_0
         s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
 
         val = + p.kvs * N3E + p.kvs * N3E_0
-        s = put_row_col_val(rowind, colind, value, row, row-6, val, s)
+        s = put_row_col_val(rowind, colind, value, row, row-p.n_vib÷2, val, s)
 
         ## V3A:
         row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 2
@@ -631,10 +629,10 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
         val = -p.kvs * N3A_0
-        s = put_row_col_val(rowind, colind, value, row, row+6-1, val, s)
+        s = put_row_col_val(rowind, colind, value, row, row+p.n_vib÷2-1, val, s)
 
         val = + p.kvs * N0A + p.kvs * N0A_0
-        s = put_row_col_val(rowind, colind, value, row, row+6, val, s)
+        s = put_row_col_val(rowind, colind, value, row, row+p.n_vib÷2, val, s)
 
         val = + p.kvs * N3E_0
         s = put_row_col_val(rowind, colind, value, row, row-1, val, s)

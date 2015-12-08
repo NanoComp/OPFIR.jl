@@ -6,10 +6,14 @@ function fixedpoint(sol_0, p)
     value = zeros(max_ele)
     rhs = zeros(p.num_layers*p.layer_unknown)
 
-    compute_rhs(rhs, p)
+    compute_rhs(rhs, p, sol_0)
     compute_row_col_val(rowind, colind, value, p, sol_0)
 
+    println("size of the rhs = ", length(rhs))
+
     matrix = sparse(rowind, colind, value)
+    println("done putting matrix")
+
     for j = 1:size(matrix,1)
         matrix[1, j] = 0;
         matrix[end, j] = 0;
@@ -20,8 +24,8 @@ function fixedpoint(sol_0, p)
         index2 = p.layer_unknown * j
         matrix[1, index1:index2] = p.r_int[j]
 
-        index1 = p.layer_unknown * j - p.n_vib + 7
-        index2 = p.layer_unknown * j - p.n_vib + 12
+        index1 = p.layer_unknown * j - p.n_vib + p.n_vib÷2 + 1
+        index2 = p.layer_unknown * j - p.n_vib + p.n_vib
         matrix[end, index1:index2] = p.r_int[j]
     end
 

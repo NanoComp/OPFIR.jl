@@ -174,7 +174,7 @@ function Params(DefaultT=Float64;
     h = 6.626068e-34,
     c = 3.0e8,
     ev = 1.60217646e-19,
-    kB = 8.617342e-5,
+    kB = 8.617342e-5, # in ev/K
     T = 300,
     M = 35,
     norm_time = 1e6,
@@ -226,7 +226,7 @@ function Params(DefaultT=Float64;
         n_vib = 6
     end
 
-    kBT = kB*T*8065.73
+    kBT = kB*T*8065.73 # in cm^-1
     v_avg = 205*sqrt(T/M)
     kvs = v_avg*σ_VS * (1e-10)^2/norm_time
     Q = exp(EG) + exp(-E3/kBT) + 2*exp(-E6/kBT) + exp(-E23/kBT) +
@@ -243,14 +243,12 @@ function Params(DefaultT=Float64;
     ### parameters that are directly related to pressure and power:
     ntotal = 9.66e24 * pressure * 1e-3 / T # with unit m^-3
 
-    if model_flag == 1
-        k63 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time/2 # in 1/microsec
-        k36 = exp(-(E6-E3)/kBT) * k63 * 2
-        k3623 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time
-        k2336 = exp(-(E36-E23)/kBT) * k3623
-        k2636 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time
-        k3626 = exp(-(E26-E36)/kBT) * k2636
-    end
+    k63 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time/2 # in 1/microsec
+    k36 = exp(-(E6-E3)/kBT) * k63 * 2
+    k3623 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time
+    k2336 = exp(-(E36-E23)/kBT) * k3623
+    k2636 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time
+    k3626 = exp(-(E26-E36)/kBT) * k2636
     kro = ntotal * v_avg * σ_VS * (1e-10)^2 / norm_time
 
     Δ_fP = 15e6*(pressure/1e3)
@@ -285,7 +283,7 @@ function Params(DefaultT=Float64;
     r_ext = linspace(0,radius/100,num_layers+1)
     r_int = 0.5*(r_ext[1:end-1] + r_ext[2:end]) # in m
 
-    kwall = WallRate(radius, pressure, r_int, ntotal, M, T, NA, v_avg, σ_GKC) + 1e-10;
+    kwall = WallRate(radius, pressure, r_int, ntotal, M, T, NA, v_avg, σ_GKC) + 1e-10
 
     MFP = 0.732*T/pressure/σ_GKC # in cm
     # avg absolute vel in m/microsec (p5 in Henry's thesis)
@@ -377,7 +375,7 @@ function Params(DefaultT=Float64;
     k89_3, k78_3, k67_3, k56_3, k45_3, k34_3, k23_3, k12_3,
     k1a, k2a, k3a, k4a, k5a, k6a, k7a, k8a, k9a, k10a, k11a,
     k12a, k13a, k14a, k15a, k16a, k17a, k18a,
-    niter, lin_solver)
+    niter, lin_solver, model_flag)
 end
 
 function Q_selectn_hl(J)
