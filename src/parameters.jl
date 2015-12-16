@@ -28,9 +28,12 @@ type Params{T<:Real}
     E36::T
     E26::T
     Q::T
-    f_G::T
-    f_3::T
-    f_6::T
+    f_G_0::T
+    f_3_0::T
+    f_6_0::T
+    f_G::AbstractVector # could be spatial dependent if model_flag = 2
+    f_3::AbstractVector
+    f_6::AbstractVector
     f_23::T
     f_36::T
     f_26::T
@@ -229,14 +232,30 @@ function Params(DefaultT=Float64;
     kBT = kB*T*8065.73 # in cm^-1
     v_avg = 205*sqrt(T/M)
     kvs = v_avg*σ_VS * (1e-10)^2/norm_time
-    Q = exp(EG) + exp(-E3/kBT) + 2*exp(-E6/kBT) + exp(-E23/kBT) +
-    exp(-E36/kBT) + exp(-E26/kBT)
-    f_G = exp(EG)/Q
-    f_3 = exp(-E3/kBT)/Q
-    f_6 = 2*exp(-E6/kBT)/Q
+    g_6 = 2
+    if model_flag==1
+        Q = exp(EG) + exp(-E3/kBT) + 2*exp(-E6/kBT) + exp(-E23/kBT) +
+            exp(-E36/kBT) + exp(-E26/kBT)
+        f_G_0 = exp(EG)/Q
+        f_3_0 = exp(-E3/kBT)/Q
+        f_6_0 = g_6*exp(-E6/kBT)/Q
+        f_G = f_G_0 * ones(num_layers)
+        f_3 = f_3_0 * ones(num_layers)
+        f_6 = f_6_0 * ones(num_layers)
+    elseif model_flag==2
+        Q = Qv(kB, T)
+        f_G_0 = exp(EG)/Q
+        f_3_0 = exp(-E3/kBT)/Q
+        f_6_0 = 1- f_G_0 - f_3_0
+        f_G = f_G_0 * ones(num_layers)
+        f_3 = f_3_0 * ones(num_layers)
+        f_6 = f_6_0 * ones(num_layers)
+        # println(f_G_0, f_3_0, f_6_0)
+    end
     f_23 = exp(-E23/kBT)/Q
     f_36 = exp(-E36/kBT)/Q
     f_26 = exp(-E26/kBT)/Q
+
     Δ_f₀D = 3.58e-7*f₀*sqrt(T/M)
     f_range = 5*Δ_f₀D
 
@@ -244,7 +263,7 @@ function Params(DefaultT=Float64;
     ntotal = 9.66e24 * pressure * 1e-3 / T # with unit m^-3
 
     k63 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time/2 # in 1/microsec
-    k36 = exp(-(E6-E3)/kBT) * k63 * 2
+    k36 = exp(-(E6-E3)/kBT) * k63 * g_6
     k3623 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time
     k2336 = exp(-(E36-E23)/kBT) * k3623
     k2636 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time
@@ -354,7 +373,8 @@ function Params(DefaultT=Float64;
     return Params{DefaultT}(radius, L, h, c, ev, kB, T, kBT, M, norm_time,
     σ_GKC, σ_DD, σ_SPT, σ_36, σ_VS,
     v_avg, kvs,
-    EG, E3, E6, E23, E36, E26, Q, f_G, f_3, f_6, f_23, f_36, f_26,
+    EG, E3, E6, E23, E36, E26, Q,
+    f_G_0, f_3_0, f_6_0, f_G, f_3, f_6, f_23, f_36, f_26,
     C3L, C4L, C5L, C4U, C5U, g_L, g_U, NA,
     f₀, f_offset, f_pump, f_dir_lasing, f_ref_lasing, Δ_f₀D, f_range,
     n_rot, n_vib,
@@ -396,4 +416,13 @@ function f_NT_ampl(ν, Δ_f_NT, f_pump)
     SHB = Δ_f_NT^2 ./ ((ν - f_pump).^2 + Δ_f_NT^2)
     # SHB = SHB/sum(SHB)
     return SHB
+end
+
+function Qv(kB, T)
+    data = readdlm("../src/E_vib.jl")
+    Q = 1.0
+    for i in 1:size(data, 1)
+        Q += data[i,2] * exp(-data[i, 1]/(kB*T*8065.73))
+    end
+    return Q
 end

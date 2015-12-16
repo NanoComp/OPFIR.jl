@@ -268,10 +268,10 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
         rot_idx += 1
 
-        val =  -p.kwall[ri] + p.f_G * p.kwall[ri]
+        val =  -p.kwall[ri] + p.f_G_0 * p.kwall[ri]
         s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
-        val = p.f_G * p.kwall[ri]
+        val = p.f_G_0 * p.kwall[ri]
         if p.model_flag==1
             for col in [row+1; row+2; row+3; row+4; row+5]
                 s = put_row_col_val(rowind, colind, value, row, col, val, s)
@@ -286,10 +286,10 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
         rot_idx += 1
 
-        val = - p.kwall[ri] + p.f_3 * p.kwall[ri]
+        val = - p.kwall[ri] + p.f_3_0 * p.kwall[ri]
         s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
-        val = p.f_3 * p.kwall[ri]
+        val = p.f_3_0 * p.kwall[ri]
         if p.model_flag==1
             for col in [row-1; row+1; row+2; row+3; row+4]
                 s = put_row_col_val(rowind, colind, value, row, col, val, s)
@@ -301,22 +301,29 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         end
 
         #### transtion between V3 and V6 ####
-        if p.model_flag==1
+        if p.model_flag==1 # || p.model_flag==2
             val = -p.k36
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
             val = +p.k63
             s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
         elseif p.model_flag==2
-            # put it in the rhs
+            # tot_pump = pump_total(p, sol_0, ri)
+            # val = -tot_pump * 0.5/(sol_0[row]+1e-6)
+            # println(tot_pump, val)
+            # s = put_row_col_val(rowind, colind, value, row, row, val, s)
+            val = -p.k36
+            s = put_row_col_val(rowind, colind, value, row, row, val, s)
+            val = +p.k63
+            s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
         end
         # V6 or V_Σ A type:
         row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
         rot_idx += 1
 
-        val = -p.kwall[ri] + p.f_6 * p.kwall[ri]
+        val = -p.kwall[ri] + p.f_6_0 * p.kwall[ri]
         s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
-        val = p.f_6 * p.kwall[ri]
+        val = p.f_6_0 * p.kwall[ri]
         if p.model_flag==1
             for col in [row-2; row-1; row+1; row+2; row+3]
                 s = put_row_col_val(rowind, colind, value, row, col, val, s)
@@ -334,7 +341,14 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             val = +p.k36
             s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
         elseif p.model_flag==2
-            # put it in the rhs
+            # tot_pump = pump_total(p, sol_0, ri)
+            # val = tot_pump * 0.5 / (sol_0[row-1]+1e-6)
+            # # println(tot_pump, val)
+            # s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
+            val = -p.k63
+            s = put_row_col_val(rowind, colind, value, row, row, val, s)
+            val = +p.k36
+            s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
         end
 
         if p.model_flag==1
@@ -399,10 +413,10 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
         rot_idx += 1
 
-        val = -p.kwall[ri] + p.f_G * p.kwall[ri]
+        val = -p.kwall[ri] + p.f_G_0 * p.kwall[ri]
         s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
-        val = p.f_G * p.kwall[ri]
+        val = p.f_G_0 * p.kwall[ri]
         if p.model_flag==1
             for col in [row+1; row+2; row+3; row+4; row+5]
                 s = put_row_col_val(rowind, colind, value, row, col, val, s)
@@ -417,10 +431,10 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
         rot_idx += 1
 
-        val = - p.kwall[ri] + p.f_3 * p.kwall[ri]
+        val = - p.kwall[ri] + p.f_3_0 * p.kwall[ri]
         s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
-        val = p.f_3 * p.kwall[ri]
+        val = p.f_3_0 * p.kwall[ri]
         if p.model_flag==1
             for col in [row-1; row+1; row+2; row+3; row+4]
                 s = put_row_col_val(rowind, colind, value, row, col, val, s)
@@ -439,16 +453,20 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
         elseif p.model_flag==2
             # put in the rhs
+            val = -p.k36
+            s = put_row_col_val(rowind, colind, value, row, row, val, s)
+            val = +p.k63
+            s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
         end
 
         # V6 E type:
         row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
         rot_idx += 1
 
-        val = -p.kwall[ri] + p.f_6 * p.kwall[ri]
+        val = -p.kwall[ri] + p.f_6_0 * p.kwall[ri]
         s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
-        val = p.f_6 * p.kwall[ri]
+        val = p.f_6_0 * p.kwall[ri]
         if p.model_flag==1
             for col in [row-2; row-1; row+1; row+2; row+3]
                 s = put_row_col_val(rowind, colind, value, row, col, val, s)
@@ -467,6 +485,10 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
         elseif p.model_flag==2
             # put it in the rhs
+            val = -p.k63
+            s = put_row_col_val(rowind, colind, value, row, row, val, s)
+            val = +p.k36
+            s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
         end
 
         if p.model_flag==1
@@ -525,6 +547,8 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             val = +p.k3626
             s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
         end
+
+        # println(rot_idx)
     end
 
     ########################## add the diffusion term ##########################
@@ -568,9 +592,9 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
     end
 
     ############## add the V-swap process V0A + V3E <-> V_3A + V0E> ##########
-    N0A_0 = p.ntotal * p.f_G/2
+    N0A_0 = p.ntotal * p.f_G_0/2
     N0E_0 = N0A_0
-    N3A_0 = p.ntotal * p.f_3/2
+    N3A_0 = p.ntotal * p.f_3_0/2
     N3E_0 = N3A_0
     for ri in 1:p.num_layers
         offset = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot
