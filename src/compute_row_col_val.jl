@@ -306,11 +306,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
             val = +p.k63
             s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
-        elseif p.model_flag==2
-            # tot_pump = pump_total(p, sol_0, ri)
-            # val = -tot_pump * 0.5/(sol_0[row]+1e-6)
-            # println(tot_pump, val)
-            # s = put_row_col_val(rowind, colind, value, row, row, val, s)
+        elseif p.model_flag==2 && p.solstart_flag==0
             val = -p.k36
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
             val = +p.k63
@@ -340,11 +336,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
             val = +p.k36
             s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
-        elseif p.model_flag==2
-            # tot_pump = pump_total(p, sol_0, ri)
-            # val = tot_pump * 0.5 / (sol_0[row-1]+1e-6)
-            # # println(tot_pump, val)
-            # s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
+        elseif p.model_flag==2 && p.solstart_flag==0
             val = -p.k63
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
             val = +p.k36

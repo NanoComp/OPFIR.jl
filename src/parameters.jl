@@ -8,6 +8,7 @@ type Params{T<:Real}
     ev::T       # in J
     kB::T       # in eV/K
     T::T        # in K
+    T_vA::T
     kBT::T      # in cm^-1
     M::T        # molecular mass in AMU
     norm_time::T# normalization to micro second
@@ -80,6 +81,9 @@ type Params{T<:Real}
 
     k63::T
     k36::T
+
+    netrate_36A::AbstractVector
+
     k3623::T
     k2336::T
     k2636::T
@@ -169,6 +173,7 @@ type Params{T<:Real}
     niter::Integer
     lin_solver::AbstractString
     model_flag::Integer
+    solstart_flag::Integer
 end
 
 function Params(DefaultT=Float64;
@@ -179,6 +184,7 @@ function Params(DefaultT=Float64;
     ev = 1.60217646e-19,
     kB = 8.617342e-5, # in ev/K
     T = 300,
+    T_v = 300,
     M = 35,
     norm_time = 1e6,
     σ_GKC = 44,
@@ -221,7 +227,8 @@ function Params(DefaultT=Float64;
     num_layers = 10,
     niter = 10,
     lin_solver = "Default",
-    model_flag = 1
+    model_flag = 1,
+    solstart_flag = 0
     )
     if model_flag == 1
         n_vib = 12
@@ -233,6 +240,7 @@ function Params(DefaultT=Float64;
     v_avg = 205*sqrt(T/M)
     kvs = v_avg*σ_VS * (1e-10)^2/norm_time
     g_6 = 2
+    netrate_36A = zeros(num_layers)
     if model_flag==1
         Q = exp(EG) + exp(-E3/kBT) + 2*exp(-E6/kBT) + exp(-E23/kBT) +
             exp(-E36/kBT) + exp(-E26/kBT)
@@ -263,7 +271,8 @@ function Params(DefaultT=Float64;
     ntotal = 9.66e24 * pressure * 1e-3 / T # with unit m^-3
 
     k63 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time/2 # in 1/microsec
-    k36 = exp(-(E6-E3)/kBT) * k63 * g_6
+    # k36 = exp(-(E6-E3)/kBT) * k63 * g_6
+    k36 = f_6_0/f_3_0 * k63
     k3623 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time
     k2336 = exp(-(E36-E23)/kBT) * k3623
     k2636 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time
@@ -370,7 +379,7 @@ function Params(DefaultT=Float64;
     k17a = k1a
     k18a = k1a
 
-    return Params{DefaultT}(radius, L, h, c, ev, kB, T, kBT, M, norm_time,
+    return Params{DefaultT}(radius, L, h, c, ev, kB, T, T_v, kBT, M, norm_time,
     σ_GKC, σ_DD, σ_SPT, σ_36, σ_VS,
     v_avg, kvs,
     EG, E3, E6, E23, E36, E26, Q,
@@ -381,7 +390,7 @@ function Params(DefaultT=Float64;
     mu0, eps0,
     mode_num, p_library, n0, t_spont, Δν_THz,
     pressure, power, num_layers, ntotal,
-    k63, k36, k3623, k2336, k2636, k3626, kro,
+    k63, k36, netrate_36A, k3623, k2336, k2636, k3626, kro,
     Δ_fP, Δ_f_Rabi, Δ_f_NT,
     num_freq, layer_unknown, df, f_dist_end, f_dist_ctr,
     velocity, f_dist_dir_lasing,
@@ -395,7 +404,7 @@ function Params(DefaultT=Float64;
     k89_3, k78_3, k67_3, k56_3, k45_3, k34_3, k23_3, k12_3,
     k1a, k2a, k3a, k4a, k5a, k6a, k7a, k8a, k9a, k10a, k11a,
     k12a, k13a, k14a, k15a, k16a, k17a, k18a,
-    niter, lin_solver, model_flag)
+    niter, lin_solver, model_flag, solstart_flag)
 end
 
 function Q_selectn_hl(J)

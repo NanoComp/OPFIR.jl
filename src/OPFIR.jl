@@ -1,6 +1,7 @@
 module OPFIR
 using Distributions
 using Cubature
+using NLsolve
 
 for f in ("parameters.jl", "main.jl",
           "anderson_accel.jl", "fixedpoint.jl",
