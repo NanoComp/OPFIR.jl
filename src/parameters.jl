@@ -8,7 +8,8 @@ type Params{T<:Real}
     ev::T       # in J
     kB::T       # in eV/K
     T::T        # in K
-    T_vA::T
+    T_vA::AbstractVector
+    T_vE::AbstractVector
     kBT::T      # in cm^-1
     M::T        # molecular mass in AMU
     norm_time::T# normalization to micro second
@@ -32,9 +33,13 @@ type Params{T<:Real}
     f_G_0::T
     f_3_0::T
     f_6_0::T
-    f_G::AbstractVector # could be spatial dependent if model_flag = 2
-    f_3::AbstractVector
-    f_6::AbstractVector
+    f_GA::AbstractVector
+    f_3A::AbstractVector
+    f_6A::AbstractVector
+    f_GE::AbstractVector
+    f_3E::AbstractVector
+    f_6E::AbstractVector
+
     f_23::T
     f_36::T
     f_26::T
@@ -79,8 +84,10 @@ type Params{T<:Real}
 
     ntotal::T # in unit m^-3
 
-    k63::T
-    k36::T
+    k63A::AbstractVector
+    k36A::AbstractVector
+    k63E::AbstractVector
+    k36E::AbstractVector
 
     netrate_36A::AbstractVector
 
@@ -184,7 +191,6 @@ function Params(DefaultT=Float64;
     ev = 1.60217646e-19,
     kB = 8.617342e-5, # in ev/K
     T = 300,
-    T_v = 300,
     M = 35,
     norm_time = 1e6,
     σ_GKC = 44,
@@ -236,6 +242,9 @@ function Params(DefaultT=Float64;
         n_vib = 6
     end
 
+    T_vA = 300 * ones(num_layers)
+    T_vE = 300 * ones(num_layers)
+
     kBT = kB*T*8065.73 # in cm^-1
     v_avg = 205*sqrt(T/M)
     kvs = v_avg*σ_VS * (1e-10)^2/norm_time
@@ -247,17 +256,23 @@ function Params(DefaultT=Float64;
         f_G_0 = exp(EG)/Q
         f_3_0 = exp(-E3/kBT)/Q
         f_6_0 = g_6*exp(-E6/kBT)/Q
-        f_G = f_G_0 * ones(num_layers)
-        f_3 = f_3_0 * ones(num_layers)
-        f_6 = f_6_0 * ones(num_layers)
+        f_GA = f_G_0 * ones(num_layers)
+        f_3A = f_3_0 * ones(num_layers)
+        f_6A = f_6_0 * ones(num_layers)
+        f_GE = f_G_0 * ones(num_layers)
+        f_3E = f_3_0 * ones(num_layers)
+        f_6E = f_6_0 * ones(num_layers)
     elseif model_flag==2
         Q = Qv(kB, T)
         f_G_0 = exp(EG)/Q
         f_3_0 = exp(-E3/kBT)/Q
         f_6_0 = 1- f_G_0 - f_3_0
-        f_G = f_G_0 * ones(num_layers)
-        f_3 = f_3_0 * ones(num_layers)
-        f_6 = f_6_0 * ones(num_layers)
+        f_GA = f_G_0 * ones(num_layers)
+        f_3A = f_3_0 * ones(num_layers)
+        f_6A = f_6_0 * ones(num_layers)
+        f_GE = f_G_0 * ones(num_layers)
+        f_3E = f_3_0 * ones(num_layers)
+        f_6E = f_6_0 * ones(num_layers)
         # println(f_G_0, f_3_0, f_6_0)
     end
     f_23 = exp(-E23/kBT)/Q
@@ -273,6 +288,12 @@ function Params(DefaultT=Float64;
     k63 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time/2 # in 1/microsec
     # k36 = exp(-(E6-E3)/kBT) * k63 * g_6
     k36 = f_6_0/f_3_0 * k63
+
+    k63A = k63 * ones(num_layers)
+    k63E = k63 * ones(num_layers)
+    k36A = k36 * ones(num_layers)
+    k36E = k36 * ones(num_layers)
+
     k3623 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time
     k2336 = exp(-(E36-E23)/kBT) * k3623
     k2636 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time
@@ -379,18 +400,18 @@ function Params(DefaultT=Float64;
     k17a = k1a
     k18a = k1a
 
-    return Params{DefaultT}(radius, L, h, c, ev, kB, T, T_v, kBT, M, norm_time,
+    return Params{DefaultT}(radius, L, h, c, ev, kB, T, T_vA, T_vE, kBT, M, norm_time,
     σ_GKC, σ_DD, σ_SPT, σ_36, σ_VS,
     v_avg, kvs,
     EG, E3, E6, E23, E36, E26, Q,
-    f_G_0, f_3_0, f_6_0, f_G, f_3, f_6, f_23, f_36, f_26,
+    f_G_0, f_3_0, f_6_0, f_GA, f_3A, f_6A, f_GE, f_3E, f_6E, f_23, f_36, f_26,
     C3L, C4L, C5L, C4U, C5U, g_L, g_U, NA,
     f₀, f_offset, f_pump, f_dir_lasing, f_ref_lasing, Δ_f₀D, f_range,
     n_rot, n_vib,
     mu0, eps0,
     mode_num, p_library, n0, t_spont, Δν_THz,
     pressure, power, num_layers, ntotal,
-    k63, k36, netrate_36A, k3623, k2336, k2636, k3626, kro,
+    k63A, k36A, k63E, k36E, netrate_36A, k3623, k2336, k2636, k3626, kro,
     Δ_fP, Δ_f_Rabi, Δ_f_NT,
     num_freq, layer_unknown, df, f_dist_end, f_dist_ctr,
     velocity, f_dist_dir_lasing,

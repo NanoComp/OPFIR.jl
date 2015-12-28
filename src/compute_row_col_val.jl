@@ -252,7 +252,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         # V3 A type:
         row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 2
         for vi in 1:p.num_freq
-            for k in 1:9
+            for k in 1:p.n_rot÷2
                 col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + p.n_rot÷2 + k
                 val = p.k1a + p.kro/2
                 s = put_row_col_val(rowind, colind, value, row, col, val, s)
@@ -272,7 +272,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         # V3 E type:
         row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + p.n_vib÷2 + 2
         for vi in 1:p.num_freq
-            for k in 1:9
+            for k in 1:p.n_rot÷2
                 col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + p.n_rot÷2 + k
                 val = p.kro/2
                 s = put_row_col_val(rowind, colind, value, row, col, val, s)
@@ -323,14 +323,14 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
 
         #### transtion between V3 and V6 ####
         if p.model_flag==1 # || p.model_flag==2
-            val = -p.k36
+            val = -p.k36A[ri]
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
-            val = +p.k63
+            val = +p.k63A[ri]
             s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
         elseif p.model_flag==2 && p.solstart_flag==0
-            val = -p.k36
+            val = -p.k36A[ri]
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
-            val = +p.k63
+            val = +p.k63A[ri]
             s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
         end
         # V6 or V_Σ A type:
@@ -353,14 +353,14 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
 
         #### transtion between V3 and V6: ####
         if p.model_flag==1
-            val = -p.k63
+            val = -p.k63A[ri]
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
-            val = +p.k36
+            val = +p.k36A[ri]
             s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
         elseif p.model_flag==2 && p.solstart_flag==0
-            val = -p.k63
+            val = -p.k63A[ri]
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
-            val = +p.k36
+            val = +p.k36A[ri]
             s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
         end
 
@@ -460,15 +460,15 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
 
         #### transtion between V3 and V6 ####
         if p.model_flag==1
-            val = -p.k36
+            val = -p.k36E[ri]
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
-            val = +p.k63
+            val = +p.k63E[ri]
             s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
         elseif p.model_flag==2
             # put in the rhs
-            val = -p.k36
+            val = -p.k36E[ri]
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
-            val = +p.k63
+            val = +p.k63E[ri]
             s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
         end
 
@@ -492,15 +492,15 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
 
         #### transtion between V3 and V6: ####
         if p.model_flag==1
-            val = -p.k63
+            val = -p.k63E[ri]
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
-            val = +p.k36
+            val = +p.k36E[ri]
             s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
         elseif p.model_flag==2
             # put it in the rhs
-            val = -p.k63
+            val = -p.k63E[ri]
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
-            val = +p.k36
+            val = +p.k36E[ri]
             s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
         end
 
