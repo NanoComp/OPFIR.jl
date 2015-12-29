@@ -285,10 +285,11 @@ function Params(DefaultT=Float64;
     ### parameters that are directly related to pressure and power:
     ntotal = 9.66e24 * pressure * 1e-3 / T # with unit m^-3
 
-    k63 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time/2 # in 1/microsec
+    # k63 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time/2 # in 1/microsec
     # k36 = exp(-(E6-E3)/kBT) * k63 * g_6
-    k36 = f_6_0/f_3_0 * k63
-
+    # k36 = f_6_0/f_3_0 * k63
+    k36 = 100.0
+    k63 = k36 * f_3_0/f_6_0
     k63A = k63 * ones(num_layers)
     k63E = k63 * ones(num_layers)
     k36A = k36 * ones(num_layers)

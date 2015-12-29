@@ -57,7 +57,7 @@ function updateks(p)
         p.f_GA[j] = fraction_Vg(p, p.T_vA[j])
         p.f_3A[j] = fraction_V3(p, p.T_vA[j])
         p.f_6A[j] = 1 - p.f_GA[j] - p.f_3A[j]
-        p.k36A[j] = 10000.0
+        p.k36A[j] = 100.0
         p.k63A[j] = p.k36A[j] * p.f_3A[j]/p.f_6A[j]
     end
 
@@ -65,7 +65,7 @@ function updateks(p)
         p.f_GE[j] = fraction_Vg(p, p.T_vE[j])
         p.f_3E[j] = fraction_V3(p, p.T_vE[j])
         p.f_6E[j] = 1 - p.f_GE[j] - p.f_3E[j]
-        p.k36E[j] = 10000.0
+        p.k36E[j] = 100.0
         p.k63E[j] = p.k36E[j] * p.f_3E[j]/p.f_6E[j]
     end
 end
