@@ -25,6 +25,7 @@ function func(p; sol_start=Array[])
         T_err = norm(T1-T2)/norm(T2)
         println(T_err)
         
+        sol_0 = zeros(p.num_layers * p.layer_unknown)
     end
 
     return (p, sol_0)
