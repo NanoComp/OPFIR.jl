@@ -11,6 +11,7 @@ function func(p; sol_start=Array[])
 
     T_err = 1.0
     while T_err > 1e-3
+        sol_0 = zeros(p.num_layers * p.layer_unknown)
         rel_err = Float64[]
         sol_0 = andersonaccel(x -> begin
                 y = fixedpoint(x, p)
@@ -24,8 +25,6 @@ function func(p; sol_start=Array[])
         T2 = [deepcopy(p.T_vA); deepcopy(p.T_vE)]
         T_err = norm(T1-T2)/norm(T2)
         println(T_err)
-        
-        sol_0 = zeros(p.num_layers * p.layer_unknown)
     end
 
     return (p, sol_0)

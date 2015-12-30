@@ -31,25 +31,25 @@ function solve_Tv(Q_v, p)
 end
 
 function updateTv(p, sol)
-    # for j in 1:p.num_layers
-    #     N0A = (sol[p.layer_unknown*j-5] + p.ntotal*p.f_G_0/2)
-    #     N3A = (sol[p.layer_unknown*j-4] + p.ntotal*p.f_3_0/2)
-    #     p.T_vA[j] = Tv(p, N0A, N3A)
-    #
-    #     N0E = (sol[p.layer_unknown*j-2] + p.ntotal*p.f_G_0/2)
-    #     N3E = (sol[p.layer_unknown*j-1] + p.ntotal*p.f_3_0/2)
-    #     p.T_vE[j] = Tv(p, N0E, N3E)
-    # end
-    N0A = 0
-    N3A = 0
     for j in 1:p.num_layers
-        N0A += (sol[p.layer_unknown*j-5] + p.ntotal*p.f_G_0/2) * p.r_int[j]
-        N3A += (sol[p.layer_unknown*j-4] + p.ntotal*p.f_3_0/2) * p.r_int[j]
+        N0A = (sol[p.layer_unknown*j-5] + p.ntotal*p.f_G_0/2)
+        N3A = (sol[p.layer_unknown*j-4] + p.ntotal*p.f_3_0/2)
+        p.T_vA[j] = Tv(p, N0A, N3A)
+
+        N0E = (sol[p.layer_unknown*j-2] + p.ntotal*p.f_G_0/2)
+        N3E = (sol[p.layer_unknown*j-1] + p.ntotal*p.f_3_0/2)
+        p.T_vE[j] = Tv(p, N0E, N3E)
     end
-    T_v = Tv(p, N0A, N3A)
-    p.T_vA[:] = T_v
-    p.T_vE[:] = T_v
-    println(T_v)
+    # N0A = 0
+    # N3A = 0
+    # for j in 1:p.num_layers
+    #     N0A += (sol[p.layer_unknown*j-5] + p.ntotal*p.f_G_0/2) * p.r_int[j]
+    #     N3A += (sol[p.layer_unknown*j-4] + p.ntotal*p.f_3_0/2) * p.r_int[j]
+    # end
+    # T_v = Tv(p, N0A, N3A)
+    # p.T_vA[:] = T_v
+    # p.T_vE[:] = T_v
+    # println(T_v)
 end
 
 function updateks(p)
