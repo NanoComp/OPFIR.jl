@@ -126,13 +126,25 @@ end
 ##
 function gain_dir_layer(p, sol, layer)
     inv_U = inv_U_dist_layer(p, sol, layer)
-    inv = sum(inv_U .* p.fp_lasing)
+    inv = 0.0
+    for i in 1:length(inv_U)
+        if inv_U[i] >0
+            inv += inv_U[i] .* p.fp_lasing[i]
+        end
+    end
+##    sum(inv_U .* p.fp_lasing)
     return inv
 end
 
 function gain_ref_layer(p, sol, layer)
     inv_L = inv_L_dist_layer(p, sol, layer)
-    inv = sum(inv_L .* p.fp_ref_lasing)
+    inv = 0.0
+    for i in 1:length(inv_L)
+        if inv_L[i] >0
+            inv += inv_L[i] .* p.fp_ref_lasing[i]
+        end
+    end
+##    sum(inv_U .* p.fp_lasing)
     return inv
 end
 
