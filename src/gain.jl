@@ -130,6 +130,13 @@ function gain_dir_layer(p, sol, layer)
     return inv
 end
 
+function gain_ref_layer(p, sol, layer)
+    inv_L = inv_L_dist_layer(p, sol, layer)
+    inv = sum(inv_L .* p.fp_ref_lasing)
+    return inv
+end
+
+
 function gain_profile_layer(p, sol, layer; ω=p.f_dist_dir_lasing)
     dist = Array(Float64, length(ω))
     inv_U = inv_U_dist_layer(p, sol, layer)
@@ -154,7 +161,7 @@ function mode(mode_num)
     return m
 end
 
-function gain_dir(p, sol)
+function gain_dir(p, sol; LasLevel="U")
     m = mode(p.mode_num)
     radius_m = p.radius/100
     k_rol_library = p.p_library/radius_m
@@ -164,11 +171,18 @@ function gain_dir(p, sol)
     denom = 0.0
     numerator = 0.0
     pop_inversion = zeros(size(p.r_int))
-    gain_U = 0.0
+    gain_LU = 0.0
 
     for ri in 1:p.num_layers
         r = p.r_int[ri]
-        pop_inversion[ri] = gain_dir_layer(p, sol, ri)
+        if LasLevel=="U"
+            pop_inversion[ri] = gain_dir_layer(p, sol, ri)
+        elseif LasLevel=="L"
+            pop_inversion[ri] = gain_ref_layer(p, sol, ri)
+        else
+            println("Only support L or U lasing!")
+        end
+
         for ϕ in ϕ_list
             if p.mode_num >= 7 ## TM modes
                 Ez = besselj(m, k_rol*r) * cos(m*ϕ)
@@ -180,13 +194,18 @@ function gain_dir(p, sol)
                 Eϕ = derv_bessel(m, k_rol*r) * cos(m*ϕ)
             end
             E_sq = Ez*conj(Ez) + Er*conj(Er) + Eϕ*conj(Eϕ)
-            denom += E_sq * r
+            denom += E_sq * r # cylindrical coordinate
             numerator += E_sq * r * pop_inversion[ri]
         end
     end
-    gain_U = numerator/denom *
-           (p.c/p.f_dir_lasing)^2/(8*pi*p.n0^2*p.t_spont)/p.Δν_THz*0.01 # in cm^-1
-    return gain_U
+    if LasLevel=="U"
+        λ_las = p.c/p.f_dir_lasing
+    elseif LasLevel=="L"
+        λ_las = p.c/p.f_ref_lasing
+    end
+    gain_LU = numerator/denom *
+           λ_las^2/(8*pi*p.n0^2*p.t_spont)/p.Δν_THz*0.01 # in cm^-1
+    return gain_LU
 end
 
 function derv_bessel(ν,x)

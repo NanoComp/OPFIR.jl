@@ -24,7 +24,7 @@ function func(p; sol_start=Array[])
         updateks(p)
         T2 = [deepcopy(p.T_vA); deepcopy(p.T_vE)]
         T_err = norm(T1-T2)/norm(T2)
-        println(T_err)
+        println("T error: ", T_err)
     end
 
     return (p, sol_0)

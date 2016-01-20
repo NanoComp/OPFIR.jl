@@ -108,9 +108,11 @@ type Params{T<:Real}
     f_dist_ctr::AbstractVector
     velocity::AbstractVector
     f_dist_dir_lasing::AbstractVector
+    f_dist_ref_lasing::AbstractVector
     gauss_dist::AbstractVector
     SHB::AbstractVector
     fp_lasing::AbstractVector
+    fp_ref_lasing::AbstractVector
     pumpR::AbstractVector
 
     Δr::T
@@ -310,6 +312,7 @@ function Params(DefaultT=Float64;
 
     velocity = (f_dist_ctr - f₀)/f₀ # in unit c
     f_dist_dir_lasing = velocity * f_dir_lasing + f_dir_lasing
+    f_dist_ref_lasing = velocity * f_ref_lasing + f_ref_lasing
 
     norm_dist = Normal(f₀, Δ_f₀D * sqrt(2*log(2)))
     pdf1 = pdf(norm_dist, f_dist_ctr)
@@ -323,6 +326,9 @@ function Params(DefaultT=Float64;
     SHB = f_NT_ampl(f_dist_ctr, Δ_f_NT, f_pump)
     fp_lasing = f_NT_ampl(f_dist_dir_lasing, Δ_f_NT, f_dir_lasing)
     fp_lasing = fp_lasing/sum(fp_lasing)
+
+    fp_ref_lasing = f_NT_ampl(f_dist_ref_lasing, Δ_f_NT, f_ref_lasing)
+    fp_ref_lasing = fp_ref_lasing/sum(fp_ref_lasing)
 
     # pump rate in m-3 microsec-1:
     pump0 = 9.4e13 * power/(radius^2)/Δ_f₀D * (0.2756^2*16.0/45) *
@@ -415,8 +421,8 @@ function Params(DefaultT=Float64;
     k63A, k36A, k63E, k36E, netrate_36A, k3623, k2336, k2636, k3626, kro,
     Δ_fP, Δ_f_Rabi, Δ_f_NT,
     num_freq, layer_unknown, df, f_dist_end, f_dist_ctr,
-    velocity, f_dist_dir_lasing,
-    gauss_dist, SHB, fp_lasing,
+    velocity, f_dist_dir_lasing, f_dist_ref_lasing,
+    gauss_dist, SHB, fp_lasing, fp_ref_lasing,
     pumpR,
     Δr, r_int,
     kwall, MFP, D,

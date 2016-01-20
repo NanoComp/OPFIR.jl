@@ -1,7 +1,7 @@
 function fixedpoint(sol_0, p)
     temp_flag = p.solstart_flag
 
-    println("k36 = ", p.k36A[1:2], " k63 = ", p.k63A[1:2])
+#    println("k36 = ", p.k36A[1:2], " k63 = ", p.k63A[1:2])
 
     max_ele = p.num_freq * p.num_layers * (p.n_rot*(p.n_rot+2) + p.n_vib*(p.n_rot+p.n_vib+2))
 
