@@ -319,15 +319,15 @@ function Params(DefaultT=Float64;
     gauss_dist = pdf1 / sum(pdf1)
 
     Δ_f_Rabi = 0.45*sqrt(power)/radius*1e6 # HMHW in Hz
-    Δ_f_NT = sqrt(Δ_fP^2 + 4*Δ_f_Rabi^2)
+    Δ_f_NT = sqrt(Δ_fP^2 + Δ_f_Rabi^2)
     Δ_f_NT = Δ_fP # not include the Rabi oscillation
     # p_dist satisfies sum(p_dist) * df ~ 1.0 ;
     p_dist = lorentz_dist(f_dist_ctr, Δ_f_NT, f_pump)
     SHB = f_NT_ampl(f_dist_ctr, Δ_f_NT, f_pump)
-    fp_lasing = f_NT_ampl(f_dist_dir_lasing, Δ_f_NT, f_dir_lasing)
+    fp_lasing = f_NT_ampl(f_dist_dir_lasing, Δ_fP, f_dir_lasing)
     fp_lasing = fp_lasing/sum(fp_lasing)
 
-    fp_ref_lasing = f_NT_ampl(f_dist_ref_lasing, Δ_f_NT, f_ref_lasing)
+    fp_ref_lasing = f_NT_ampl(f_dist_ref_lasing, Δ_fP, f_ref_lasing)
     fp_ref_lasing = fp_ref_lasing/sum(fp_ref_lasing)
 
     # pump rate in m-3 microsec-1:
