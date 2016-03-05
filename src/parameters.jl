@@ -227,7 +227,7 @@ function Params(DefaultT=Float64;
     #zeros of Bessel functions:
     p_library = [3.83, 5.33, 7.02, 6.71, 1.84, 3.05, 2.4, 3.83],
     n0 = 1.0,
-    t_spont = 100,
+    t_spont = 100, #6400
     Δν_THz = 25e6,
     ## pressure and power related parameters:
     pressure = 100.0,
@@ -290,8 +290,13 @@ function Params(DefaultT=Float64;
     # k63 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time/2 # in 1/microsec
     # k36 = exp(-(E6-E3)/kBT) * k63 * g_6
     # k36 = f_6_0/f_3_0 * k63
-    k36 = 100.0
-    k63 = k36 * f_3_0/f_6_0
+    if model_flag == 1
+        k63 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time/2 # in 1/microsec
+        k36 = exp(-(E6-E3)/kBT) * k63 * g_6
+    else
+        k36 = 100.0
+        k63 = k36 * f_3_0/f_6_0
+    end
     k63A = k63 * ones(num_layers)
     k63E = k63 * ones(num_layers)
     k36A = k36 * ones(num_layers)
@@ -319,8 +324,9 @@ function Params(DefaultT=Float64;
     gauss_dist = pdf1 / sum(pdf1)
 
     Δ_f_Rabi = 0.45*sqrt(power)/radius*1e6 # HMHW in Hz
-    Δ_f_NT = sqrt(Δ_fP^2 + Δ_f_Rabi^2)
-    Δ_f_NT = Δ_fP # not include the Rabi oscillation
+    # Δ_f_NT = sqrt(Δ_fP^2 + Δ_f_Rabi^2)
+    Δ_f_NT = Δ_fP + Δ_f_Rabi
+    # Δ_f_NT = Δ_fP # not include the Rabi oscillation
     # p_dist satisfies sum(p_dist) * df ~ 1.0 ;
     p_dist = lorentz_dist(f_dist_ctr, Δ_f_NT, f_pump)
     SHB = f_NT_ampl(f_dist_ctr, Δ_f_NT, f_pump)
@@ -456,7 +462,7 @@ function f_NT_ampl(ν, Δ_f_NT, f_pump)
 end
 
 function Qv(kB, T)
-    data = readdlm("../src/E_vib.jl")
+    data = readdlm("./src/E_vib.jl")
     Q = 1.0
     for i in 1:size(data, 1)
         Q += data[i,2] * exp(-data[i, 1]/(kB*T*8065.73))
