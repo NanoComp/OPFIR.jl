@@ -29,19 +29,19 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             val = p.k12_G
             s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
             ### pumping:
-            val = -p.pumpR[vi]
+            val = -p.pump_IR[vi, ri]
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
-            val = - p.pumpR[vi] * p.C4L * p.gauss_dist[vi]
+            val = - p.pump_IR[vi, ri] * p.C4L * p.gauss_dist[vi]
             col = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 1
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
 
             col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + p.n_rot÷2 + 3
-            val = p.pumpR[vi] * p.g_L/p.g_U
+            val = p.pump_IR[vi, ri] * p.g_L/p.g_U
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
 
             col = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 2
-            val = p.pumpR[vi] * p.C5U * p.gauss_dist[vi] * p.g_L/p.g_U
+            val = p.pump_IR[vi, ri] * p.C5U * p.gauss_dist[vi] * p.g_L/p.g_U
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
 
             # oscil: ground vib: J5
@@ -155,19 +155,19 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
 
             ### pumping:
             col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + 2
-            val = p.pumpR[vi]
+            val = p.pump_IR[vi, ri]
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
 
             col = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 1
-            val = p.pumpR[vi] * p.C4L * p.gauss_dist[vi]
+            val = p.pump_IR[vi, ri] * p.C4L * p.gauss_dist[vi]
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
 
             col = row
-            val = - p.pumpR[vi] * p.g_L/p.g_U
+            val = - p.pump_IR[vi, ri] * p.g_L/p.g_U
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
 
             col = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 2
-            val = - p.pumpR[vi] * p.C5L * p.gauss_dist[vi] * p.g_L/p.g_U
+            val = - p.pump_IR[vi, ri] * p.C5L * p.gauss_dist[vi] * p.g_L/p.g_U
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
 
             # oscil: 3 vib: J6

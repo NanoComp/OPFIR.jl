@@ -1,5 +1,6 @@
 function func(p; sol_start=Array[])
     # p = Params(pressure=pressure, power=power, num_layers=num_layers, model_flag=model_flag)
+    # initiate some of the parameters from alpha_0
     if p.solstart_flag==0
         sol_0 = zeros(p.num_layers * p.layer_unknown)
     else
@@ -7,7 +8,6 @@ function func(p; sol_start=Array[])
     end
 
     println("matrix size is ", size(sol_0,1))
-
 
     T_err = 1.0
     while T_err > 2e-2
@@ -21,7 +21,7 @@ function func(p; sol_start=Array[])
         if p.model_flag == 1
            break
         end
-        
+
         T1 = [deepcopy(p.T_vA); deepcopy(p.T_vE)]
         updateTv(p, sol_0)
         updateks(p)
