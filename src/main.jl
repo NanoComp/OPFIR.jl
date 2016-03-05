@@ -10,7 +10,7 @@ function func(p; sol_start=Array[])
 
 
     T_err = 1.0
-    while T_err > 1e-3
+    while T_err > 2e-2
         sol_0 = zeros(p.num_layers * p.layer_unknown)
         rel_err = Float64[]
         sol_0 = andersonaccel(x -> begin
@@ -19,14 +19,16 @@ function func(p; sol_start=Array[])
                 y
                 end, sol_0, reltol=1e-6)
         if p.model_flag == 1
-            break
+           break
         end
+        
         T1 = [deepcopy(p.T_vA); deepcopy(p.T_vE)]
         updateTv(p, sol_0)
         updateks(p)
         T2 = [deepcopy(p.T_vA); deepcopy(p.T_vE)]
         T_err = norm(T1-T2)/norm(T2)
         println("T error: ", T_err)
+        flush(STDOUT)
     end
 
     return (p, sol_0)

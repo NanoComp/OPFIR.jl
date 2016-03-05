@@ -113,6 +113,9 @@ type Params{T<:Real}
     SHB::AbstractVector
     fp_lasing::AbstractVector
     fp_ref_lasing::AbstractVector
+
+    alpha_0::T
+    alpha_r::AbstractVector
     pumpR::AbstractVector
 
     Δr::T
@@ -227,7 +230,7 @@ function Params(DefaultT=Float64;
     #zeros of Bessel functions:
     p_library = [3.83, 5.33, 7.02, 6.71, 1.84, 3.05, 2.4, 3.83],
     n0 = 1.0,
-    t_spont = 100, #6400
+    t_spont = 100,
     Δν_THz = 25e6,
     ## pressure and power related parameters:
     pressure = 100.0,
@@ -236,8 +239,10 @@ function Params(DefaultT=Float64;
     niter = 10,
     lin_solver = "Default",
     model_flag = 1,
-    solstart_flag = 0
+    solstart_flag = 0,
+    alpha_0 = 65.0,
     )
+
     if model_flag == 1
         n_vib = 12
     elseif model_flag == 2
@@ -297,6 +302,7 @@ function Params(DefaultT=Float64;
         k36 = 100.0
         k63 = k36 * f_3_0/f_6_0
     end
+
     k63A = k63 * ones(num_layers)
     k63E = k63 * ones(num_layers)
     k36A = k36 * ones(num_layers)
@@ -308,7 +314,25 @@ function Params(DefaultT=Float64;
     k3626 = exp(-(E26-E36)/kBT) * k2636
     kro = ntotal * v_avg * σ_VS * (1e-10)^2 / norm_time
 
+    # alpha_0 = 65.0 # in unit m^-1 Torr^-1
+    # powerF, powerB = absF(alpha_0, L, pressure)
+    # powerF *= power
+    # powerB *= power
+
+    # alpha_0 = 65 # in unit m^-1 Torr^-1
+    alpha_0 = alpha_0 * (pressure/1000)
+    alpha_r = alpha_0 * ones(num_layers)
+
     Δ_fP = 15e6*(pressure/1e3)
+    #Δ_f_Rabi = 0.45*sqrt(power)/radius*1e6 # HMHW in Hz
+    Δ_f_RabiF = 0.45*sqrt(powerF)/radius*1e6
+    Δ_f_RabiB = 0.45*sqrt(powerB)/radius*1e6
+    #Δ_f_NT = sqrt(Δ_fP^2 + Δ_f_Rabi^2)
+    #Δ_f_NT = Δ_fP + Δ_f_Rabi
+    #Δ_f_NT = Δ_fP # not include the Rabi oscillation
+    Δ_f_NTF = Δ_fP + Δ_f_RabiF
+    Δ_f_NTB = Δ_fP + Δ_f_RabiB
+
     num_freq = round(Int64,max(50,2*f_range/(Δ_fP/4)))
     layer_unknown = n_rot*num_freq + n_vib
     df = 2.0 * f_range / num_freq
@@ -319,17 +343,18 @@ function Params(DefaultT=Float64;
     f_dist_dir_lasing = velocity * f_dir_lasing + f_dir_lasing
     f_dist_ref_lasing = velocity * f_ref_lasing + f_ref_lasing
 
+    f_dist_ctrB = f₀ - f₀ * velocity
+
     norm_dist = Normal(f₀, Δ_f₀D * sqrt(2*log(2)))
     pdf1 = pdf(norm_dist, f_dist_ctr)
     gauss_dist = pdf1 / sum(pdf1)
 
-    Δ_f_Rabi = 0.45*sqrt(power)/radius*1e6 # HMHW in Hz
-    # Δ_f_NT = sqrt(Δ_fP^2 + Δ_f_Rabi^2)
-    Δ_f_NT = Δ_fP + Δ_f_Rabi
-    # Δ_f_NT = Δ_fP # not include the Rabi oscillation
     # p_dist satisfies sum(p_dist) * df ~ 1.0 ;
-    p_dist = lorentz_dist(f_dist_ctr, Δ_f_NT, f_pump)
-    SHB = f_NT_ampl(f_dist_ctr, Δ_f_NT, f_pump)
+    #p_dist = lorentz_dist(f_dist_ctr, Δ_f_NT, f_pump)
+    #SHB = f_NT_ampl(f_dist_ctr, Δ_f_NT, f_pump)
+    SHBF = f_NT_ampl(f_dist_ctr, Δ_f_NTF, f_pump)
+    SHBB = f_NT_ampl(f_dist_ctrB, Δ_f_NTB, f_pump)
+
     fp_lasing = f_NT_ampl(f_dist_dir_lasing, Δ_fP, f_dir_lasing)
     fp_lasing = fp_lasing/sum(fp_lasing)
 
@@ -337,9 +362,14 @@ function Params(DefaultT=Float64;
     fp_ref_lasing = fp_ref_lasing/sum(fp_ref_lasing)
 
     # pump rate in m-3 microsec-1:
-    pump0 = 9.4e13 * power/(radius^2)/Δ_f₀D * (0.2756^2*16.0/45) *
-            exp(-log(2)*((f_pump-f₀)/Δ_f₀D)^2)/norm_time
-    pumpR = pump0 * SHB
+    #pump0 = 9.4e13 * power/(radius^2)/Δ_f₀D * (0.2756^2*16.0/45) *
+            # exp(-log(2)*((f_pump-f₀)/Δ_f₀D)^2)/norm_time
+    #pumpR = pump0 * SHB
+    pump0 = 9.4e13 /(radius^2)/Δ_f₀D * (0.2756^2*16.0/45) *
+                exp(-log(2)*((f_pump-f₀)/Δ_f₀D)^2)/norm_time
+    pumpR = pump0 * (powerF * SHBF + powerB * SHBB)
+#    println("powerF = ", powerF)
+#    println("powerB = ", powerB)
 
     Δr = radius/100 / num_layers # in m
     r_ext = linspace(0,radius/100,num_layers+1)
@@ -425,11 +455,11 @@ function Params(DefaultT=Float64;
     mode_num, p_library, n0, t_spont, Δν_THz,
     pressure, power, num_layers, ntotal,
     k63A, k36A, k63E, k36E, netrate_36A, k3623, k2336, k2636, k3626, kro,
-    Δ_fP, Δ_f_Rabi, Δ_f_NT,
+    Δ_fP, Δ_f_RabiF, Δ_f_NTF,
     num_freq, layer_unknown, df, f_dist_end, f_dist_ctr,
     velocity, f_dist_dir_lasing, f_dist_ref_lasing,
-    gauss_dist, SHB, fp_lasing, fp_ref_lasing,
-    pumpR,
+    gauss_dist, SHBF, fp_lasing, fp_ref_lasing,
+    alpha_0, alpha_r, pumpR,
     Δr, r_int,
     kwall, MFP, D,
     k98_G, k87_G, k76_G, k65_G, k54_G, k43_G, k32_G, k21_G,
@@ -462,10 +492,22 @@ function f_NT_ampl(ν, Δ_f_NT, f_pump)
 end
 
 function Qv(kB, T)
-    data = readdlm("./src/E_vib.jl")
+    data = readdlm(".././src/E_vib.jl")
     Q = 1.0
     for i in 1:size(data, 1)
         Q += data[i,2] * exp(-data[i, 1]/(kB*T*8065.73))
     end
     return Q
 end
+
+
+function absF(alpha_0, L)
+    t1 = 0.95
+    t2 = 0.96 * 0.95
+    alphaL = alpha_0*L/100
+    coeffF = (1 - exp(-alphaL))/alphaL / (1-t1*t2*exp(-2*alphaL))
+    coeffB = coeffF * exp(-alphaL)*t1
+    return coeffF, coeffB
+end
+
+# function alphaIR_v(f)

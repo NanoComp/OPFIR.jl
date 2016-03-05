@@ -1,5 +1,7 @@
 function compute_rhs(rhs, p, sol)
 
+    pumpR_SHB!(sol, p);
+
     for ri in 1:p.num_layers
         for vi in 1:p.num_freq
             row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + 2
@@ -27,6 +29,10 @@ function compute_rhs(rhs, p, sol)
 
 end
 
+function pumpR_SHB!(sol, p)
+    alpha_0 = p.alpha_0;
+
+end
 
 function pump_total(p, sol, layer)
     L_tot = Nl_total_dist_layer(p, sol, layer)

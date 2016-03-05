@@ -39,6 +39,7 @@ function fixedpoint(sol_0, p)
     end
 
     println("norm of sol diff = ", norm(sol_1 - sol_0) / norm(sol_1))
+    flush(STDOUT)
     p.solstart_flag = temp_flag
     return sol_1
 end
