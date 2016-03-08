@@ -10,9 +10,9 @@ function fixedpoint(sol_0, p)
     value = zeros(max_ele)
     rhs = zeros(p.num_layers*p.layer_unknown)
 
-    update_alpha_from_N!(sol_0, p)
-    println(p.alpha_r)
-    update_Param_from_alpha!(p)
+    update_alpha_from_N!(p, sol_0)
+    # println(p.alpha_r)
+    update_Param_from_alpha!(p, sol_0)
 
     compute_rhs(rhs, p, sol_0)
     compute_row_col_val(rowind, colind, value, p, sol_0)

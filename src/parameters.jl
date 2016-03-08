@@ -335,7 +335,7 @@ function Params(DefaultT=Float64;
 
     f_dist_ctrB = f₀ - f₀ * velocity
 
-    norm_dist = Normal(f₀, Δ_f₀D * sqrt(2*log(2)))
+    norm_dist = Normal(f₀, Δ_f₀D / sqrt(2*log(2)))
     pdf1 = pdf(norm_dist, f_dist_ctr)
     gauss_dist = pdf1 / sum(pdf1)
     # p_dist satisfies sum(p_dist) * df ~ 1.0 ;
@@ -346,22 +346,31 @@ function Params(DefaultT=Float64;
     fp_ref_lasing = f_NT_ampl(f_dist_ref_lasing, Δ_fP, f_ref_lasing)
     fp_ref_lasing = fp_ref_lasing/sum(fp_ref_lasing)
 
-    alpha_0 = alpha_0 * (pressure/1000)
-    alpha_r = alpha_0 * ones(num_layers)
+    # alpha_0 from eq (2.B.3) first line in unit m^-1:
 
     Δ_f_RabiF = zeros(num_layers)
     Δ_f_RabiB = zeros(num_layers)
-    Δ_f_NTF = zeros(num_layers)
-    Δ_f_NTB = zeros(num_layers)
+    Δ_f_NTF = ones(num_layers) * Δ_fP
+    Δ_f_NTB = ones(num_layers) * Δ_fP
     SHBF = zeros(num_freq, num_layers)
     SHBB = zeros(num_freq, num_layers)
     powerF = zeros(num_layers)
     powerB = zeros(num_layers)
 
+    totalNL0 = C4L * ntotal * f_G_0/2
+    totalNU0 = C5U * ntotal * f_3_0/2
+    # alpha_0 in m^-1
+    alpha_0 = exp(-log(2)*((f_pump-f₀)/Δ_f₀D)^2)*sqrt(log(2)/pi)/Δ_f₀D *
+              8*pi^3/3/h/c * (totalNL0 - totalNU0) *
+              1e-36 * (0.2756^2*16.0/45) * f_pump * 1e-13
+    alpha_r = alpha_0 * ones(num_layers)
     pump_IR = zeros(num_freq, num_layers)
     # in unit m^-3 microsec^-1
-    pump_0 = 9.4e13 * power/(radius^2)/Δ_f₀D * (0.2756^2*16.0/45) *
-                exp(-log(2)*((f_pump-f₀)/Δ_f₀D)^2)/norm_time
+    pump_0 = 0
+    # (1-exp(-alpha_0*L/100)) * power/(pi*(radius/100)^2*L/100 * h*f_pump *
+    #          ntotal * f_G_0/2 * C4L) / norm_time
+    # # 9.4e13 * power/(radius^2)/Δ_f₀D * (0.2756^2*16.0/45) *
+                # exp(-log(2)*((f_pump-f₀)/Δ_f₀D)^2)/norm_time
 
     Δr = radius/100 / num_layers # in m
     r_ext = linspace(0,radius/100,num_layers+1)
@@ -490,13 +499,4 @@ function Qv(kB, T)
         Q += data[i,2] * exp(-data[i, 1]/(kB*T*8065.73))
     end
     return Q
-end
-
-function CavityAbsorption_FB(alpha_0, L)
-    t1 = 0.95
-    t2 = 0.96 * 0.95
-    alphaL = alpha_0*L/100
-    coeffF = (1 - exp(-alphaL))/alphaL / (1-t1*t2*exp(-2*alphaL))
-    coeffB = coeffF * exp(-alphaL)*t1
-    return coeffF, coeffB
 end
