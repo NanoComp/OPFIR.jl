@@ -13,7 +13,7 @@ function fraction_V3(p, T)
 end
 
 function Qv_0(p, T)
-    data = readdlm("././src/E_vib.jl")
+    data = readdlm("../../src/E_vib.jl")
     Q = 1.0
     for i in 1:size(data, 1)
         Q += data[i,2] * exp(-data[i, 1]/(p.kB*T*8065.73))
