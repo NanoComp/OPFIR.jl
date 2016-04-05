@@ -342,10 +342,11 @@ function Params(DefaultT=Float64;
     #p_dist = lorentz_dist(f_dist_ctr, Δ_f_NT, f_pump)
     fp_lasing = f_NT_ampl(f_dist_dir_lasing, Δ_fP, f_dir_lasing)
     fp_lasing = fp_lasing/sum(fp_lasing)
+    fp_lasing = f_NT_normalized(f_dist_dir_lasing, Δ_fP, f_dir_lasing, df*f_dir_lasing/f₀)
 
     fp_ref_lasing = f_NT_ampl(f_dist_ref_lasing, Δ_fP, f_ref_lasing)
     fp_ref_lasing = fp_ref_lasing/sum(fp_ref_lasing)
-
+    fp_ref_lasing = f_NT_normalized(f_dist_ref_lasing, Δ_fP, f_ref_lasing, df*f_ref_lasing/f₀)
     # alpha_0 from eq (2.B.3) first line in unit m^-1:
 
     Δ_f_RabiF = zeros(num_layers)
@@ -488,6 +489,12 @@ end
 
 function f_NT_ampl(ν, Δ_f_NT, f_pump)
     SHB = Δ_f_NT^2 ./ ((ν - f_pump).^2 + Δ_f_NT^2)
+    # SHB = SHB/sum(SHB)
+    return SHB
+end
+
+function f_NT_normalized(ν, Δ_f_NT, f_pump, df)
+    SHB = 1/π * df * Δ_f_NT ./ ((ν - f_pump).^2 + Δ_f_NT^2)
     # SHB = SHB/sum(SHB)
     return SHB
 end
