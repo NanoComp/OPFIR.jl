@@ -3,6 +3,7 @@ include("wallrates.jl")
 type Params{T<:Real}
     radius::T   # radius in cm
     L::T        # length in cm
+    L_eff::T    # effective length in cm
     h::T        # Planck constant
     c::T        # speed of light in m/s
     ev::T       # in J
@@ -198,6 +199,7 @@ end
 function Params(DefaultT=Float64;
     radius = 0.25,
     L = 15,
+    L_eff = 15,
     h = 6.626068e-34,
     c = 3.0e8,
     ev = 1.60217646e-19,
@@ -383,7 +385,7 @@ function Params(DefaultT=Float64;
     # avg absolute vel in m/microsec (p5 in Henry's thesis)
     vel = 1/3 * v_avg/sqrt(2)/norm_time
     # diffusion coefficient in m^2/microsec. Einstein-Smoluchowski equation;
-    D = vel * MFP * 1e-2
+    D = vel * MFP * 1e-2 * 5
 
     kDD = 19.8 * pressure * σ_DD/ sqrt(T*M)
 
@@ -445,7 +447,7 @@ function Params(DefaultT=Float64;
     k17a = k1a
     k18a = k1a
 
-    return Params{DefaultT}(radius, L, h, c, ev, kB, T, T_vA, T_vE, kBT, M, norm_time,
+    return Params{DefaultT}(radius, L, L_eff, h, c, ev, kB, T, T_vA, T_vE, kBT, M, norm_time,
     σ_GKC, σ_DD, σ_SPT, σ_36, σ_VS,
     v_avg, kvs,
     EG, E3, E6, E23, E36, E26, Q,

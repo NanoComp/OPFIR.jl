@@ -128,9 +128,11 @@ function gain_dir_layer(p, sol, layer)
     inv_U = inv_U_dist_layer(p, sol, layer)
     inv = 0.0
     for i in 1:length(inv_U)
-        if inv_U[i] >0 || true
-            inv += inv_U[i] .* p.fp_lasing[i]
-        end
+#        inv += inv_U[i]
+        g(ν) = 1/π * p.Δ_fP ./ ((ν - p.f_dist_dir_lasing[i]).^2 + p.Δ_fP^2)
+#        fraction = quadgk(g, p.f_dir_lasing-3e6, p.f_dir_lasing+3e6)[1]
+        fraction = 1
+        inv += inv_U[i] * fraction
     end
 ##    sum(inv_U .* p.fp_lasing)
     return inv
@@ -140,11 +142,12 @@ function gain_ref_layer(p, sol, layer)
     inv_L = inv_L_dist_layer(p, sol, layer)
     inv = 0.0
     for i in 1:length(inv_L)
-        if inv_L[i] >0 || true
-            inv += inv_L[i] .* p.fp_ref_lasing[i]
-        end
+        # inv += inv_L[i]
+        g(ν) = 1/π * p.Δ_fP ./ ((ν - p.f_dist_ref_lasing[i]).^2 + p.Δ_fP^2)
+ #       fraction = quadgk(g, p.f_ref_lasing-3e6, p.f_ref_lasing+3e6)[1]
+         fraction = 1.0
+         inv += inv_L[i] * fraction
     end
-##    sum(inv_U .* p.fp_lasing)
     return inv
 end
 
@@ -217,7 +220,7 @@ function gain_dir(p, sol; LasLevel="U")
     end
     gain_LU = numerator/denom *
            λ_las^2/(8*pi*p.n0^2*p.t_spont)/p.Δν_THz*0.01 # in cm^-1
-    return gain_LU
+    return gain_LU #* (p.L_eff/p.L)
 end
 
 function derv_bessel(ν,x)
