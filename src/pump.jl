@@ -53,7 +53,7 @@ function update_Param_from_alpha!(p, sol)
     AbsorptionB = Array(Float64, p.num_layers)
 
     alpha_avg = sum(p.alpha_r .* p.r_int)/sum(p.r_int)
-    L_eff = min(p.L, 100/alpha_avg)
+    L_eff = min(p.L, 200/alpha_avg)
     #L_eff = 15.0
     p.L_eff = L_eff
     println("L_eff = ", L_eff)
@@ -86,7 +86,7 @@ function update_Param_from_alpha!(p, sol)
         totalNLF = sum(Nl_dist.*abs_abilityF)
         totalNLB = sum(Nl_dist.*abs_abilityB)
 
-        pumpregion = 0.6
+        pumpregion = 1
         
         for vi in 1:p.num_freq
             p.pump_IR[vi, ri] =
