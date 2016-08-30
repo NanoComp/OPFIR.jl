@@ -1,5 +1,4 @@
 function func(p; sol_start=Array[])
-    # p = Params(pressure=pressure, power=power, num_layers=num_layers, model_flag=model_flag)
     # initiate some of the parameters from alpha_0
     if p.solstart_flag==0
         sol_0 = zeros(p.num_layers * p.layer_unknown)
@@ -17,7 +16,7 @@ function func(p; sol_start=Array[])
                 y = fixedpoint(x, p)
                 push!(rel_err, norm(y - x) / norm(y))
                 y
-                end, sol_0, reltol=1e-6)
+              end, sol_0, reltol=1e-4)
         if p.model_flag == 1
            break
         end

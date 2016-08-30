@@ -29,7 +29,7 @@ function update_alpha_from_N!(p, sol)
         p.alpha_r[ri] = tmp_factor * sum((Nl_dist - p.g_L/p.g_U*Nu_dist).*abs_ability)
         # p.alpha_r[ri] = tmp_factor * (Nl_dist[maxind] - p.g_L/p.g_U*Nu_dist[maxind])
     end
-    println(p.alpha_r)
+    # println(p.alpha_r)
 end
 
 function CavityAbsorption_FB(alpha_0, L)
@@ -37,15 +37,18 @@ function CavityAbsorption_FB(alpha_0, L)
     t2 = 0.96 * 0.95
     alphaL = alpha_0*L/100
     coeffF = (1 - exp(-alphaL)) / (1-t1*t2*exp(-2*alphaL))
+    #coeffF = (1 - exp(-alphaL))
     coeffB = coeffF * exp(-alphaL)*t1
     return coeffF, coeffB
 end
 
 function AveragePower_FB(alpha_0, L, power)
     coeffF, coeffB = CavityAbsorption_FB(alpha_0, L)
-    coeffF = coeffF/(alpha_0*L/100) * power
-    coeffB = coeffB/(alpha_0*L/100) * power
-    return coeffF, coeffB
+    powerF = coeffF/(alpha_0*L/100) * power
+    powerB = coeffB/(alpha_0*L/100) * power
+    # powerF = coeffF * power
+    # powerB = coeffF * power
+    return powerF, powerB
 end
 
 function update_Param_from_alpha!(p, sol)
@@ -53,11 +56,11 @@ function update_Param_from_alpha!(p, sol)
     AbsorptionB = Array(Float64, p.num_layers)
 
     alpha_avg = sum(p.alpha_r .* p.r_int)/sum(p.r_int)
-    L_eff = min(p.L, 200/alpha_avg)
+    L_eff = min(p.L, 100/alpha_avg)
     #L_eff = 15.0
     p.L_eff = L_eff
     println("L_eff = ", L_eff)
-    
+
     for ri in 1:p.num_layers
         AbsorptionF[ri], AbsorptionB[ri] = CavityAbsorption_FB(p.alpha_r[ri], L_eff)
         p.powerF[ri], p.powerB[ri] = AveragePower_FB(p.alpha_r[ri], L_eff, p.power)
@@ -87,7 +90,7 @@ function update_Param_from_alpha!(p, sol)
         totalNLB = sum(Nl_dist.*abs_abilityB)
 
         pumpregion = 1
-        
+
         for vi in 1:p.num_freq
             p.pump_IR[vi, ri] =
             (p.SHBF[vi, ri] * AbsorptionF[ri] / totalNLF) *

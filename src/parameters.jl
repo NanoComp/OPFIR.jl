@@ -504,7 +504,7 @@ function f_NT_normalized(ν, Δ_f_NT, f_pump, df)
 end
 
 function Qv(kB, T)
-    data = readdlm("../../src/E_vib.jl")
+    data = readdlm("../src/E_vib.jl")
     Q = 1.0
     for i in 1:size(data, 1)
         Q += data[i,2] * exp(-data[i, 1]/(kB*T*8065.73))
