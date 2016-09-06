@@ -128,10 +128,9 @@ function gain_dir_layer(p, sol, layer)
     inv_U = inv_U_dist_layer(p, sol, layer)
     inv = 0.0
     for i in 1:length(inv_U)
-#        inv += inv_U[i]
-        g(ν) = 1/π * p.Δ_fP ./ ((ν - p.f_dist_dir_lasing[i]).^2 + p.Δ_fP^2)
+        g(ν) = 1/π * p.Δ_f_NTF[layer] ./ ((ν - p.f_dist_dir_lasing[i]).^2 + p.Δ_f_NTF[layer]^2)
 #        fraction = quadgk(g, p.f_dir_lasing-3e6, p.f_dir_lasing+3e6)[1]
-        fraction = 1
+        fraction = g(p.f_dir_lasing)
         inv += inv_U[i] * fraction
     end
 ##    sum(inv_U .* p.fp_lasing)
@@ -142,10 +141,9 @@ function gain_ref_layer(p, sol, layer)
     inv_L = inv_L_dist_layer(p, sol, layer)
     inv = 0.0
     for i in 1:length(inv_L)
-        # inv += inv_L[i]
-        g(ν) = 1/π * p.Δ_fP ./ ((ν - p.f_dist_ref_lasing[i]).^2 + p.Δ_fP^2)
+        g(ν) = 1/π * p.Δ_f_NTF[layer] ./ ((ν - p.f_dist_ref_lasing[i]).^2 + p.Δ_f_NTF[layer]^2)
  #       fraction = quadgk(g, p.f_ref_lasing-3e6, p.f_ref_lasing+3e6)[1]
-         fraction = 1.0
+         fraction = g(p.f_ref_lasing)
          inv += inv_L[i] * fraction
     end
     return inv
@@ -176,7 +174,7 @@ function mode(mode_num)
     return m
 end
 
-function gain_dir(p, sol; LasLevel="U")
+function gain_dir(p, sol; LasLevel="U", vi=0)
     m = mode(p.mode_num)
     radius_m = p.radius/100
     k_rol_library = p.p_library/radius_m
@@ -191,9 +189,11 @@ function gain_dir(p, sol; LasLevel="U")
     for ri in 1:p.num_layers
         r = p.r_int[ri]
         if LasLevel=="U"
-            pop_inversion[ri] = gain_dir_layer(p, sol, ri)
+            pop_inversion[ri] = gain_dir_layer3(p, sol, ri, vi)
+            #pop_inversion[ri] = gain_dir_layer(p, sol, ri)
         elseif LasLevel=="L"
-            pop_inversion[ri] = gain_ref_layer(p, sol, ri)
+            pop_inversion[ri] = gain_ref_layer3(p, sol, ri, vi)
+            #pop_inversion[ri] = gain_ref_layer(p, sol, ri)
         else
             println("Only support L or U lasing!")
         end
