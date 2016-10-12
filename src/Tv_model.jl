@@ -1,4 +1,8 @@
 function Tv(p, N0, N3)
+    if ~(N0/N3 >0)
+      p.err_tv = true
+      return
+    end
     T = -(p.EG-p.E3) / (p.kB*log(N0/N3)) /8065.73
     return T
 end
@@ -13,7 +17,11 @@ function fraction_V3(p, T)
 end
 
 function Qv_0(p, T)
-    data = readdlm("../../src/E_vib.jl")
+    if p.script == 1
+      data = readdlm("../../src/E_vib.jl")
+    else
+      data = readdlm("../src/E_vib.jl")
+    end
     Q = 1.0
     for i in 1:size(data, 1)
         Q += data[i,2] * exp(-data[i, 1]/(p.kB*T*8065.73))
@@ -39,6 +47,11 @@ function updateTv(p, sol)
         N0E = (sol[p.layer_unknown*j-2] + p.ntotal*p.f_G_0/2)
         N3E = (sol[p.layer_unknown*j-1] + p.ntotal*p.f_3_0/2)
         p.T_vE[j] = Tv(p, N0E, N3E)
+
+        if p.err_tv == true
+          println("Tv error is detected! Return current values")
+          return
+        end
     end
     # N0A = 0
     # N3A = 0
@@ -57,7 +70,7 @@ function updateks(p)
         p.f_GA[j] = fraction_Vg(p, p.T_vA[j])
         p.f_3A[j] = fraction_V3(p, p.T_vA[j])
         p.f_6A[j] = 1 - p.f_GA[j] - p.f_3A[j]
-        p.k36A[j] = 100.0
+        p.k36A[j] = 1000.0
         p.k63A[j] = p.k36A[j] * p.f_3A[j]/p.f_6A[j]
     end
 
@@ -65,7 +78,7 @@ function updateks(p)
         p.f_GE[j] = fraction_Vg(p, p.T_vE[j])
         p.f_3E[j] = fraction_V3(p, p.T_vE[j])
         p.f_6E[j] = 1 - p.f_GE[j] - p.f_3E[j]
-        p.k36E[j] = 100.0
+        p.k36E[j] = 1000.0
         p.k63E[j] = p.k36E[j] * p.f_3E[j]/p.f_6E[j]
     end
 end

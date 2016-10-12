@@ -84,6 +84,9 @@ type Params{T<:Real}
     power::T        # in unit W
     powerF::AbstractVector
     powerB::AbstractVector
+    averagePF::AbstractVector
+    averagePB::AbstractVector
+
     num_layers::Integer
 
     ntotal::T # in unit m^-3
@@ -195,6 +198,27 @@ type Params{T<:Real}
     lin_solver::AbstractString
     model_flag::Integer
     solstart_flag::Integer
+
+    backward::Integer
+    ACStark::Integer
+    effectiveL::Integer
+    MultRef::Integer
+
+    D_factor::T
+
+    f_dirgain_dist::AbstractVector
+    f_refgain_dist::AbstractVector
+    dirgain::AbstractVector
+    refgain::AbstractVector
+
+    script::Integer
+
+    evol_t::AbstractVector
+
+    err_tv::Bool
+
+    beta13::T
+
 end
 
 function Params(DefaultT=Float64;
@@ -252,6 +276,14 @@ function Params(DefaultT=Float64;
     lin_solver = "Default",
     model_flag = 1,
     solstart_flag = 0,
+    backward = 1,
+    ACStark = 1,
+    effectiveL = 0,
+    MultRef = 1,
+    D_factor = 1.0,
+    script = 0,
+    evol_t = 0:.1:1,
+    err_tv = false,
     )
 
     if model_flag == 1
@@ -281,7 +313,7 @@ function Params(DefaultT=Float64;
         f_3E = f_3_0 * ones(num_layers)
         f_6E = f_6_0 * ones(num_layers)
     elseif model_flag==2
-        Q = Qv(kB, T)
+        Q = Qv(kB, T, script)
         f_G_0 = exp(EG)/Q
         f_3_0 = exp(-E3/kBT)/Q
         f_6_0 = 1- f_G_0 - f_3_0
@@ -351,7 +383,14 @@ function Params(DefaultT=Float64;
     fp_ref_lasing = f_NT_ampl(f_dist_ref_lasing, Δ_fP, f_ref_lasing)
     fp_ref_lasing = fp_ref_lasing/sum(fp_ref_lasing)
     fp_ref_lasing = f_NT_normalized(f_dist_ref_lasing, Δ_fP, f_ref_lasing, df*f_ref_lasing/f₀)
+
+    f_dirgain_dist = linspace(f_dir_lasing-40e6, f_dir_lasing+40e6, 200)
+    f_refgain_dist = linspace(f_ref_lasing-40e6, f_ref_lasing+40e6, 200)
+    dirgain = zeros(size(f_dirgain_dist))
+    refgain = zeros(size(f_refgain_dist))
     # alpha_0 from eq (2.B.3) first line in unit m^-1:
+
+    beta13 = 1.20 * sqrt(power)/radius
 
     Δ_f_RabiF = zeros(num_layers)
     Δ_f_RabiB = zeros(num_layers)
@@ -361,6 +400,8 @@ function Params(DefaultT=Float64;
     SHBB = zeros(num_freq, num_layers)
     powerF = zeros(num_layers)
     powerB = zeros(num_layers)
+    averagePF = power * ones(num_layers)
+    averagePB = power * ones(num_layers)
 
     totalNL0 = C4L * ntotal * f_G_0/2
     totalNU0 = C5U * ntotal * f_3_0/2
@@ -374,8 +415,8 @@ function Params(DefaultT=Float64;
     pump_0 = 0
     # (1-exp(-alpha_0*L/100)) * power/(pi*(radius/100)^2*L/100 * h*f_pump *
     #          ntotal * f_G_0/2 * C4L) / norm_time
-    # # 9.4e13 * power/(radius^2)/Δ_f₀D * (0.2756^2*16.0/45) *
-                # exp(-log(2)*((f_pump-f₀)/Δ_f₀D)^2)/norm_time
+    pump_0 = 9.4e13 * power/(radius^2)/Δ_f₀D * (0.2756^2*16.0/45) *
+                exp(-log(2)*((f_pump-f₀)/Δ_f₀D)^2)/norm_time
 
     Δr = radius/100 / num_layers # in m
     r_ext = linspace(0,radius/100,num_layers+1)
@@ -387,7 +428,7 @@ function Params(DefaultT=Float64;
     # avg absolute vel in m/microsec (p5 in Henry's thesis)
     vel = 1/3 * v_avg/sqrt(2)/norm_time
     # diffusion coefficient in m^2/microsec. Einstein-Smoluchowski equation;
-    D = vel * MFP * 1e-2
+    D = vel * MFP * 1e-2 * D_factor
 
     kDD = 19.8 * pressure * σ_DD/ sqrt(T*M)
 
@@ -459,7 +500,8 @@ function Params(DefaultT=Float64;
     n_rot, n_vib,
     mu0, eps0,
     mode_num, p_library, n0, t_spont, Δν_THz,
-    pressure, power, powerF, powerB, num_layers, ntotal,
+    pressure, power, powerF, powerB, averagePF, averagePB,
+    num_layers, ntotal,
     k63A, k36A, k63E, k36E, netrate_36A, k3623, k2336, k2636, k3626, kro,
     Δ_fP, Δ_f_RabiF, Δ_f_RabiB, Δ_f_NTF, Δ_f_NTB,
     num_freq, layer_unknown, df, f_dist_end, f_dist_ctr, f_dist_ctrB,
@@ -474,7 +516,14 @@ function Params(DefaultT=Float64;
     k89_3, k78_3, k67_3, k56_3, k45_3, k34_3, k23_3, k12_3,
     k1a, k2a, k3a, k4a, k5a, k6a, k7a, k8a, k9a, k10a, k11a,
     k12a, k13a, k14a, k15a, k16a, k17a, k18a,
-    niter, lin_solver, model_flag, solstart_flag)
+    niter, lin_solver, model_flag, solstart_flag,
+    backward, ACStark, effectiveL, MultRef, D_factor,
+    f_dirgain_dist, f_refgain_dist, dirgain, refgain,
+    script,
+    evol_t,
+    err_tv,
+    beta13
+    )
 end
 
 function Q_selectn_hl(J)
@@ -503,8 +552,29 @@ function f_NT_normalized(ν, Δ_f_NT, f_pump, df)
     return SHB
 end
 
-function Qv(kB, T)
-    data = readdlm("../../src/E_vib.jl")
+function emission_broaden(ν, vi, p, df)
+  # emission spectrum of subclass vi at frequencys nu
+  spectrum = zeros(size(ν))
+  f31 = p.f_dist_ctr[vi]
+  f32 = p.f_dist_dir_lasing[vi]
+  deltap = 2π * (p.f_pump - f31)
+  γ = 0.5 * sqrt(deltap^2 + 4*p.beta13^2)
+  τ = 1/(2π*p.Δ_fP)
+  for i in 1:length(ν)
+    Ω = 0.5*deltap - 2π * (ν[i]-f32)
+    spectrum[i] = 1/(1+(γ-Ω)^2*τ^2) + 1/(1+(γ+Ω)^2*τ^2) +
+    (2*(γ^2-Ω^2)*τ^2*(1+2*γ^2*τ^2)-2)/(1+4γ^2*τ^2)/(1+(γ-Ω)^2*τ^2)/(1+(γ+Ω)^2*τ^2)
+  end
+  spectrum = df*(1+4*γ^2*τ^2)/(4*γ^2*τ) * spectrum
+  return spectrum
+end
+
+function Qv(kB, T, script)
+    if script == 1
+      data = readdlm("../../src/E_vib.jl")
+    else
+      data = readdlm("../src/E_vib.jl")
+    end
     Q = 1.0
     for i in 1:size(data, 1)
         Q += data[i,2] * exp(-data[i, 1]/(kB*T*8065.73))

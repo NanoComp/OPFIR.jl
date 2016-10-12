@@ -188,11 +188,13 @@ function gain_dir(p, sol; LasLevel="U", vi=0)
 
     for ri in 1:p.num_layers
         r = p.r_int[ri]
+        # update beta13 for each layer
+        p.beta13 = 1.2 * sqrt(p.averagePF[ri])/p.radius * 1e6
         if LasLevel=="U"
-            pop_inversion[ri] = gain_dir_layer3(p, sol, ri, vi)
+            pop_inversion[ri] = gain_dir_layer3(p, sol, ri, vi)[1]
             #pop_inversion[ri] = gain_dir_layer(p, sol, ri)
         elseif LasLevel=="L"
-            pop_inversion[ri] = gain_ref_layer3(p, sol, ri, vi)
+            pop_inversion[ri] = gain_ref_layer3(p, sol, ri, vi)[1]
             #pop_inversion[ri] = gain_ref_layer(p, sol, ri)
         else
             println("Only support L or U lasing!")
@@ -225,4 +227,66 @@ end
 
 function derv_bessel(ν,x)
     return 0.5.*(besselj(ν-1,x)-besselj(ν+1,x))
+end
+
+
+###############################
+function gain_dir_layer3(p, sol, layer, vi)
+    df_dir = p.df *p.f_dir_lasing/p.f₀
+    freq2 = p.f_dirgain_dist
+    dfreq2 = freq2[2] - freq2[1]
+    # Nu_broaden = 0.0
+    invU = inv_U_dist_layer(p, sol, layer)
+    inv_U = 0.0
+    for j in 1:p.num_freq
+      inv_U += emission_broaden(freq2[vi], j, p, dfreq2) * invU[j]
+    end
+
+    # broaden Nu by AC stark effect
+    # Δ_f_THZ = p.Δ_f_NTF[layer]
+    # for j in 1:p.num_freq
+    #     Nu_broaden += Nu[j] *
+    #     1/π * Δ_f_THZ / ((freq2[vi]-p.f_dist_dir_lasing[j]).^2 + Δ_f_THZ^2) * dfreq2
+    # end
+    #
+    # Nu_1 = Nu_1_total_dist_layer(p, sol, layer)
+    # Nu_1_broaden = 0
+    # Δ_f_THZ = p.Δ_f_NTF[layer]
+    # for j in 1:p.num_freq
+    #     Nu_1_broaden += Nu_1[j] *
+    #     1/π * Δ_f_THZ / ((freq2[vi]-p.f_dist_dir_lasing[j]).^2 + Δ_f_THZ^2) * dfreq2
+    # end
+    #
+    # inv_U = Nu_broaden - Nu_1_broaden*p.g_U/p.g_L
+    return inv_U
+end
+
+function gain_ref_layer3(p, sol, layer, vi)
+    # df_dir = p.df *p.f_ref_lasing/p.f₀
+    freq2 = p.f_dirgain_dist
+    dfreq2 = freq2[2] - freq2[1]
+    invL = inv_L_dist_layer(p, sol, layer)
+    inv_L = 0.0
+    for j in 1:p.num_freq
+      inv_L += emission_broaden(freq2[vi], j, p, dfreq2) * invL[j]
+    end
+    # Nl_broaden = 0.0
+    # Nl = Nl_total_dist_layer(p, sol, layer)
+    # # broaden Nu by AC stark effect
+    # Δ_f_THZ = p.Δ_f_NTF[layer]
+    # for j in 1:p.num_freq
+    #     Nl_broaden += Nl[j] *
+    #     1/π * Δ_f_THZ / ((freq2[vi]-p.f_dist_ref_lasing[j]).^2 + Δ_f_THZ^2) * dfreq2
+    # end
+    #
+    # Nl_1 = Nl_1_total_dist_layer(p, sol, layer)
+    # Nl_1_broaden = 0
+    # Δ_f_THZ = p.Δ_f_NTF[layer]
+    # for j in 1:p.num_freq
+    #     Nl_1_broaden += Nl_1[j] *
+    #     1/π * Δ_f_THZ / ((freq2[vi]-p.f_dist_ref_lasing[j]).^2 + Δ_f_THZ^2) * dfreq2
+    # end
+    #
+    # inv_L = Nl_1_broaden - Nl_broaden*p.g_U/p.g_L
+    return inv_L
 end

@@ -1,8 +1,6 @@
 function fixedpoint(sol_0, p)
     temp_flag = p.solstart_flag
-
-#    println("k36 = ", p.k36A[1:2], " k63 = ", p.k63A[1:2])
-
+    
     max_ele = p.num_freq * p.num_layers * (p.n_rot*(p.n_rot+2) + p.n_vib*(p.n_rot+p.n_vib+2))
 
     rowind = ones(Int64, max_ele)
@@ -41,6 +39,9 @@ function fixedpoint(sol_0, p)
     elseif p.lin_solver=="Default"
         sol_1 = - matrix \ rhs
     end
+
+    # updateTv(p, sol_1)
+    # updateks(p)
 
     println("norm of sol diff = ", norm(sol_1 - sol_0) / norm(sol_1))
     flush(STDOUT)
