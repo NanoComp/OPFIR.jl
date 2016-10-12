@@ -77,6 +77,14 @@ function plotting(p, sol)
     savefig(figname)
   end
 
+  fig = figure()
+  hold
+  plot(p.r_int, p.T_vA)
+  plot(p.r_int, p.T_vE)
+  xlabel("radial position")
+  title("effective T")
+  figname = string("TvA_TvE.png")
+  savefig(figname)
 end
 
 function plot_gain_curve(centerfreq, freq, gain, filename)

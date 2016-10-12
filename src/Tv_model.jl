@@ -42,6 +42,14 @@ function updateTv(p, sol)
     for j in 1:p.num_layers
         N0A = (sol[p.layer_unknown*j-5] + p.ntotal*p.f_G_0/2)
         N3A = (sol[p.layer_unknown*j-4] + p.ntotal*p.f_3_0/2)
+        for vi in 1:p.num_freq
+          index_b = p.layer_unknown*(j-1) + 1 + (vi-1)*p.n_rot
+          index_e = index_b + p.n_rot÷2 - 1
+          N0A += sum(sol[index_b:index_e])
+          index_b += p.n_rot÷2
+          index_e += p.n_rot÷2
+          N3A += sum(sol[index_b:index_e])
+        end
         p.T_vA[j] = Tv(p, N0A, N3A)
 
         N0E = (sol[p.layer_unknown*j-2] + p.ntotal*p.f_G_0/2)
