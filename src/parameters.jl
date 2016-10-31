@@ -292,8 +292,8 @@ function Params(DefaultT=Float64;
         n_vib = 6
     end
 
-    T_vA = 300 * ones(num_layers)
-    T_vE = 300 * ones(num_layers)
+    T_vA = T * ones(num_layers)
+    T_vE = T * ones(num_layers)
 
     kBT = kB*T*8065.73 # in cm^-1
     v_avg = 205*sqrt(T/M)
@@ -558,6 +558,7 @@ function emission_broaden(ν, vi, p, df)
   f31 = p.f_dist_ctr[vi]
   f32 = p.f_dist_dir_lasing[vi]
   deltap = 2π * (p.f_pump - f31)
+  # deltap = 2π * 25e6
   γ = 0.5 * sqrt(deltap^2 + 4*p.beta13^2)
   τ = 1/(2π*p.Δ_fP)
   for i in 1:length(ν)
