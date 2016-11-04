@@ -44,7 +44,7 @@ function plotting(p, sol)
     n30_J4 = p.ntotal*p.f_3_0/2 * p.C4U .* p.gauss_dist
     plot(p.f_dist_ctr, n30_J5)
     hold
-    plot(p.f_dist_ctr, Nl_total_dist_layer(p, sol, layer)) #
+    plot(p.f_dist_ctr, Nu_total_dist_layer(p, sol, layer)) #
     xlabel("frequency in pump transition")
     ylabel("population (m^-3)")
     legend(["no pump", "with pump"])

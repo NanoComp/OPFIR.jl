@@ -360,6 +360,9 @@ function Params(DefaultT=Float64;
     Δ_fP = 15e6*(pressure/1e3)
 
     num_freq = round(Int64,max(50,2*f_range/(Δ_fP/4)))
+    # num_freq = round(Int64, num_freq * pressure/100)
+    # println("num_freq = ", num_freq)
+
     layer_unknown = n_rot*num_freq + n_vib
     df = 2.0 * f_range / num_freq
     f_dist_end = linspace(-f_range, f_range, num_freq + 1) + f₀
@@ -384,8 +387,8 @@ function Params(DefaultT=Float64;
     fp_ref_lasing = fp_ref_lasing/sum(fp_ref_lasing)
     fp_ref_lasing = f_NT_normalized(f_dist_ref_lasing, Δ_fP, f_ref_lasing, df*f_ref_lasing/f₀)
 
-    f_dirgain_dist = linspace(f_dir_lasing-40e6, f_dir_lasing+40e6, 200)
-    f_refgain_dist = linspace(f_ref_lasing-40e6, f_ref_lasing+40e6, 200)
+    f_dirgain_dist = linspace(f_dir_lasing-40e6, f_dir_lasing+40e6, 500)
+    f_refgain_dist = linspace(f_ref_lasing-40e6, f_ref_lasing+40e6, 500)
     dirgain = zeros(size(f_dirgain_dist))
     refgain = zeros(size(f_refgain_dist))
     # alpha_0 from eq (2.B.3) first line in unit m^-1:
@@ -567,6 +570,7 @@ function emission_broaden(ν, vi, p, df)
     (2*(γ^2-Ω^2)*τ^2*(1+2*γ^2*τ^2)-2)/(1+4γ^2*τ^2)/(1+(γ-Ω)^2*τ^2)/(1+(γ+Ω)^2*τ^2)
   end
   spectrum = df*(1+4*γ^2*τ^2)/(4*γ^2*τ) * spectrum
+  # spectrum = df * spectrum * p.beta13^2/γ^2
   return spectrum
 end
 

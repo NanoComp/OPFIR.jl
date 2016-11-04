@@ -65,8 +65,8 @@ function update_Param_from_alpha!(p, sol)
 
         p.averagePF[ri], p.averagePB[ri] = AveragePower2_FB(p.alpha_r[ri], p.L, p.power)
 
-        # p.Δ_f_RabiF[ri] = 0.45*sqrt(p.powerF[ri])/p.radius*1e6
-        # p.Δ_f_RabiB[ri] = 0.45*sqrt(p.powerB[ri])/p.radius*1e6
+        # p.Δ_f_RabiF[ri] = 0.38*sqrt(p.powerF[ri])/p.radius*1e6
+        # p.Δ_f_RabiB[ri] = 0.38*sqrt(p.powerB[ri])/p.radius*1e6
         p.Δ_f_RabiF[ri] = 0.38*sqrt(p.averagePF[ri])/p.radius*1e6
         p.Δ_f_RabiB[ri] = 0.38*sqrt(p.averagePB[ri])/p.radius*1e6
 

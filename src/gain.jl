@@ -190,6 +190,7 @@ function gain_dir(p, sol; LasLevel="U", vi=0)
         r = p.r_int[ri]
         # update beta13 for each layer
         p.beta13 = 1.2 * sqrt(p.averagePF[ri])/p.radius * 1e6
+        # p.beta13 = 1.2 * sqrt(p.powerF[ri])/p.radius * 1e6
         if LasLevel=="U"
             pop_inversion[ri] = gain_dir_layer3(p, sol, ri, vi)[1]
             #pop_inversion[ri] = gain_dir_layer(p, sol, ri)
@@ -236,11 +237,17 @@ function gain_dir_layer3(p, sol, layer, vi)
     freq2 = p.f_dirgain_dist
     dfreq2 = freq2[2] - freq2[1]
     # Nu_broaden = 0.0
-    invU = inv_U_dist_layer(p, sol, layer)
-    inv_U = 0.0
+    # invU = inv_U_dist_layer(p, sol, layer)
+    invU_T = Nu_T_dist_layer(p,sol,layer) - Nu_1_T_dist_layer(p,sol,layer)*p.g_U/p.g_L
+    invU_NT = Nu_NT_dist_layer(p,sol,layer) - Nu_1_NT_dist_layer(p,sol,layer)*p.g_U/p.g_L
+    inv_NT = 0.0
+    inv_T = 0.0
     for j in 1:p.num_freq
-      inv_U += emission_broaden(freq2[vi], j, p, dfreq2) * invU[j]
+      inv_NT += emission_broaden(freq2[vi], j, p, dfreq2) * invU_NT[j]
+      inv_T += f_NT_normalized(freq2[vi], p.Δ_fP, p.f_dist_dir_lasing[j], dfreq2) * invU_T[j]
     end
+
+    inv_U = inv_NT + inv_T
 
     # broaden Nu by AC stark effect
     # Δ_f_THZ = p.Δ_f_NTF[layer]
