@@ -1,7 +1,7 @@
 function Tv(p, N0, N3)
     if ~(N0/N3 >0)
       p.err_tv = true
-      return
+      return 0.
     end
     T = -(p.EG-p.E3) / (p.kB*log(N0/N3)) /8065.73
     return T
@@ -18,9 +18,9 @@ end
 
 function Qv_0(p, T)
     if p.script == 1
-      data = readdlm("../../src/E_vib.jl")
+      data = readdlm("/Users/fanwang/.julia/v0.4/OPFIR/src/E_vib.jl")
     else
-      data = readdlm("../src/E_vib.jl")
+      data = readdlm("/Users/fanwang/.julia/v0.4/OPFIR/src/E_vib.jl")
     end
     Q = 1.0
     for i in 1:size(data, 1)

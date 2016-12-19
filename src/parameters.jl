@@ -219,7 +219,8 @@ type Params{T<:Real}
 
     beta13::T
 
-    Wi::T
+    WiU::T
+    WiL::T
 end
 
 function Params(DefaultT=Float64;
@@ -285,7 +286,8 @@ function Params(DefaultT=Float64;
     script = 0,
     evol_t = 0:.1:1,
     err_tv = false,
-    Wi = 0,
+    WiU = 0,
+    WiL = 0,
     )
 
     if model_flag == 1
@@ -531,7 +533,7 @@ function Params(DefaultT=Float64;
     evol_t,
     err_tv,
     beta13,
-    Wi
+    WiU, WiL
     )
 end
 
@@ -583,9 +585,9 @@ end
 
 function Qv(kB, T, script)
     if script == 1
-      data = readdlm("../../src/E_vib.jl")
+      data = readdlm("/Users/fanwang/.julia/v0.4/OPFIR/src/E_vib.jl")
     else
-      data = readdlm("../src/E_vib.jl")
+      data = readdlm("/Users/fanwang/.julia/v0.4/OPFIR/src/E_vib.jl")
     end
     Q = 1.0
     for i in 1:size(data, 1)

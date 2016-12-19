@@ -5,42 +5,47 @@ function func(p; sol_start=Array[])
     # initiate some of the parameters from alpha_0
     if p.solstart_flag==0
         sol_0 = zeros(p.num_layers * p.layer_unknown)
+        p_0 = p
+        matrix_0 = 0
+        lu_mat0 = 0
     else
+        tmp_power = p.power
         p_sol = load("./p_sol.jld")
         sol_0 = p_sol["sol"]
-        tmp_power = p.power
-        p = p_sol["p"]
+        sol_in = deepcopy(sol_0)
+        p_0 = p_sol["p"]
+        p = deepcopy(p_0)
         p.power = tmp_power
-        #sol_0 = sol_start
+        p.solstart_flag = 1
     end
 
     println("matrix size is ", size(sol_0,1))
 
     T_err = 1.0
-    alpha_err = 1.0
-    # sol_0 = zeros(p.num_layers * p.layer_unknown)
-
-    # rel_err = Float64[]
-    # sol_0 = andersonaccel(x -> begin
-    #         y = fixedpoint(x, p)
-    #         push!(rel_err, norm(y - x) / norm(y))
-    #         y
-    #       end, sol_0, reltol=1e-4)
-
-    while T_err > 5e-2 && alpha_err > 1e-3
-        # if p.solstart_flag==0
-        #     sol_0 = zeros(p.num_layers * p.layer_unknown)
-        # else
-        #     sp_sol = load("./p_sol.jld")
-        #     sol_0 = p_sol["sol"]
-        # end
+    N_err = 1.0
+    while T_err > 2e-2 && N_err > 1e-3
+        N_prev = total_NuInv(p, sol_0)
         alpha_p = deepcopy(p.alpha_r)
         rel_err = Float64[]
+        sol_in = deepcopy(sol_0)
+
+        if p.solstart_flag == 1
+            max_ele = p.num_freq * p.num_layers * (p.n_rot*(p.n_rot+2) + p.n_vib*(p.n_rot+p.n_vib+2))
+            rowind_0 = ones(Int64, max_ele)
+            colind_0 = ones(Int64, max_ele)
+            value_0 = zeros(max_ele)
+            compute_row_col_val(rowind_0, colind_0, value_0, p_0, sol_in)
+            matrix_0 = sparse(rowind_0, colind_0, value_0)
+            mat_modify(matrix_0, p)
+            lu_mat0 = lufact(matrix_0)
+        end
+
         sol_0 = andersonaccel(x -> begin
-                y = fixedpoint(x, p)
+                y = fixedpoint(x, p, matrix_0, lu_mat0)
                 push!(rel_err, norm(y - x) / norm(y))
                 y
-              end, sol_0, reltol=1e-4, m=40)
+            end, sol_0, reltol=1e-6, m=40)
+
         if p.model_flag == 1
            break
         end
@@ -55,7 +60,10 @@ function func(p; sol_start=Array[])
         updateks(p)
         T2 = [deepcopy(p.T_vA); deepcopy(p.T_vE)]
         T_err = norm(T1-T2)/norm(T2)
-        println("T error: ", T_err, ", alpha_err:", alpha_err)
+
+        N_curr = total_NuInv(p, sol_0)
+        N_err = abs(N_curr - N_prev)/abs(N_curr)
+        println("T error: ", T_err, ", N_err:", N_err)
         flush(STDOUT)
     end
 
@@ -110,4 +118,20 @@ function dndt_p(p, t, sol)
 
   return (matrix*sol + rhs)
 
+end
+
+function total_NuInv(p, sol)
+    invU = zeros(p.num_layers)
+    for k = 1:p.num_layers
+        invU[k] = sum(inv_U_dist_layer(p, sol, k))
+    end
+    return sum(p.r_int.*invU)/sum(p.r_int)
+end
+
+function total_NlInv(p, sol)
+    invL = zeros(p.num_layers)
+    for k = 1:p.num_layers
+        invL[k] = sum(inv_L_dist_layer(p, sol, k))
+    end
+    return sum(p.r_int.*invL)/sum(p.r_int)
 end

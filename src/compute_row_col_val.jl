@@ -21,10 +21,10 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             # oscil: ground vib: J4
             row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + 2
             ## J4 -> J5, J3 (diagonal):
-            val = - p.k23_G - p.k21_G - p.k2a - p.kro - p.Wi
+            val = - p.k23_G - p.k21_G - p.k2a - p.kro - p.WiL
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
             ## J5, J3 -> J4:
-            val = p.k32_G + p.Wi
+            val = p.k32_G + p.WiL
             s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
             val = p.k12_G
             s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
@@ -47,12 +47,12 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             # oscil: ground vib: J5
             row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + 3
             ## J5 -> J6, J4 (diagonal):
-            val = - p.k34_G - p.k32_G - p.k3a - p.kro - p.Wi
+            val = - p.k34_G - p.k32_G - p.k3a - p.kro - p.WiL
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
             ## J6, J4 -> J5:
             val = p.k43_G
             s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
-            val = p.k23_G + p.Wi
+            val = p.k23_G + p.WiL
             s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
 
             # oscil: ground vib: J6
@@ -134,10 +134,10 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             # oscil: 3 vib: J4
             row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + 9 + 2
             ## J4 -> J5, J3 (diagonal):
-            val = - p.k23_3 - p.k21_3 - p.k11a - p.kro #- p.Wi
+            val = - p.k23_3 - p.k21_3 - p.k11a - p.kro - p.WiU
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
             ## J5, J3 -> J4:
-            val = p.k32_3 #+ p.Wi
+            val = p.k32_3 + p.WiU
             s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
             val = p.k12_3
             s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
@@ -145,13 +145,12 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             # oscil: 3 vib: J5
             row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + 9 + 3
             ## J5 -> J6, J4 (diagonal):
-            val = - p.k34_3 - p.k32_3 - p.k12a - p.kro #- p.Wi
+            val = - p.k34_3 - p.k32_3 - p.k12a - p.kro - p.WiU
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
             ## J6, J4 -> J5:
             val = p.k43_3
             s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
-            # val = p.k23_3 + p.Wi
-            val = p.k23_3
+            val = p.k23_3 + p.WiU
             s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
 
             ### pumping:
@@ -328,7 +327,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
             val = +p.k63A[ri]
             s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
-        elseif p.model_flag==2 && p.solstart_flag==0
+        elseif p.model_flag==2 #&& p.solstart_flag==0
             val = -p.k36A[ri]
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
             val = +p.k63A[ri]
@@ -358,7 +357,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
             val = +p.k36A[ri]
             s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
-        elseif p.model_flag==2 && p.solstart_flag==0
+        elseif p.model_flag==2 #&& p.solstart_flag==0
             val = -p.k63A[ri]
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
             val = +p.k36A[ri]
