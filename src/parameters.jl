@@ -219,6 +219,7 @@ type Params{T<:Real}
 
     beta13::T
 
+    Wi::T
 end
 
 function Params(DefaultT=Float64;
@@ -284,6 +285,7 @@ function Params(DefaultT=Float64;
     script = 0,
     evol_t = 0:.1:1,
     err_tv = false,
+    Wi = 0,
     )
 
     if model_flag == 1
@@ -356,6 +358,7 @@ function Params(DefaultT=Float64;
     k2636 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time
     k3626 = exp(-(E26-E36)/kBT) * k2636
     kro = ntotal * v_avg * σ_VS * (1e-10)^2 / norm_time
+    # kro = 0
 
     Δ_fP = 15e6*(pressure/1e3)
 
@@ -426,7 +429,9 @@ function Params(DefaultT=Float64;
     r_int = 0.5*(r_ext[1:end-1] + r_ext[2:end]) # in m
 
     kwall = WallRate(radius, pressure, r_int, ntotal, M, T, NA, v_avg, σ_GKC) + 1e-10
-
+    # kwall = ones(size(kwall)) * kwall[end]
+    # println("average kwall: = ", sum(kwall.*r_int)/sum(r_int))
+    # kwall = ones(size(kwall)) * kwall[end]
     MFP = 0.732*T/pressure/σ_GKC # in cm
     # avg absolute vel in m/microsec (p5 in Henry's thesis)
     vel = 1/3 * v_avg/sqrt(2)/norm_time
@@ -525,7 +530,8 @@ function Params(DefaultT=Float64;
     script,
     evol_t,
     err_tv,
-    beta13
+    beta13,
+    Wi
     )
 end
 
@@ -570,6 +576,7 @@ function emission_broaden(ν, vi, p, df)
     (2*(γ^2-Ω^2)*τ^2*(1+2*γ^2*τ^2)-2)/(1+4γ^2*τ^2)/(1+(γ-Ω)^2*τ^2)/(1+(γ+Ω)^2*τ^2)
   end
   spectrum = df*(1+4*γ^2*τ^2)/(4*γ^2*τ) * spectrum
+  # spectrum = spectrum / max(spectrum)
   # spectrum = df * spectrum * p.beta13^2/γ^2
   return spectrum
 end

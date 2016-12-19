@@ -1,5 +1,5 @@
 
-function update_alpha_from_N!(p, sol)
+function update_alpha_from_N!(p, sol) # in m^-1
     tmp_factor = 8*π^3/3/p.h/p.c * 1e-36 * (0.2756^2*16.0/45) *
                   p.f_pump * 1e-13 / p.df
     for ri in 1:p.num_layers
@@ -34,7 +34,8 @@ function AveragePower_FB(alpha_0, L, power)
     power_local = power/(1-exp(-alpha_0*L/100))
 
     powerF = (1-exp(-alpha_0*L/100))/(alpha_0*L/100) * power_local
-    powerB = (1-exp(-alpha_0*L/100))/(alpha_0*L/100) * power_local
+    # powerB = (1-exp(-alpha_0*L/100))/(alpha_0*L/100) * power_local
+    powerB = powerF * exp(-alpha_0 * L/100)
     return powerF, powerB
 end
 
@@ -54,7 +55,6 @@ function update_Param_from_alpha!(p, sol)
     L_eff = min(p.L, 200/alpha_avg) # in cm
     #L_eff = 15.0
     p.L_eff = L_eff
-    # println("L_eff = ", L_eff)
 
     for ri in 1:p.num_layers
       # percentage being absorbed in forward/backward direction
@@ -65,8 +65,8 @@ function update_Param_from_alpha!(p, sol)
 
         p.averagePF[ri], p.averagePB[ri] = AveragePower2_FB(p.alpha_r[ri], p.L, p.power)
 
-        # p.Δ_f_RabiF[ri] = 0.38*sqrt(p.powerF[ri])/p.radius*1e6
-        # p.Δ_f_RabiB[ri] = 0.38*sqrt(p.powerB[ri])/p.radius*1e6
+        p.Δ_f_RabiF[ri] = 0.38*sqrt(p.powerF[ri])/p.radius*1e6
+        p.Δ_f_RabiB[ri] = 0.38*sqrt(p.powerB[ri])/p.radius*1e6
         p.Δ_f_RabiF[ri] = 0.38*sqrt(p.averagePF[ri])/p.radius*1e6
         p.Δ_f_RabiB[ri] = 0.38*sqrt(p.averagePB[ri])/p.radius*1e6
 

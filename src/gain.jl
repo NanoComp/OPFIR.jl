@@ -190,7 +190,7 @@ function gain_dir(p, sol; LasLevel="U", vi=0)
         r = p.r_int[ri]
         # update beta13 for each layer
         p.beta13 = 1.2 * sqrt(p.averagePF[ri])/p.radius * 1e6
-        # p.beta13 = 1.2 * sqrt(p.powerF[ri])/p.radius * 1e6
+        p.beta13 = 1.2 * sqrt(p.powerF[ri])/p.radius * 1e6
         if LasLevel=="U"
             pop_inversion[ri] = gain_dir_layer3(p, sol, ri, vi)[1]
             #pop_inversion[ri] = gain_dir_layer(p, sol, ri)
@@ -243,7 +243,8 @@ function gain_dir_layer3(p, sol, layer, vi)
     inv_NT = 0.0
     inv_T = 0.0
     for j in 1:p.num_freq
-      inv_NT += emission_broaden(freq2[vi], j, p, dfreq2) * invU_NT[j]
+      # inv_NT += emission_broaden(freq2[vi], j, p, dfreq2) * invU_NT[j]
+      inv_NT += f_NT_normalized(freq2[vi], p.Δ_f_NTF[layer], p.f_dist_dir_lasing[j], dfreq2) * invU_NT[j]
       inv_T += f_NT_normalized(freq2[vi], p.Δ_fP, p.f_dist_dir_lasing[j], dfreq2) * invU_T[j]
     end
 
@@ -270,13 +271,24 @@ end
 
 function gain_ref_layer3(p, sol, layer, vi)
     # df_dir = p.df *p.f_ref_lasing/p.f₀
-    freq2 = p.f_dirgain_dist
+    freq2 = p.f_refgain_dist
     dfreq2 = freq2[2] - freq2[1]
-    invL = inv_L_dist_layer(p, sol, layer)
-    inv_L = 0.0
+    # invL = inv_L_dist_layer(p, sol, layer)
+    # inv_L = 0.0
+    # for j in 1:p.num_freq
+      # inv_L += emission_broaden(freq2[vi], j, p, dfreq2) * invL[j]
+    # end
+
+    invL_T = Nl_1_T_dist_layer(p,sol,layer) - Nl_T_dist_layer(p,sol,layer)*p.g_U/p.g_L
+    invL_NT = Nl_1_NT_dist_layer(p,sol,layer) - Nl_NT_dist_layer(p,sol,layer)*p.g_U/p.g_L
+    inv_NT = 0.0
+    inv_T = 0.0
     for j in 1:p.num_freq
-      inv_L += emission_broaden(freq2[vi], j, p, dfreq2) * invL[j]
+      # inv_NT += emission_broaden(freq2[vi], j, p, dfreq2) * invU_NT[j]
+      inv_NT += f_NT_normalized(freq2[vi], p.Δ_f_NTF[layer], p.f_dist_ref_lasing[j], dfreq2) * invL_NT[j]
+      inv_T += f_NT_normalized(freq2[vi], p.Δ_f_NTF[layer], p.f_dist_ref_lasing[j], dfreq2) * invL_T[j]
     end
+    inv_L = inv_NT + inv_T
     # Nl_broaden = 0.0
     # Nl = Nl_total_dist_layer(p, sol, layer)
     # # broaden Nu by AC stark effect
