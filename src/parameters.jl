@@ -365,6 +365,7 @@ function Params(DefaultT=Float64;
     Δ_fP = 15e6*(pressure/1e3)
 
     num_freq = round(Int64,max(50,2*f_range/(Δ_fP/4)))
+    # num_freq = 1
     # num_freq = round(Int64, num_freq * pressure/100)
     # println("num_freq = ", num_freq)
 
@@ -433,7 +434,9 @@ function Params(DefaultT=Float64;
     kwall = WallRate(radius, pressure, r_int, ntotal, M, T, NA, v_avg, σ_GKC) + 1e-10
     # kwall = ones(size(kwall)) * kwall[end]
     # println("average kwall: = ", sum(kwall.*r_int)/sum(r_int))
-    # kwall = ones(size(kwall)) * kwall[end]
+    # kwall = ones(size(kwall)) * sum(kwall.*r_int)/sum(r_int)
+    # D_factor = 0.01
+
     MFP = 0.732*T/pressure/σ_GKC # in cm
     # avg absolute vel in m/microsec (p5 in Henry's thesis)
     vel = 1/3 * v_avg/sqrt(2)/norm_time

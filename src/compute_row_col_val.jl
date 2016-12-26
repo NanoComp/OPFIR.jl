@@ -609,6 +609,8 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
     N0E_0 = N0A_0
     N3A_0 = p.ntotal * p.f_3_0/2
     N3E_0 = N3A_0
+    non_kvs = p.kvs
+    # non_kvs = 0
     for ri in 1:p.num_layers
         offset = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot
         N0A = sol_0[offset + 1]
@@ -618,60 +620,60 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         ## V0A:
         row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 1
 
-        val = -p.kvs * N3E - p.kvs * N3E_0
+        val = -non_kvs * N3E - non_kvs * N3E_0
         s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
-        val = -p.kvs * N0A_0
+        val = -non_kvs * N0A_0
         s = put_row_col_val(rowind, colind, value, row, row+p.n_vib÷2+1, val, s)
 
-        val = + p.kvs * N3A + p.kvs * N3A_0
+        val = + non_kvs * N3A + non_kvs * N3A_0
         s = put_row_col_val(rowind, colind, value, row, row+p.n_vib÷2, val, s)
 
-        val = + p.kvs * N0E_0
+        val = + non_kvs * N0E_0
         s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
 
         ## V3E
         row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + p.n_vib÷2 + 2
 
-        val = -p.kvs * N0A - p.kvs * N0A_0
+        val = -non_kvs * N0A - non_kvs * N0A_0
         s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
-        val = -p.kvs * N3E_0
+        val = -non_kvs * N3E_0
         s = put_row_col_val(rowind, colind, value, row, row-p.n_vib÷2-1, val, s)
 
-        val = + p.kvs * N3A_0
+        val = + non_kvs * N3A_0
         s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
 
-        val = + p.kvs * N0E + p.kvs * N0E_0
+        val = + non_kvs * N0E + non_kvs * N0E_0
         s = put_row_col_val(rowind, colind, value, row, row-p.n_vib÷2, val, s)
 
         ## V0E:
         row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + p.n_vib÷2 + 1
-        val = -p.kvs * N3A - p.kvs * N3A_0
+        val = -non_kvs * N3A - non_kvs * N3A_0
         s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
-        val = -p.kvs * N0E_0
+        val = -non_kvs * N0E_0
         s = put_row_col_val(rowind, colind, value, row, row-p.n_vib÷2+1, val, s)
 
-        val = +p.kvs * N0A_0
+        val = +non_kvs * N0A_0
         s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
 
-        val = + p.kvs * N3E + p.kvs * N3E_0
+        val = + non_kvs * N3E + non_kvs * N3E_0
         s = put_row_col_val(rowind, colind, value, row, row-p.n_vib÷2, val, s)
 
         ## V3A:
         row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 2
 
-        val = -p.kvs * N0E - p.kvs * N0E_0
+        val = -non_kvs * N0E - non_kvs * N0E_0
         s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
-        val = -p.kvs * N3A_0
+        val = -non_kvs * N3A_0
         s = put_row_col_val(rowind, colind, value, row, row+p.n_vib÷2-1, val, s)
 
-        val = + p.kvs * N0A + p.kvs * N0A_0
+        val = + non_kvs * N0A + non_kvs * N0A_0
         s = put_row_col_val(rowind, colind, value, row, row+p.n_vib÷2, val, s)
 
-        val = + p.kvs * N3E_0
+        val = + non_kvs * N3E_0
         s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
     end
 end

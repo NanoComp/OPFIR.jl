@@ -135,3 +135,35 @@ function total_NlInv(p, sol)
     end
     return sum(p.r_int.*invL)/sum(p.r_int)
 end
+
+function nonthpopinv(p, sol)
+    invU = zeros(p.num_layers)
+    invL = zeros(p.num_layers)
+    for kl = 1:p.num_layers
+        invU[kl] = sum(Nu_NT_dist_layer(p,sol,kl) - p.g_U/p.g_L*Nu_1_NT_dist_layer(p,sol,kl))
+        invL[kl] = sum(Nl_1_NT_dist_layer(p,sol,kl) - p.g_U/p.g_L*Nl_NT_dist_layer(p,sol,kl))
+    end
+    total_invU = sum(p.r_int.*invU)/sum(p.r_int)
+    total_invL = sum(p.r_int.*invL)/sum(p.r_int)
+    return (total_invU, total_invL)
+end
+
+function popinvth(p)
+    ν0 = (p.f_dir_lasing+p.f_ref_lasing)/2
+    lambda = p.c/ν0
+    alpha = cavityloss(p) # unit m^-1
+    Nt = 8*pi^2 / lambda^2 * p.t_spont * alpha * sum(p.Δ_f_NTF.*p.r_int)/sum(p.r_int)
+    return Nt
+end
+
+function cavityloss(p)
+    Q = 10000
+    ν0 = (p.f_dir_lasing+p.f_ref_lasing)/2
+    lambda = p.c/ν0
+    L = p.L/100 # meter
+    t_rt = 2*L/p.c # in sec
+    alpha_perc = 2*pi*ν0 * t_rt/Q
+
+    alpha = -log(1-alpha_perc)/2/L # unit m^-1
+    return alpha
+end

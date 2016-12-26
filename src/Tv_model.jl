@@ -1,6 +1,7 @@
 function Tv(p, N0, N3)
     if ~(N0/N3 >0)
       p.err_tv = true
+    #   println(p.alpha_r)
       return 0.
     end
     T = -(p.EG-p.E3) / (p.kB*log(N0/N3)) /8065.73
@@ -58,6 +59,10 @@ function updateTv(p, sol)
 
         if p.err_tv == true
           println("Tv error is detected! Return current values")
+          println("current absorption coefficient: ", p.alpha_r)
+          println("problem comes from layer: ", j)
+          println("N0A=", N0A, ", N3A=", N3A, ", N0E=", N0E, ", N3E=", N3E)
+          exit()
           return
         end
     end
