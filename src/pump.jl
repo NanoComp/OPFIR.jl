@@ -16,6 +16,19 @@ function update_alpha_from_N!(p, sol) # in m^-1
     # println("alpha=", alpha)
 end
 
+function IR_absorption(p, sol, ν)
+    alpha_r = Array(Float64, p.num_layers)
+    tmp_factor = 8*π^3/3/p.h/p.c * 1e-36 * (0.2756^2*16.0/45) * ν * 1e-13 / p.df
+
+    for ri in 1:p.num_layers
+        Nl_dist = OPFIR.Nl_total_dist_layer(p, sol, ri)
+        Nu_dist = OPFIR.Nu_total_dist_layer(p, sol, ri)
+        abs_ability = OPFIR.f_NT_normalized(p.f_dist_ctr, p.Δ_f_NTF[ri], ν, p.df)
+        alpha_r[ri] = tmp_factor * sum((Nl_dist - p.g_L/p.g_U*Nu_dist).*abs_ability)
+    end
+    return dot(alpha_r, p.r_int)/sum(p.r_int)
+end
+
 function CavityAbsorption_FB(alpha_0, L, p)
     t1 = 0.95
     t2 = 0.96 * 0.95
