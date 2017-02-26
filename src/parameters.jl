@@ -24,6 +24,7 @@ type Params{T<:Real}
 
     v_avg::T    # in m/sec, average relative velocity between molecules
     kvs::T      # in m^3/microsec
+    # kvsplit::T
 
     EG::T
     E3::T
@@ -219,6 +220,7 @@ type Params{T<:Real}
 
     beta13::T
 
+    # Wi::T
     WiU::T
     WiL::T
 end
@@ -302,6 +304,10 @@ function Params(DefaultT=Float64;
     kBT = kB*T*8065.73 # in cm^-1
     v_avg = 205*sqrt(T/M)
     kvs = v_avg*σ_VS * (1e-10)^2/norm_time
+
+    # σ_VSplit = 12.4
+    # kvsplit = v_avg*σ_VSplit * (1e-10)^2/norm_time
+
     g_6 = 2
     netrate_36A = zeros(num_layers)
     if model_flag==1
@@ -434,7 +440,8 @@ function Params(DefaultT=Float64;
     kwall = WallRate(radius, pressure, r_int, ntotal, M, T, NA, v_avg, σ_GKC) + 1e-10
     # kwall = ones(size(kwall)) * kwall[end]
     # println("average kwall: = ", sum(kwall.*r_int)/sum(r_int))
-    # kwall = ones(size(kwall)) * sum(kwall.*r_int)/sum(r_int)
+    # kwall = ones(size(kwall)) * 1/(3.2 * pressure * radius^2)
+    # D_factor = 10.0
     # D_factor = 0.01
 
     MFP = 0.732*T/pressure/σ_GKC # in cm
@@ -505,7 +512,7 @@ function Params(DefaultT=Float64;
 
     return Params{DefaultT}(radius, pump_radius, L, L_eff, h, c, ev, kB, T, T_vA, T_vE, kBT, M, norm_time,
     σ_GKC, σ_DD, σ_SPT, σ_36, σ_VS,
-    v_avg, kvs,
+    v_avg, kvs, #kvsplit,
     EG, E3, E6, E23, E36, E26, Q,
     f_G_0, f_3_0, f_6_0, f_GA, f_3A, f_6A, f_GE, f_3E, f_6E, f_23, f_36, f_26,
     C3L, C4L, C5L, C4U, C5U, g_L, g_U, NA,
