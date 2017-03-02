@@ -23,7 +23,11 @@ function IR_absorption(p, sol, ν)
     for ri in 1:p.num_layers
         Nl_dist = OPFIR.Nl_total_dist_layer(p, sol, ri)
         Nu_dist = OPFIR.Nu_total_dist_layer(p, sol, ri)
-        abs_ability = OPFIR.f_NT_normalized(p.f_dist_ctr, p.Δ_f_NTF[ri], ν, p.df)
+        if sum(sol) == 0
+            abs_ability = OPFIR.f_NT_normalized(p.f_dist_ctr, p.Δ_fP, ν, p.df)
+        else
+            abs_ability = OPFIR.f_NT_normalized(p.f_dist_ctr, p.Δ_f_NTF[ri], ν, p.df)
+        end
         alpha_r[ri] = tmp_factor * sum((Nl_dist - p.g_L/p.g_U*Nu_dist).*abs_ability)
     end
     return dot(alpha_r, p.r_int)/sum(p.r_int)

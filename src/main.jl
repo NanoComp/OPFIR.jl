@@ -167,3 +167,49 @@ function cavityloss(p)
     alpha = -log(1-alpha_perc)/2/L # unit m^-1
     return alpha
 end
+
+function gaincoeffcient(f, Φ, p, sol, taus, level)
+    γ = 0.0
+    for vi in 1:p.num_freq
+        if level == 'L'
+            f0 = p.f_dist_ref_lasing[vi]
+        elseif level == 'U'
+            f0 = p.f_dist_dir_lasing[vi]
+        else
+            throw(ArgumentError("level can only be L or U!"))
+        end
+            # popinv: spatial averged pop inversion for U
+        popinv = 0.
+        if level == 'L'
+            for i = 1:p.num_layers
+                popinv += (OPFIR.inv_L_dist_layer(p, sol, i)[vi]*p.r_int[i])/sum(p.r_int)
+            end
+        else
+            for i = 1:p.num_layers
+                popinv += (OPFIR.inv_U_dist_layer(p, sol, i)[vi]*p.r_int[i])/sum(p.r_int)
+            end
+        end
+        Δnu = p.Δ_fP
+        λ = p.c/f
+        sigma_f = λ^2/8/π/p.t_spont * 1/pi * Δnu/((f-f0)^2 + Δnu^2)
+        if Φ == 0
+            γ += popinv * sigma_f
+        else
+            Φs = 1/taus/sigma_f
+            γ += popinv * sigma_f / (1+Φ/Φs)
+        end
+    end
+    return γ
+end
+
+function comptaus(nonth_popinv, wi_list)
+    taus = similar(nonth_popinv[:, :, 1])
+    for pressure in 1:size(nonth_popinv, 1)
+        for power in 1:size(nonth_popinv, 2)
+            tmp = vec(nonth_popinv[pressure, power, :]) / nonth_popinv[pressure, power, 1]
+            a, b = linreg(wi_list*1.0, 1./tmp - 1)
+            taus[pressure, power] = b
+        end
+    end
+    return taus
+end
