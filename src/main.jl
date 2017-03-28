@@ -124,6 +124,7 @@ function total_NuInv(p, sol)
     invU = zeros(p.num_layers)
     for k = 1:p.num_layers
         invU[k] = sum(inv_U_dist_layer(p, sol, k))
+        # invU[k] = Nu_NT_dist_layer(p, sol, k)[1] - p.g_U/p.g_L*Nu_1_NT_dist_layer(p, sol, k)[1]
     end
     return sum(p.r_int.*invU)/sum(p.r_int)
 end
@@ -156,17 +157,51 @@ function popinvth(p)
     return Nt
 end
 
-function cavityloss(p)
-    Q = 10000
-    ν0 = (p.f_dir_lasing+p.f_ref_lasing)/2
-    lambda = p.c/ν0
-    L = p.L/100 # meter
-    t_rt = 2*L/p.c # in sec
-    alpha_perc = 2*pi*ν0 * t_rt/Q
+function ohmicloss(p)
+p_library = [2.40 3.83 1.84 3.05 3.83]
+# % 1 -> TM01 cutoff
+# % 2 -> TM11 cutoff
+# % 3 -> TE11 cutoff
+# % 4 -> TE21 cutoff
+# % 5 -> TE01 cutoff
+radius_m = p.radius/100
+zerobessel = p_library[5] # TE01 mode
+m = 0
 
-    alpha = -log(1-alpha_perc)/2/L # unit m^-1
+resitivityCu = 1/4e7 # copper resistivity at room temperature;
+conductivityCu = 1/resitivityCu # copper conductivity at room temperature;
+mu = 4*pi*1e-7 # magnetic permeability in copper
+
+eta = 377 # impedance of air in ohms
+f0 = (p.f_dir_lasing+p.f_ref_lasing)/2
+lambda = p.c/f0 # wavelength in m
+k0 = 2*pi/lambda # wavevector
+Rs = sqrt(pi*f0*mu/conductivityCu) # in ohms
+
+lossval = Rs/(radius_m*eta*sqrt(1-(zerobessel/k0/radius_m)^2))*
+          ((zerobessel/k0/radius_m)^2+m^2/(zerobessel^2-m^2)) #; % in 1/m
+return lossval
+end
+
+
+function cavityloss(p)
+    # Q = 10000
+    # ν0 = (p.f_dir_lasing+p.f_ref_lasing)/2
+    # lambda = p.c/ν0
+    # L = p.L/100 # meter
+    # t_rt = 2*L/p.c # in sec
+    # alpha_perc = 2*pi*ν0 * t_rt/Q
+    #
+    # alpha = -log(1-alpha_perc)/2/L # unit m^-1
+    # # from pinhole + from cavity absorption
+    # # alpha = 0.04/(2*p.L/100) + 0.5620891773180884-0.04/(2*0.15)
+    # alpha = 0.5620891773180884 * 15/p.L
+    Rback = 1.
+    Rfront = 0.96 * Rback
+    alpha = 2 * ohmicloss(p) - log(Rfront*Rback)/(2p.L/100)
     return alpha
 end
+
 
 function gaincoeffcient(f, Φ, p, sol, taus, level)
     γ = 0.0
@@ -212,4 +247,18 @@ function comptaus(nonth_popinv, wi_list)
         end
     end
     return taus
+end
+
+
+function compfraction(p, sol)
+    N0A = N3A = NΣA = 0.
+    for j in 1:p.num_layers
+        N0A += ((sol[p.layer_unknown*j-5] + p.ntotal*p.f_G_0/2)) * p.r_int[j]
+        N3A += ((sol[p.layer_unknown*j-4] + p.ntotal*p.f_3_0/2)) * p.r_int[j]
+        NΣA += ((sol[p.layer_unknown*j-3] + p.ntotal*p.f_6_0/2)) * p.r_int[j]
+    end
+    f0 = N0A/sum(N0A+N3A+NΣA)
+    f3 = N3A/sum(N0A+N3A+NΣA)
+    fΣ = NΣA/sum(N0A+N3A+NΣA)
+    return (f0, f3, fΣ)
 end

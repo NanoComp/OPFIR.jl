@@ -135,13 +135,16 @@ function update_Param_from_alpha!(p, sol)
             # 8*π^3/(3*p.h^2*p.c) * 1e-36 * (0.2756^2*16.0/45) *p.power/(π*p.radius^2) * 1e-9 *
             # (p.SHBF[vi, ri]/p.df * p.powerF[ri]/p.power + p.SHBB[vi, ri]/p.df * p.powerB[ri]/p.power)/
             # p.norm_time
+
             p.pump_IR[vi, ri] =
             8*π^3/(3*p.h^2*p.c) * 1e-36 * (0.2756^2*16.0/45) *p.power/(π*p.radius^2) * 1e-9 *
             (p.SHBF[vi, ri]/p.df * p.averagePF[ri]/p.power +
              p.SHBB[vi, ri]/p.df * p.averagePB[ri]/p.power)/p.norm_time
-            #            (p.SHBF[vi, ri]/p.df) / p.norm_time
-            # assume constant pump rate all the time
-            #p.pump_IR[vi, ri] = p.pump_0 * f_NT_ampl(p.f_dist_ctr[vi], p.Δ_f_NTF[ri], p.f_pump)
+
+            # p.pump_IR[vi, ri] =
+            # 8*π^3/(3*p.h^2*p.c) * 1e-36 * (0.2756^2*16.0/45) * 4 *p.power/(π*p.radius^2) * 1e-9 *
+            # (p.SHBF[vi, ri]/p.df +
+            #  p.SHBB[vi, ri]/p.df * 0)/p.norm_time
 
             if ri > p.num_layers * pumpregion
                 p.pump_IR[vi, ri] = 0

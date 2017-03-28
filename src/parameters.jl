@@ -436,6 +436,9 @@ function Params(DefaultT=Float64;
     Δr = radius/100 / num_layers # in m
     r_ext = linspace(0,radius/100,num_layers+1)
     r_int = 0.5*(r_ext[1:end-1] + r_ext[2:end]) # in m
+    # for temporary convenience, r_ext is defined as r_int*dr
+    # dr = r_ext[2:end] - r_ext[1:end-1]
+    # r_ext = r_int .* dr
 
     kwall = WallRate(radius, pressure, r_int, ntotal, M, T, NA, v_avg, σ_GKC) + 1e-10
     # kwall = ones(size(kwall)) * kwall[end]

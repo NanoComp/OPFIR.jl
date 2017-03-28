@@ -36,6 +36,7 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
         rhs = rhs + matrix_B0 * sol_0
         # mat_rhs_modify(matrix_0, rhs, p_0)
         sol_1 = lu_mat0 \ (-rhs)
+
     else
         sol_1 = - matrix \ rhs
     end
@@ -45,6 +46,17 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
     # elseif p.lin_solver=="Default"
     #     sol_1 = - matrix \ rhs
     # end
+    update_alpha_from_N!(p, sol_1)
+
+    # println(p.averagePF[1], ", ", p.averagePF[end])
+    optimizecavity = 0
+    if optimizecavity == 1 && p.WiU == 0. && p.WiL == 0.
+        p.L = 1/p.alpha_r[1]*100
+        println("L = ", p.L, "cm")
+    else
+        println("L = ", p.L, "cm")
+    end
+    #p.WiU!=0. && throw(ArgumentError("wi not equal to zero, L should be fixed!"))
 
     println("norm of sol diff = ", norm(sol_1 - sol_0) / norm(sol_1))
     flush(STDOUT)

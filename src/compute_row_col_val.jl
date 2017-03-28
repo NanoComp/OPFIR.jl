@@ -568,39 +568,71 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
 
     for ri in 2:p.num_layers-1
         index_diffu = p.layer_unknown * (ri-1) + 1 : p.layer_unknown * ri
+        dx1 = p.r_int[ri] - p.r_int[ri-1]
+        dx2 = p.r_int[ri+1] - p.r_int[ri]
+        ai1 = -dx2/dx1/(dx1+dx2)
+        bi1 = (dx2-dx1)/dx1/dx2
+        ci1 = dx1/dx2/(dx1+dx2)
+        ai2 = 2/dx1/(dx1+dx2)
+        bi2 = -2/dx1/dx2
+        ci2 = 2/dx2/(dx1+dx2)
         for k in index_diffu
             row = k
             col = row - p.layer_unknown
-            val = p.D*(-1.0/(2*p.Δr*p.r_int[ri]) + 1.0/(p.Δr)^2)
+            # val = p.D*(-1.0/(2*p.Δr*p.r_int[ri]) + 1.0/(p.Δr)^2)
+            val = p.D * (ai2 + ai1/p.r_int[ri])
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
 
-            val = p.D*(-2.0/(p.Δr)^2)
+            # val = p.D*(-2.0/(p.Δr)^2)
+            val = p.D * (bi2 + bi1/p.r_int[ri])
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
-            val = p.D*(1.0/(2*p.Δr*p.r_int[ri]) + 1.0/(p.Δr)^2)
+            # val = p.D*(1.0/(2*p.Δr*p.r_int[ri]) + 1.0/(p.Δr)^2)
+            val = p.D * (ci2 + ci1/p.r_int[ri])
             col = row + p.layer_unknown
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
         end
     end
 
+    ## first layer
+    dx1 = p.r_int[1] * 2
+    dx2 = p.r_int[2] - p.r_int[1]
+    ai1 = -dx2/dx1/(dx1+dx2)
+    bi1 = (dx2-dx1)/dx1/dx2
+    ci1 = dx1/dx2/(dx1+dx2)
+    ai2 = 2/dx1/(dx1+dx2)
+    bi2 = -2/dx1/dx2
+    ci2 = 2/dx2/(dx1+dx2)
     for k in 1:p.layer_unknown
         row = k
-        val = p.D*(-1.0/(p.Δr)^2 - 1.0/2.0/p.Δr/p.r_int[1])
+        # val = p.D*(-1.0/(p.Δr)^2 - 1.0/2.0/p.Δr/p.r_int[1])
+        val = p.D * (ai2+bi2 + ai1/p.r_int[1]+bi1/p.r_int[1])
         s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
         col = row + p.layer_unknown
-        val = p.D*(1.0/(p.Δr)^2 + 1.0/2/p.Δr/p.r_int[1])
+        # val = p.D*(1.0/(p.Δr)^2 + 1.0/2/p.Δr/p.r_int[1])
+        val = p.D * (ci2 + ci1/p.r_int[1])
         s = put_row_col_val(rowind, colind, value, row, col, val, s)
     end
 
     ################ question: BC for the wall? #######
+    dx1 = p.r_int[end] - p.r_int[end-1]
+    dx2 = (p.radius - p.r_int[end]) * 2
+    ai1 = -dx2/dx1/(dx1+dx2)
+    bi1 = (dx2-dx1)/dx1/dx2
+    ci1 = dx1/dx2/(dx1+dx2)
+    ai2 = 2/dx1/(dx1+dx2)
+    bi2 = -2/dx1/dx2
+    ci2 = 2/dx2/(dx1+dx2)
     for k in p.layer_unknown*(p.num_layers-1)+1:p.layer_unknown*p.num_layers
         row = k
         col = row - p.layer_unknown
-        val = p.D*(-1.0/(2*p.Δr*p.r_int[end]) + 1.0/(p.Δr)^2)
+        # val = p.D*(-1.0/(2*p.Δr*p.r_int[end]) + 1.0/(p.Δr)^2)
+        val = p.D * (ai2 + ai1/p.r_int[end])
         s = put_row_col_val(rowind, colind, value, row, col, val, s)
 
-        val = p.D*(-2.0/(p.Δr)^2) + p.D*(1.0/(2*p.Δr*p.r_int[end]) + 1.0/(p.Δr)^2)
+        # val = p.D*(-2.0/(p.Δr)^2) + p.D*(1.0/(2*p.Δr*p.r_int[end]) + 1.0/(p.Δr)^2)
+        val = p.D * (bi2+ci2 + bi1/p.r_int[end] + ci1/p.r_int[end])
         s = put_row_col_val(rowind, colind, value, row, row, val, s)
     end
 
