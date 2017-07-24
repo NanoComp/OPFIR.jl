@@ -9,6 +9,8 @@ function update_alpha_from_N!(p, sol) # in m^-1
         abs_ability = f_NT_normalized(p.f_dist_ctr, p.Δ_f_NTF[ri], p.f_pump, p.df)
         # maxv, maxind = findmax(abs_ability)
         p.alpha_r[ri] = tmp_factor * sum((Nl_dist - p.g_L/p.g_U*Nu_dist).*abs_ability)
+        # p.alpha_r[ri] = tmp_factor * sum((Nl_dist*p.g_U/p.g_L - Nu_dist).*abs_ability)
+
         # p.alpha_r[ri] = tmp_factor * (Nl_dist[maxind] - p.g_L/p.g_U*Nu_dist[maxind])
     end
     alpha = sum(p.alpha_r.*p.r_int)/sum(p.r_int)

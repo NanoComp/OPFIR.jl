@@ -157,15 +157,19 @@ function popinvth(p)
     return Nt
 end
 
-function ohmicloss(p)
+function ohmicloss(p, llevel)
 p_library = [2.40 3.83 1.84 3.05 3.83]
 # % 1 -> TM01 cutoff
 # % 2 -> TM11 cutoff
 # % 3 -> TE11 cutoff
 # % 4 -> TE21 cutoff
 # % 5 -> TE01 cutoff
+
+# mode_num: 1: TE01 / 2: TE12 / 3: TE02 / 4: TE22 / 5: TE11 / 6: TE21 / 7: TM01 / 8: TM11
+#zeros of Bessel functions:
+p_library = [3.83, 5.33, 7.02, 6.71, 1.84, 3.05, 2.4, 3.83]
 radius_m = p.radius/100
-zerobessel = p_library[5] # TE01 mode
+zerobessel = (llevel=='U' ? p.p_library[3] : p.p_library[1])# TE01 mode
 m = 0
 
 resitivityCu = 1/4e7 # copper resistivity at room temperature;
@@ -173,7 +177,7 @@ conductivityCu = 1/resitivityCu # copper conductivity at room temperature;
 mu = 4*pi*1e-7 # magnetic permeability in copper
 
 eta = 377 # impedance of air in ohms
-f0 = (p.f_dir_lasing+p.f_ref_lasing)/2
+f0 = (llevel=='U' ? p.f_dir_lasing : p.f_ref_lasing)
 lambda = p.c/f0 # wavelength in m
 k0 = 2*pi/lambda # wavevector
 Rs = sqrt(pi*f0*mu/conductivityCu) # in ohms
@@ -184,7 +188,7 @@ return lossval
 end
 
 
-function cavityloss(p)
+function cavityloss(p, llevel)
     # Q = 10000
     # ν0 = (p.f_dir_lasing+p.f_ref_lasing)/2
     # lambda = p.c/ν0
@@ -198,7 +202,7 @@ function cavityloss(p)
     # alpha = 0.5620891773180884 * 15/p.L
     Rback = 1.
     Rfront = 0.96 * Rback
-    alpha = 2 * ohmicloss(p) - log(Rfront*Rback)/(2p.L/100)
+    alpha = 2 * ohmicloss(p, llevel) - log(Rfront*Rback)/(2p.L/100)
     return alpha
 end
 

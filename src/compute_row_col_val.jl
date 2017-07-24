@@ -21,7 +21,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             # oscil: ground vib: J4
             row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + 2
             ## J4 -> J5, J3 (diagonal):
-            val = - p.k23_G - p.k21_G - p.k2a - p.kro - p.WiL
+            val = - p.k23_G - p.k21_G - p.k2a - p.kro - p.WiL*p.g_U/p.g_L
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
             ## J5, J3 -> J4:
             val = p.k32_G + p.WiL
@@ -52,7 +52,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             ## J6, J4 -> J5:
             val = p.k43_G
             s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
-            val = p.k23_G + p.WiL
+            val = p.k23_G + p.WiL*p.g_U/p.g_L
             s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
 
             # oscil: ground vib: J6
@@ -134,7 +134,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             # oscil: 3 vib: J4
             row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + 9 + 2
             ## J4 -> J5, J3 (diagonal):
-            val = - p.k23_3 - p.k21_3 - p.k11a - p.kro - p.WiU
+            val = - p.k23_3 - p.k21_3 - p.k11a - p.kro - p.WiU*p.g_U/p.g_L
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
             ## J5, J3 -> J4:
             val = p.k32_3 + p.WiU
@@ -150,7 +150,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             ## J6, J4 -> J5:
             val = p.k43_3
             s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
-            val = p.k23_3 + p.WiU
+            val = p.k23_3 + p.WiU*p.g_U/p.g_L
             s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
 
             ### pumping:
@@ -617,7 +617,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
 
     ################ question: BC for the wall? #######
     dx1 = p.r_int[end] - p.r_int[end-1]
-    dx2 = (p.radius - p.r_int[end]) * 2
+    dx2 = (p.radius/100 - p.r_int[end]) * 2
     ai1 = -dx2/dx1/(dx1+dx2)
     bi1 = (dx2-dx1)/dx1/dx2
     ci1 = dx1/dx2/(dx1+dx2)

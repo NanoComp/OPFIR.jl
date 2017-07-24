@@ -12,22 +12,22 @@ function ind_p_L(p, layer)
 end
 
 # population inversion of direct lasing in each radial layer
-function pop_inv_dir_layer(p, sol, layer)
-    index_offset = ind_offset(p, layer)
-    pop_inv = 0
-    for vi in 1:p.num_freq
-        index_u = index_offset + (vi-1) * p.n_rot + 12
-        pop_inv += (sol[index_u]/p.g_U - sol[index_u - 1]/p.g_L) * p.fp_lasing[vi]
-    end
-    return pop_inv
-end
+# function pop_inv_dir_layer(p, sol, layer)
+#     index_offset = ind_offset(p, layer)
+#     pop_inv = 0
+#     for vi in 1:p.num_freq
+#         index_u = index_offset + (vi-1) * p.n_rot + 12
+#         pop_inv += (sol[index_u]/p.g_U - sol[index_u - 1]/p.g_L) * p.fp_lasing[vi]
+#     end
+#     return pop_inv
+# end
 
 # nonthermal/thermal/total Nu distribution (over freq/velocity) in each radial layer
 function Nu_NT_dist_layer(p, sol, layer)
     index_offset = ind_offset(p, layer)
     Nu = zeros(p.num_freq)
     for i in 1:p.num_freq
-        index_u = index_offset + (i-1) * p.n_rot + 12
+        index_u = index_offset + (i-1) * p.n_rot + 12 # 12 comes from counting rot levels
         Nu[i] = sol[index_u]
     end
     return Nu
