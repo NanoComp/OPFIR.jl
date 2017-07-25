@@ -365,7 +365,7 @@ function Params(DefaultT=Float64;
     k2336 = exp(-(E36-E23)/kBT) * k3623
     k2636 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time
     k3626 = exp(-(E26-E36)/kBT) * k2636
-    kro = ntotal * v_avg * σ_VS * (1e-10)^2 / norm_time
+    kro = ntotal * v_avg * σ_VS * (1e-10)^2 / norm_time * 0
     # kro = 0
 
     Δ_fP = 15e6*(pressure/1e3)
@@ -449,9 +449,9 @@ function Params(DefaultT=Float64;
 
     MFP = 0.732*T/pressure/σ_GKC # in cm
     # avg absolute vel in m/microsec (p5 in Henry's thesis)
-    vel = 1/3 * v_avg/sqrt(2)/norm_time
+    vel = v_avg/sqrt(2)/norm_time
     # diffusion coefficient in m^2/microsec. Einstein-Smoluchowski equation;
-    D = vel * MFP * 1e-2 * D_factor
+    D = 1/3 * vel * MFP * 1e-2 * D_factor
 
     kDD = 19.8 * pressure * σ_DD/ sqrt(T*M)
 

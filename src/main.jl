@@ -4,7 +4,7 @@ using ODE
 function func(p; sol_start=Array[])
     # initiate some of the parameters from alpha_0
     if p.solstart_flag==0
-        sol_0 = zeros(p.num_layers * p.layer_unknown)
+        sol_0 = zeros(p.num_layers * p.layer_unknown + p.n_vib)
         p_0 = p
         matrix_0 = 0
         lu_mat0 = 0

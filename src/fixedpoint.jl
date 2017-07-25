@@ -4,7 +4,7 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
     rowind = ones(Int64, max_ele)
     colind = ones(Int64, max_ele)
     value = zeros(max_ele)
-    rhs = zeros(p.num_layers*p.layer_unknown)
+    rhs = zeros(p.num_layers*p.layer_unknown + p.n_vib)
 
     update_alpha_from_N!(p, sol_0)
     # println(p.alpha_r)
@@ -69,15 +69,16 @@ function mat_modify(matrix, p)
         matrix[1, j] = 0
         matrix[end, j] = 0
     end
-
+    scalefactor = maximum(matrix)/(p.r_int[end]/2)
     for j = 1:p.num_layers
         index1 = p.layer_unknown * (j-1) + 1
         index2 = p.layer_unknown * j
-        matrix[1, index1:index2] = p.r_int[j]
+        matrix[1, index1:index2] = p.r_int[j] * scalefactor
 
         index1 = p.layer_unknown * j - p.n_vib + p.n_vib÷2 + 1
+        # index1 = p.layer_unknown * j - p.n_vib + 1
         index2 = p.layer_unknown * j
-        matrix[end, index1:index2] = p.r_int[j]
+        matrix[end, index1:index2] = p.r_int[j] * scalefactor
     end
 end
 
