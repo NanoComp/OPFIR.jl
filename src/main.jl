@@ -129,6 +129,79 @@ function total_NuInv(p, sol)
     return sum(p.r_int.*invU)/sum(p.r_int)
 end
 
+function totinv(p, sol, llevel)
+    popinv = zeros(p.num_layers)
+    if llevel == 'U'
+        for k = 1:p.num_layers
+            popinv[k] = sum(inv_U_dist_layer(p, sol, k))
+        end
+    elseif llevel == 'L'
+        for k = 1:p.num_layers
+            popinv[k] = sum(inv_L_dist_layer(p, sol, k))
+        end
+    else
+        throw(ArgumentError("Lasing level error!"))
+    end
+    return sum(p.r_int.*popinv)/sum(p.r_int)
+end
+
+
+function zerobessel(m)
+    # mode_num: 1: TE01 / 2: TE12 / 3: TE02 / 4: TE22 / 5: TE11 / 6: TE21 / 7: TM01 / 8: TM11
+    #zeros of Bessel functions:
+    # p_library = [3.83, 5.33, 7.02, 6.71, 1.84, 3.05, 2.4, 3.83]
+    return m == "TE01" ? 3.83 :
+           m == "TE12" ? 5.33 :
+           m == "TE02" ? 7.02 :
+           m == "TE22" ? 6.71 :
+           m == "TE11" ? 1.84 :
+           m == "TE21" ? 3.05 :
+           m == "TM01" ? 2.40 :
+           m == "TM11" ? 3.83 :
+           throw(ArgumentError("Cavity mode entered is not supported yet!"))
+end
+
+function totinvmode(p, sol, llevel, cavitymode)
+    m = parse(Int, cavitymode[3])
+    radius_m = p.radius/100
+    kρ = zerobessel(cavitymode)/radius_m
+    ϕ_list = linspace(0, 2*pi, 150)
+    denom = 0.
+    numerator = 0.
+    pop_inv = zeros(p.num_layers)
+
+    for ri = 1:p.num_layers
+        pop_inv[ri] = llevel=='U' ? sum(inv_U_dist_layer(p, sol, ri)) :
+                      llevel=='L' ? sum(inv_L_dist_layer(p, sol, ri)) :
+                      throw(ArgumentError("Lasing level error!"))
+    end
+    E_sq = 0.
+    for ri = 1:p.num_layers
+        r = p.r_int[ri]
+        for ϕ in ϕ_list
+            if contains(cavitymode, "TM") ## TM modes
+                Ez = besselj(m, kρ*r) * cos(m*ϕ)
+                Er = derv_bessel(m, kρ*r) * cos(m*ϕ)
+                Eϕ = m/(kρ*r) * besselj(m, kρ*r) * (-sin(m*ϕ))
+            elseif contains(cavitymode, "TE") ## TE modes
+                Ez = 0
+                Er = m/(kρ*r) * besselj(m, kρ*r) * (-sin(m*ϕ))
+                Eϕ = derv_bessel(m, kρ*r) * cos(m*ϕ)
+            else
+                throw(ArgumentError("cavity mode can only be TE or TM"))
+            end
+            E_sq = Ez*conj(Ez) + Er*conj(Er) + Eϕ*conj(Eϕ)
+
+            # E_sq = 1.
+            denom += E_sq * r # cylindrical coordinate
+            numerator += E_sq * r * pop_inv[ri]
+        end
+        # println(E_sq)
+    end
+
+    return numerator/denom
+end
+
 function total_NlInv(p, sol)
     invL = zeros(p.num_layers)
     for k = 1:p.num_layers
@@ -157,8 +230,8 @@ function popinvth(p)
     return Nt
 end
 
-function ohmicloss(p, llevel)
-p_library = [2.40 3.83 1.84 3.05 3.83]
+function ohmicloss(p, llevel, cavitymode)
+# p_library = [2.40 3.83 1.84 3.05 3.83]
 # % 1 -> TM01 cutoff
 # % 2 -> TM11 cutoff
 # % 3 -> TE11 cutoff
@@ -167,10 +240,11 @@ p_library = [2.40 3.83 1.84 3.05 3.83]
 
 # mode_num: 1: TE01 / 2: TE12 / 3: TE02 / 4: TE22 / 5: TE11 / 6: TE21 / 7: TM01 / 8: TM11
 #zeros of Bessel functions:
-p_library = [3.83, 5.33, 7.02, 6.71, 1.84, 3.05, 2.4, 3.83]
+# p_library = [3.83, 5.33, 7.02, 6.71, 1.84, 3.05, 2.4, 3.83]
 radius_m = p.radius/100
-zerobessel = (llevel=='U' ? p.p_library[3] : p.p_library[1])# TE01 mode
-m = 0
+# x0 = (llevel=='U' ? p.p_library[3] : p.p_library[1])# TE01 mode
+x0 = zerobessel(cavitymode)
+m = parse(Int, cavitymode[3])
 
 resitivityCu = 1/4e7 # copper resistivity at room temperature;
 conductivityCu = 1/resitivityCu # copper conductivity at room temperature;
@@ -182,27 +256,20 @@ lambda = p.c/f0 # wavelength in m
 k0 = 2*pi/lambda # wavevector
 Rs = sqrt(pi*f0*mu/conductivityCu) # in ohms
 
-lossval = Rs/(radius_m*eta*sqrt(1-(zerobessel/k0/radius_m)^2))*
-          ((zerobessel/k0/radius_m)^2+m^2/(zerobessel^2-m^2)) #; % in 1/m
+if contains(cavitymode, "TE")
+    lossval = Rs/(radius_m*eta*sqrt(1-(x0/k0/radius_m)^2))*
+            ((x0/k0/radius_m)^2+m^2/(x0^2-m^2)) #; % in 1/m
+elseif contains(cavitymode, "TM")
+    lossval = Rs/(radius_m*eta*sqrt(1-(x0/k0/radius_m)^2))
+end
 return lossval
 end
 
 
-function cavityloss(p, llevel)
-    # Q = 10000
-    # ν0 = (p.f_dir_lasing+p.f_ref_lasing)/2
-    # lambda = p.c/ν0
-    # L = p.L/100 # meter
-    # t_rt = 2*L/p.c # in sec
-    # alpha_perc = 2*pi*ν0 * t_rt/Q
-    #
-    # alpha = -log(1-alpha_perc)/2/L # unit m^-1
-    # # from pinhole + from cavity absorption
-    # # alpha = 0.04/(2*p.L/100) + 0.5620891773180884-0.04/(2*0.15)
-    # alpha = 0.5620891773180884 * 15/p.L
+function cavityloss(p, llevel, cavitymode)
     Rback = 1.
     Rfront = 0.96 * Rback
-    alpha = 2 * ohmicloss(p, llevel) - log(Rfront*Rback)/(2p.L/100)
+    alpha = 2 * ohmicloss(p, llevel, cavitymode) - log(Rfront*Rback)/(2p.L/100)
     return alpha
 end
 
