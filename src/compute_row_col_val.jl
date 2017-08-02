@@ -727,19 +727,19 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         N3A = sol_0[offset + 2]
         N0E = sol_0[offset + p.n_vib÷2 + 1]
         N3E = sol_0[offset + p.n_vib÷2 + 2]
-        ## non-thermal rotational levels:
-        for vi in 1:p.num_freq
-            for ell in 1:p.n_rot÷2 # in V0A
-                row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + ell
-                val = -non_kvs * (N3E_0 + N3E)
-                s = put_row_col_val(rowind, colind, value, row, row, val, s)
-            end
-            for ell in 1:p.n_rot÷2 # in V3A
-                row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + p.n_rot÷2 + ell
-                val = -non_kvs * (N0E_0 + N0E)
-                s = put_row_col_val(rowind, colind, value, row, row, val, s)
-            end
-        end
+        # ## non-thermal rotational levels:
+        # for vi in 1:p.num_freq
+        #     for ell in 1:p.n_rot÷2 # in V0A
+        #         row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + ell
+        #         val = -non_kvs * (N3E_0 + N3E)
+        #         s = put_row_col_val(rowind, colind, value, row, row, val, s)
+        #     end
+        #     for ell in 1:p.n_rot÷2 # in V3A
+        #         row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + p.n_rot÷2 + ell
+        #         val = -non_kvs * (N0E_0 + N0E)
+        #         s = put_row_col_val(rowind, colind, value, row, row, val, s)
+        #     end
+        # end
 
         ## V0A:
         row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 1
@@ -756,14 +756,14 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         val = + non_kvs * N0E_0
         s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
 
-        # from non-thermal:
-        for vi in 1:p.num_freq
-            for ell in 1:p.n_rot÷2 # in V3A
-                col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + p.n_rot÷2 + ell
-                val = non_kvs * (N0E_0 + N0E)
-                s = put_row_col_val(rowind, colind, value, row, col, val, s)
-            end
-        end
+        # # from non-thermal:
+        # for vi in 1:p.num_freq
+        #     for ell in 1:p.n_rot÷2 # in V3A
+        #         col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + p.n_rot÷2 + ell
+        #         val = non_kvs * (N0E_0 + N0E)
+        #         s = put_row_col_val(rowind, colind, value, row, col, val, s)
+        #     end
+        # end
 
         ## V3E
         row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + p.n_vib÷2 + 2
@@ -780,19 +780,19 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         val = + non_kvs * N0E + non_kvs * N0E_0
         s = put_row_col_val(rowind, colind, value, row, row-p.n_vib÷2, val, s)
 
-        # from non-thermal
-        for vi in 1:p.num_freq
-            for ell in 1:p.n_rot÷2 # in V0A
-                col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + ell
-                val = -non_kvs * (N3E_0 + N3E)
-                s = put_row_col_val(rowind, colind, value, row, col, val, s)
-            end
-            for ell in 1:p.n_rot÷2 # in V3A
-                col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + p.n_rot÷2 + ell
-                val = non_kvs * (N0E_0 + N0E)
-                s = put_row_col_val(rowind, colind, value, row, col, val, s)
-            end
-        end
+        # # from non-thermal
+        # for vi in 1:p.num_freq
+        #     for ell in 1:p.n_rot÷2 # in V0A
+        #         col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + ell
+        #         val = -non_kvs * (N3E_0 + N3E)
+        #         s = put_row_col_val(rowind, colind, value, row, col, val, s)
+        #     end
+        #     for ell in 1:p.n_rot÷2 # in V3A
+        #         col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + p.n_rot÷2 + ell
+        #         val = non_kvs * (N0E_0 + N0E)
+        #         s = put_row_col_val(rowind, colind, value, row, col, val, s)
+        #     end
+        # end
 
         ## V0E:
         row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + p.n_vib÷2 + 1
@@ -808,19 +808,19 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         val = + non_kvs * N3E + non_kvs * N3E_0
         s = put_row_col_val(rowind, colind, value, row, row-p.n_vib÷2, val, s)
 
-        # from non-thermal
-        for vi in 1:p.num_freq
-            for ell in 1:p.n_rot÷2 # in V0A
-                col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + ell
-                val = non_kvs * (N3E_0 + N3E)
-                s = put_row_col_val(rowind, colind, value, row, col, val, s)
-            end
-            for ell in 1:p.n_rot÷2 # in V3A
-                col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + p.n_rot÷2 + ell
-                val = -non_kvs * (N0E_0 + N0E)
-                s = put_row_col_val(rowind, colind, value, row, col, val, s)
-            end
-        end
+        # # from non-thermal
+        # for vi in 1:p.num_freq
+        #     for ell in 1:p.n_rot÷2 # in V0A
+        #         col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + ell
+        #         val = non_kvs * (N3E_0 + N3E)
+        #         s = put_row_col_val(rowind, colind, value, row, col, val, s)
+        #     end
+        #     for ell in 1:p.n_rot÷2 # in V3A
+        #         col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + p.n_rot÷2 + ell
+        #         val = -non_kvs * (N0E_0 + N0E)
+        #         s = put_row_col_val(rowind, colind, value, row, col, val, s)
+        #     end
+        # end
 
         ## V3A:
         row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 2
@@ -837,14 +837,14 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         val = + non_kvs * N3E_0
         s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
 
-        # from non-thermal
-        for vi in 1:p.num_freq
-            for ell in 1:p.n_rot÷2 # in V0A
-                col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + ell
-                val = non_kvs * (N3E_0 + N3E)
-                s = put_row_col_val(rowind, colind, value, row, col, val, s)
-            end
-        end
+        # # from non-thermal
+        # for vi in 1:p.num_freq
+        #     for ell in 1:p.n_rot÷2 # in V0A
+        #         col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + ell
+        #         val = non_kvs * (N3E_0 + N3E)
+        #         s = put_row_col_val(rowind, colind, value, row, col, val, s)
+        #     end
+        # end
 
 
         if p.model_flag == 1

@@ -365,7 +365,7 @@ function Params(DefaultT=Float64;
     k2336 = exp(-(E36-E23)/kBT) * k3623
     k2636 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time
     k3626 = exp(-(E26-E36)/kBT) * k2636
-    kro = ntotal * v_avg * σ_VS * (1e-10)^2 / norm_time * 0
+    kro = ntotal * v_avg * σ_VS * (1e-10)^2 / norm_time
     # kro = 0
 
     Δ_fP = 15e6*(pressure/1e3)
