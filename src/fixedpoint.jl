@@ -7,15 +7,12 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
     rhs = zeros(p.num_layers*p.layer_unknown + p.n_vib)
 
     update_alpha_from_N!(p, sol_0)
-    # println(p.alpha_r)
     update_Param_from_alpha!(p, sol_0)
 
     if p.model_flag == 2
         updateTv(p, sol_0)
         updateks(p)
     end
-    # println(p.alpha_r)
-    # println(p_0.alpha_r)
     compute_rhs(rhs, p, sol_0)
     compute_row_col_val(rowind, colind, value, p, sol_0)
 
@@ -23,32 +20,16 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
     mat_rhs_modify(matrix, rhs, p)
 
     if p.solstart_flag == 1
-        # rowind_0 = ones(Int64, max_ele)
-        # colind_0 = ones(Int64, max_ele)
-        # value_0 = zeros(max_ele)
-        #
-        # compute_row_col_val(rowind_0, colind_0, value_0, p_0, sol_in)
-        # matrix_0 = sparse(rowind_0, colind_0, value_0)
-        # mat_modify(matrix_0, p_0)
         matrix_B0 = matrix - matrix_0
-        # println(norm(matrix_B0, 1), " ", norm(matrix_0, 1), " ", norm(matrix,1))
-        # sol_1 = - matrix \ rhs
         rhs = rhs + matrix_B0 * sol_0
-        # mat_rhs_modify(matrix_0, rhs, p_0)
         sol_1 = lu_mat0 \ (-rhs)
 
     else
         sol_1 = - matrix \ rhs
     end
-    # sol_1 = - matrix \ rhs
-    # if p.lin_solver=="Sherman_Morrison"
-    #     sol_1 = - SM_solve(matrix, 2, [1, size(matrix,1)], rhs)
-    # elseif p.lin_solver=="Default"
-    #     sol_1 = - matrix \ rhs
-    # end
+
     update_alpha_from_N!(p, sol_1)
 
-    # println(p.averagePF[1], ", ", p.averagePF[end])
     optimizecavity = 0
     if optimizecavity == 1 && p.WiU == 0. && p.WiL == 0.
         p.L = 1/p.alpha_r[1]*100
@@ -56,7 +37,6 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
     else
         println("L = ", p.L, "cm")
     end
-    #p.WiU!=0. && throw(ArgumentError("wi not equal to zero, L should be fixed!"))
 
     println("norm of sol diff = ", norm(sol_1 - sol_0) / norm(sol_1))
     flush(STDOUT)
@@ -76,7 +56,6 @@ function mat_modify(matrix, p)
         matrix[1, index1:index2] = p.r_int[j] * scalefactor
 
         index1 = p.layer_unknown * j - p.n_vib + p.n_vib÷2 + 1
-        # index1 = p.layer_unknown * j - p.n_vib + 1
         index2 = p.layer_unknown * j
         matrix[end, index1:index2] = p.r_int[j] * scalefactor
     end

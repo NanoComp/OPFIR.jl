@@ -440,7 +440,8 @@ function Params(DefaultT=Float64;
     # dr = r_ext[2:end] - r_ext[1:end-1]
     # r_ext = r_int .* dr
 
-    kwall = WallRate(radius, pressure, r_int, ntotal, M, T, NA, v_avg, σ_GKC) + 1e-10
+    # kwall = WallRate(radius, pressure, r_int, ntotal, M, T, NA, v_avg, σ_GKC) + 1e-10
+    kwall = zeros(num_layers)
     # kwall = ones(size(kwall)) * kwall[end]
     # println("average kwall: = ", sum(kwall.*r_int)/sum(r_int))
     # kwall = ones(size(kwall)) * 1/(3.2 * pressure * radius^2)

@@ -309,15 +309,9 @@ function gaincoeffcient(f, Φ, p, sol, taus, level)
 end
 
 function comptaus(nonth_popinv, wi_list)
-    taus = similar(nonth_popinv[:, :, 1])
-    for pressure in 1:size(nonth_popinv, 1)
-        for power in 1:size(nonth_popinv, 2)
-            tmp = vec(nonth_popinv[pressure, power, :]) / nonth_popinv[pressure, power, 1]
-            a, b = linreg(wi_list*1.0, 1./tmp - 1)
-            taus[pressure, power] = b
-        end
-    end
-    return taus
+    tmp = (nonth_popinv) / nonth_popinv[1]
+    a, b = linreg(wi_list*1.0, 1./tmp - 1)
+    return b
 end
 
 
