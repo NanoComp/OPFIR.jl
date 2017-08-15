@@ -17,7 +17,7 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
     compute_row_col_val(rowind, colind, value, p, sol_0)
 
     matrix = sparse(rowind, colind, value)
-    mat_rhs_modify(matrix, rhs, p)
+    # mat_rhs_modify(matrix, rhs, p)
 
     if p.solstart_flag == 1
         matrix_B0 = matrix - matrix_0

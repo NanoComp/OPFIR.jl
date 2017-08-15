@@ -36,7 +36,7 @@ function func(p; sol_start=Array[])
             value_0 = zeros(max_ele)
             compute_row_col_val(rowind_0, colind_0, value_0, p_0, sol_in)
             matrix_0 = sparse(rowind_0, colind_0, value_0)
-            mat_modify(matrix_0, p)
+            # mat_modify(matrix_0, p)
             lu_mat0 = lufact(matrix_0)
         end
 

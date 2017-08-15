@@ -1,8 +1,4 @@
 function compute_rhs(rhs, p, sol)
-    # pump_IR = Array(Float64, p.num_layers, p.num_freq)
-    # update_alpha_from_N!(sol, p)
-    # update_Param_from_alpha!(p)
-
     for ri in 1:p.num_layers
         for vi in 1:p.num_freq
 
@@ -15,20 +11,6 @@ function compute_rhs(rhs, p, sol)
                        (p.C4L * p.f_G_0/2 - p.C5U * p.f_3_0/2 * p.g_L/p.g_U)
         end
     end
-
-    # if p.model_flag==2 && p.solstart_flag==1
-    #     for ri in 1:p.num_layers
-    #         # row of V3A level:
-    #         row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 2
-    #         # tot_pump = pump_total(p, sol, ri)
-    #         # V3A -> VΣA net rate
-    #         rhs[row] -= p.netrate_36A[ri]
-    #         rhs[row+1] += p.netrate_36A[ri]
-    #         # rhs[row] += tot_pump * p.f_6_0/(p.f_3_0+p.f_6_0)
-    #         # rhs[row+1] += - tot_pump * p.f_6_0/(p.f_3_0+p.f_6_0)
-    #     end
-    # end
-
 end
 
 function pumpR_SHB!(sol, p)
