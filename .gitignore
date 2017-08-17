@@ -1,4 +1,7 @@
+example/
 model*/*
 .DS_Store
-*.ipynb
-0*/*
+run_*/
+notebooks/
+Stark_Backward*/
+.gitignore
