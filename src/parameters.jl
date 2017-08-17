@@ -223,6 +223,9 @@ type Params{T<:Real}
     # Wi::T
     WiU::T
     WiL::T
+
+    optcavity::Bool
+
 end
 
 function Params(DefaultT=Float64;
@@ -290,6 +293,7 @@ function Params(DefaultT=Float64;
     err_tv = false,
     WiU = 0,
     WiL = 0,
+    optcavity = false,
     )
 
     if model_flag == 1
@@ -436,17 +440,10 @@ function Params(DefaultT=Float64;
     Δr = radius/100 / num_layers # in m
     r_ext = linspace(0,radius/100,num_layers+1)
     r_int = 0.5*(r_ext[1:end-1] + r_ext[2:end]) # in m
-    # for temporary convenience, r_ext is defined as r_int*dr
-    # dr = r_ext[2:end] - r_ext[1:end-1]
-    # r_ext = r_int .* dr
 
     # kwall = WallRate(radius, pressure, r_int, ntotal, M, T, NA, v_avg, σ_GKC) + 1e-10
     kwall = zeros(num_layers)
-    # kwall = ones(size(kwall)) * kwall[end]
-    # println("average kwall: = ", sum(kwall.*r_int)/sum(r_int))
-    # kwall = ones(size(kwall)) * 1/(3.2 * pressure * radius^2)
-    # D_factor = 10.0
-    # D_factor = 0.01
+
 
     MFP = 0.732*T/pressure/σ_GKC # in cm
     # avg absolute vel in m/microsec (p5 in Henry's thesis)
@@ -547,7 +544,8 @@ function Params(DefaultT=Float64;
     evol_t,
     err_tv,
     beta13,
-    WiU, WiL
+    WiU, WiL,
+    optcavity
     )
 end
 

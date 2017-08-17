@@ -71,6 +71,44 @@ function func(p; sol_start=Array[])
 end
 
 
+function outputpower(p, level, cavitymode)
+    p.WiU = p.WiL = 0.
+    wi = vcat(0.0, 0.1, 0.2)
+    nonth_popinv = zeros(length(wi))
+    (p0, sol0) = func(p)
+    if level == 'U'
+        (nonth_popinv[1], a) = nonthpopinv(p0, sol0)
+    else
+        (a, nonth_popinv[1]) = nonthpopinv(p0, sol0)
+    end
+
+    if level == 'U'
+        for j in 1:length(wi)-1
+            p.WiU = wi[j+1]
+            (p, sol) = func(p)
+            (nonth_popinv[j+1], a) = nonthpopinv(p, sol)
+        end
+    elseif level == 'L'
+        for j in 1:length(wi)-1
+            p.WiL = wi[j+1]
+            (p, sol) = func(p)
+            (a, nonth_popinv[j+1]) = nonthpopinv(p, sol)
+        end
+    else
+        throw(ArgumentError("level can only be L or U!"))
+    end
+
+    taus = comptaus(vec(nonth_popinv), wi)*1e-6
+    alpha = cavityloss(p0, level, cavitymode)
+    ΔN = totinv(p0, sol0, level)
+    νTHZ = level=='U' ? p0.f_dir_lasing : p0.f_ref_lasing
+    σν = (p0.c/νTHZ)^2/8/π/p0.t_spont * 1/pi/p0.Δ_fP
+    Φ = (ΔN*σν/alpha-1)/taus/σν
+    laspower = Φ * (p0.h*νTHZ)/2 * pi * (p0.radius/100)^2 * 0.04
+    return laspower
+end
+
+
 function func_tevol(p)
   sol_0 = zeros(p.num_layers * p.layer_unknown)
   sol_f = zeros(p.num_layers * p.layer_unknown, length(p.evol_t)-1)
