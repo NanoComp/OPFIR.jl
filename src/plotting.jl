@@ -24,6 +24,7 @@ function plotting(p, sol)
     xlabel("frequency offset in lasing transition (MHz)")
     figname = string("nonthermal_pop_vs_freq_layer_",layer,".png")
     savefig(figname)
+    close(fig)
 
     fig = figure()
     hold
@@ -37,6 +38,7 @@ function plotting(p, sol)
     title("Population of Ground state J=4, K=3")
     figname = string("popL_layer_",layer,".png")
     savefig(figname)
+    close(fig)
 
     fig = figure()
     hold
@@ -51,6 +53,7 @@ function plotting(p, sol)
     title("Population of V3 state J=5, K=3")
     figname = string("popU_layer_", layer, ".png")
     savefig(figname)
+    close(fig)
 
     fig = figure()
     hold
@@ -59,6 +62,7 @@ function plotting(p, sol)
     title("pop inversion of U level")
     figname = string("invU_layer_", layer, ".png")
     savefig(figname)
+    close(fig)
 
     fig = figure()
     hold
@@ -67,6 +71,7 @@ function plotting(p, sol)
     title("pop inversion of L level")
     figname = string("invL_layer_", layer, ".png")
     savefig(figname)
+    close(fig)
 
     fig = figure()
     hold
@@ -75,6 +80,7 @@ function plotting(p, sol)
     title("pump transition rate")
     figname = string("pumprate_", layer, ".png")
     savefig(figname)
+    close(fig)
   end
 
   fig = figure()
@@ -85,6 +91,7 @@ function plotting(p, sol)
   title("effective T")
   figname = string("TvA_TvE.png")
   savefig(figname)
+  close(fig)
 end
 
 function plot_gain_curve(centerfreq, freq, gain, filename)
@@ -94,4 +101,5 @@ function plot_gain_curve(centerfreq, freq, gain, filename)
   ylabel("gain (a.u.)")
   title(filename)
   savefig(string(filename, ".png"))
+  close(fig)
 end

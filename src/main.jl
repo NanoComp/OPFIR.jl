@@ -45,6 +45,7 @@ function func(p; sol_start=Array[])
                 push!(rel_err, norm(y - x) / norm(y))
                 y
             end, sol_0, reltol=1e-6, m=40)
+        sol_0 == 0 && return (p, sol_0)
 
         if p.model_flag == 1
            break

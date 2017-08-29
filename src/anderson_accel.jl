@@ -69,6 +69,7 @@ function andersonaccel!{R<:AbstractFloat}(g!, x::Union{AbstractVector{R},Abstrac
 
     for k = 2:maxiter
         g!(y, x)
+        y[1]==0 && return 0
         for i = 1:n
             f_old = f[i]
             γ[i] = f[i] = y[i] - x[i]

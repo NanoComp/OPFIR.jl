@@ -62,8 +62,8 @@ function updateTv(p, sol)
           println("current absorption coefficient: ", p.alpha_r)
           println("problem comes from layer: ", j)
           println("N0A=", N0A, ", N3A=", N3A, ", N0E=", N0E, ", N3E=", N3E)
-          exit()
-          return
+        #   exit()
+          return 0
         end
     end
     # N0A = 0
