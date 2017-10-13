@@ -1,5 +1,6 @@
 using JLD
 using ODE
+using NLsolve
 
 function func(p; sol_start=Array[])
     # initiate some of the parameters from alpha_0
@@ -8,6 +9,9 @@ function func(p; sol_start=Array[])
         p_0 = p
         matrix_0 = 0
         lu_mat0 = 0
+        if length(sol_start)>0
+            sol_0 = sol_start
+        end
     else
         tmp_power = p.power
         p_sol = load("./p_sol.jld")
@@ -200,47 +204,6 @@ function zerobessel(m)
            throw(ArgumentError("Cavity mode entered is not supported yet!"))
 end
 
-function totinvmode(p, sol, llevel, cavitymode)
-    m = parse(Int, cavitymode[3])
-    radius_m = p.radius/100
-    kρ = zerobessel(cavitymode)/radius_m
-    ϕ_list = linspace(0, 2*pi, 150)
-    denom = 0.
-    numerator = 0.
-    pop_inv = zeros(p.num_layers)
-
-    for ri = 1:p.num_layers
-        pop_inv[ri] = llevel=='U' ? sum(inv_U_dist_layer(p, sol, ri)) :
-                      llevel=='L' ? sum(inv_L_dist_layer(p, sol, ri)) :
-                      throw(ArgumentError("Lasing level error!"))
-    end
-    E_sq = 0.
-    for ri = 1:p.num_layers
-        r = p.r_int[ri]
-        for ϕ in ϕ_list
-            if contains(cavitymode, "TM") ## TM modes
-                Ez = besselj(m, kρ*r) * cos(m*ϕ)
-                Er = derv_bessel(m, kρ*r) * cos(m*ϕ)
-                Eϕ = m/(kρ*r) * besselj(m, kρ*r) * (-sin(m*ϕ))
-            elseif contains(cavitymode, "TE") ## TE modes
-                Ez = 0
-                Er = m/(kρ*r) * besselj(m, kρ*r) * (-sin(m*ϕ))
-                Eϕ = derv_bessel(m, kρ*r) * cos(m*ϕ)
-            else
-                throw(ArgumentError("cavity mode can only be TE or TM"))
-            end
-            E_sq = Ez*conj(Ez) + Er*conj(Er) + Eϕ*conj(Eϕ)
-
-            # E_sq = 1.
-            denom += E_sq * r # cylindrical coordinate
-            numerator += E_sq * r * pop_inv[ri]
-        end
-        # println(E_sq)
-    end
-
-    return numerator/denom
-end
-
 function total_NlInv(p, sol)
     invL = zeros(p.num_layers)
     for k = 1:p.num_layers
@@ -307,7 +270,7 @@ end
 
 function cavityloss(p, llevel, cavitymode)
     Rback = 1.
-    Rfront = 0.96 * Rback
+    Rfront = (1-0.04) * Rback
     alpha = 2 * ohmicloss(p, llevel, cavitymode) - log(Rfront*Rback)/(2p.L/100)
     return alpha
 end
@@ -365,4 +328,91 @@ function compfraction(p, sol)
     f3 = N3A/sum(N0A+N3A+NΣA)
     fΣ = NΣA/sum(N0A+N3A+NΣA)
     return (f0, f3, fΣ)
+end
+
+
+#################################################################################
+## compute the output power with mode overlapping ##
+function outpowermode(p, sol, llevel, cavitymode, taus)
+    νTHZ = llevel=='U' ? p.f_dir_lasing : p.f_ref_lasing
+    Δnu = p.Δ_fP
+    σν = (p.c/νTHZ)^2/8/π/p.t_spont * 1/pi/Δnu
+    # println(σν)
+    alpha = cavityloss(p, llevel, cavitymode)
+    ΔN = totinv(p, sol, llevel)
+    Φ0 = (ΔN*σν/alpha-1)/taus/σν
+    Φ = nlsolve((x,fvec) -> begin
+                fvec[1] = gaincoefmode(x[1], p, sol, llevel, cavitymode, taus, σν) - alpha
+            end, [Φ0], iterations=100)
+    if Φ.iterations > 99
+        return -1., Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * 0.04
+    else
+        return Φ.zero[1] * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * 0.04,
+        Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * 0.04
+    end
+end
+
+function gaincoefmode(Φ, p, sol, llevel, cavitymode, taus, σν)
+    pop_inv = zeros(p.num_layers)
+    for ri = 1:p.num_layers
+        pop_inv[ri] = llevel=='U' ? sum(inv_U_dist_layer(p, sol, ri)) :
+                      llevel=='L' ? sum(inv_L_dist_layer(p, sol, ri)) :
+                      throw(ArgumentError("Lasing level error!"))
+    end
+    ## normalize electric field
+    E_sq = 0.
+    denom = 0.
+    numerator = 0.
+    ϕ_list = linspace(0, 2*pi, 150)
+    m = parse(Int, cavitymode[3])
+    radius_m = p.radius/100
+    kρ = zerobessel(cavitymode)/radius_m
+    for ri = 1:p.num_layers
+        r = p.r_int[ri]
+        for ϕ in ϕ_list
+            if contains(cavitymode, "TM") ## TM modes
+                Ez = besselj(m, kρ*r) * cos(m*ϕ)
+                Er = derv_bessel(m, kρ*r) * cos(m*ϕ)
+                Eϕ = m/(kρ*r) * besselj(m, kρ*r) * (-sin(m*ϕ))
+            elseif contains(cavitymode, "TE") ## TE modes
+                Ez = 0
+                Er = m/(kρ*r) * besselj(m, kρ*r) * (-sin(m*ϕ))
+                Eϕ = derv_bessel(m, kρ*r) * cos(m*ϕ)
+            else
+                throw(ArgumentError("cavity mode can only be TE or TM"))
+            end
+            E_sq = Ez*conj(Ez) + Er*conj(Er) + Eϕ*conj(Eϕ)
+            denom += r # cylindrical coordinate
+            numerator += E_sq * r
+        end
+    end
+    beta = denom/numerator
+
+    ## compute the gain coeff:
+    E_sq = 0.
+    denom = 0.
+    numerator = 0.
+    ϕ_list = linspace(0, 2*pi, 150)
+    for ri = 1:p.num_layers
+        r = p.r_int[ri]
+        for ϕ in ϕ_list
+            if contains(cavitymode, "TM") ## TM modes
+                Ez = besselj(m, kρ*r) * cos(m*ϕ)
+                Er = derv_bessel(m, kρ*r) * cos(m*ϕ)
+                Eϕ = m/(kρ*r) * besselj(m, kρ*r) * (-sin(m*ϕ))
+            elseif contains(cavitymode, "TE") ## TE modes
+                Ez = 0
+                Er = m/(kρ*r) * besselj(m, kρ*r) * (-sin(m*ϕ))
+                Eϕ = derv_bessel(m, kρ*r) * cos(m*ϕ)
+            else
+                throw(ArgumentError("cavity mode can only be TE or TM"))
+            end
+            E_sq = Ez*conj(Ez) + Er*conj(Er) + Eϕ*conj(Eϕ)
+            E_sq = E_sq * beta
+
+            numerator += pop_inv[ri]*σν*E_sq*r/(1+Φ*E_sq*taus*σν)
+            denom += E_sq*r
+        end
+    end
+    return numerator/denom
 end
