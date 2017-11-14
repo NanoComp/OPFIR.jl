@@ -109,7 +109,7 @@ function outputpower(p, level, cavitymode)
     νTHZ = level=='U' ? p0.f_dir_lasing : p0.f_ref_lasing
     σν = (p0.c/νTHZ)^2/8/π/p0.t_spont * 1/pi/p0.Δ_fP
     Φ = (ΔN*σν/alpha-1)/taus/σν
-    laspower = Φ * (p0.h*νTHZ)/2 * pi * (p0.radius/100)^2 * 0.04
+    laspower = Φ * (p0.h*νTHZ)/2 * pi * (p0.radius/100)^2 * efftrans(cavitymode)
     return laspower
 end
 
@@ -268,9 +268,9 @@ return lossval
 end
 
 
-function cavityloss(p, llevel, cavitymode)
+function cavityloss(p, llevel, cavitymode) # in m^-1
     Rback = 1.
-    Rfront = (1-0.04) * Rback
+    Rfront = (1-efftrans(cavitymode)) * Rback
     alpha = 2 * ohmicloss(p, llevel, cavitymode) - log(Rfront*Rback)/(2p.L/100)
     return alpha
 end
@@ -339,16 +339,17 @@ function outpowermode(p, sol, llevel, cavitymode, taus)
     σν = (p.c/νTHZ)^2/8/π/p.t_spont * 1/pi/Δnu
     # println(σν)
     alpha = cavityloss(p, llevel, cavitymode)
+    println(alpha, ", ", efftrans(cavitymode))
     ΔN = totinv(p, sol, llevel)
     Φ0 = (ΔN*σν/alpha-1)/taus/σν
     Φ = nlsolve((x,fvec) -> begin
                 fvec[1] = gaincoefmode(x[1], p, sol, llevel, cavitymode, taus, σν) - alpha
             end, [Φ0], iterations=100)
     if Φ.iterations > 99
-        return -1., Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * 0.04
+        return -1., Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(cavitymode)
     else
-        return Φ.zero[1] * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * 0.04,
-        Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * 0.04
+        return Φ.zero[1] * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(cavitymode),
+        Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(cavitymode)
     end
 end
 
@@ -415,4 +416,47 @@ function gaincoefmode(Φ, p, sol, llevel, cavitymode, taus, σν)
         end
     end
     return numerator/denom
+end
+
+
+function efftrans(cavitymode)
+    n = parse(Int, cavitymode[3])
+    # println(n)
+    t = zerobessel(cavitymode)
+    if contains(cavitymode, "TE")
+        P0 = (t^2-n^2) * besselj(n, t)^2
+        t = 0.2*t
+        Prad = t^2*(besselj(n-1, t)^2 - besselj(n-2, t)*besselj(n, t)) - 2*n*besselj(n,t)^2
+        # return Prad/P0
+        return maxT(n, zerobessel(cavitymode))
+    elseif contains(cavitymode, "TM")
+        P0 = t^2 * derv_bessel(n, t)^2
+        t = 0.2*t
+        Prad = t^2*(besselj(n-1, t)^2 - besselj(n-2, t)*besselj(n, t)) - 2*n*besselj(n,t)^2
+        return Prad/P0
+    end
+
+end
+
+function avgkernel(r1, r2, n, t)
+    r = linspace(r1, r2, 1001)
+    dr = (r2 - r1)/1000
+    ker = similar(r)
+    for k in 1:length(r)
+        ker[k] = derv_bessel(n, r[k]*t)^2 * t^2 + besselj(n, t*r[k])^2 * n^2/(r[k]+1e-6)^2
+    end
+    avgker = (ker'*r)[1] * dr
+    return avgker
+end
+
+function maxT(n, t)
+    ## here, it only works for hole size 4% of the cross section
+    # println(n, " ", t)
+    r0 = zeros(26)
+    avgk = zeros(25)
+    for k in 1:25
+        r0[k+1] = sqrt(r0[k]^2 + 0.04)
+        avgk[k] = avgkernel(r0[k], r0[k+1], n, t)
+    end
+    return maximum(avgk/avgkernel(0, 1, n, t))
 end
