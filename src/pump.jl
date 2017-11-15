@@ -1,5 +1,5 @@
 function alphaback(p, sol) # in m^-1
-    tmp_factor = 8*π^3/3/p.h/p.c * 1e-36 * (0.2756^2*16.0/45) *
+    tmp_factor = 8*π^3/3/p.h/p.c * 1e-36 * 0.2756^2*((p.J0+1)^2-p.K0^2)/(p.J0+1)/(2p.J0+1) *
                   p.f_pump * 1e-13 / p.df
     alphab = zeros(p.num_layers)
     for ri in 1:p.num_layers
@@ -38,37 +38,14 @@ function comppumprate!(p, alphab)
         p.SHBB[:, ri] = f_NT_normalized(p.f_dist_ctrB, fV, p.f_pump, p.df)
 
         p.pump_IR[:, ri] =
-        8*π^3/(3*p.h^2*p.c)*1e-36*(0.2756^2*16.0/45)/(π*p.radius^2)*1e-9 *
+        8*π^3/(3*p.h^2*p.c)*1e-36*(0.2756^2*((p.J0+1)^2-p.K0^2)/(p.J0+1)/(2p.J0+1))/(π*p.radius^2)*1e-9 *
         (p.SHBF[:, ri]/p.df * pavgforw +
          p.SHBB[:, ri]/p.df * pavgback)/p.norm_time
      end
-        # p0 = p.power
-        # p.pump_IR[:,ri] = 0.
-        #
-        # while p0>0.01*p.power
-        #     p.averagePF[ri], p.averagePB[ri] = AveragePower2_FB(p.alpha_r[ri], alphab[ri], p.L, p0)
-        #     p.Δ_f_RabiF[ri] = 0.38*sqrt(p.averagePF[ri])/p.radius*1e6
-        #     p.Δ_f_RabiB[ri] = 0.38*sqrt(p.averagePB[ri])/p.radius*1e6
-        #     p.Δ_f_NTF[ri] = p.Δ_fP + p.Δ_f_RabiF[ri]
-        #     p.Δ_f_NTB[ri] = p.Δ_fP + p.Δ_f_RabiB[ri]
-        #     fV = p.Δ_f_NTF[ri]
-        #     p.SHBF[:, ri] = f_NT_normalized(p.f_dist_ctr, fV, p.f_pump, p.df)
-        #     fV = p.Δ_f_NTB[ri]
-        #     p.SHBB[:, ri] = f_NT_normalized(p.f_dist_ctrB, fV, p.f_pump, p.df)
-        #
-        #     p.pump_IR[:, ri] +=
-        #     8*π^3/(3*p.h^2*p.c)*1e-36*(0.2756^2*16.0/45)/(π*p.radius^2)*1e-9 *
-        #     (p.SHBF[:, ri]/p.df * p.averagePF[ri] +
-        #      p.SHBB[:, ri]/p.df * p.averagePB[ri])/p.norm_time
-        #     p0 = p0*exp(-p.alpha_r[ri]*p.L/100)*exp(-alphab[ri]*p.L/100) * 0.95^2*0.96
-            # println(p0)
-        # end
-        # ri==1 ? println(p0) : 1
-    # end
 end
 
 function update_alpha_from_N!(p, sol) # in m^-1
-    tmp_factor = 8*π^3/3/p.h/p.c * 1e-36 * (0.2756^2*16.0/45) *
+    tmp_factor = 8*π^3/3/p.h/p.c * 1e-36 * 0.2756^2*((p.J0+1)^2-p.K0^2)/(p.J0+1)/(2p.J0+1) *
                   p.f_pump * 1e-13 / p.df
     for ri in 1:p.num_layers
         Nl_dist = Nl_total_dist_layer(p, sol, ri)
@@ -89,35 +66,4 @@ function update_Param_from_alpha!(p, sol)
 
     alphab = sum(alphaback(p, sol).*p.r_int)/sum(p.r_int) * ones(p.num_layers)
     comppumprate!(p, alphab)
-    #
-    # for ri in 1:p.num_layers
-    #     p.averagePF[ri], p.averagePB[ri] = AveragePower2_FB(p.alpha_r[ri], alphab[ri], p.L, p.power)
-    #
-    #     p.Δ_f_RabiF[ri] = 0.38*sqrt(p.averagePF[ri])/p.radius*1e6
-    #     p.Δ_f_RabiB[ri] = 0.38*sqrt(p.averagePB[ri])/p.radius*1e6
-    #
-    #     p.Δ_f_NTF[ri] = p.Δ_fP + p.Δ_f_RabiF[ri]
-    #     p.Δ_f_NTB[ri] = p.Δ_fP + p.Δ_f_RabiB[ri]
-    #
-    #     if p.ACStark == 0
-    #       p.Δ_f_NTF[ri] = p.Δ_fP
-    #       p.Δ_f_NTB[ri] = p.Δ_fP
-    #     end
-    #     fV = p.Δ_f_NTF[ri]
-    #     p.SHBF[:, ri] = f_NT_normalized(p.f_dist_ctr, fV, p.f_pump, p.df)
-    #     fV = p.Δ_f_NTB[ri]
-    #     p.SHBB[:, ri] = f_NT_normalized(p.f_dist_ctrB, fV, p.f_pump, p.df)
-    # end
-    #
-    # for ri in 1:p.num_layers
-    #
-    #     for vi in 1:p.num_freq
-    #         p.pump_IR[vi, ri] =
-    #         p.pump_IR[vi, ri] =
-    #         8*π^3/(3*p.h^2*p.c) * 1e-36 * (0.2756^2*16.0/45) *p.power/(π*p.radius^2) * 1e-9 *
-    #         (p.SHBF[vi, ri]/p.df * p.averagePF[ri]/p.power +
-    #          p.SHBB[vi, ri]/p.df * p.averagePB[ri]/p.power)/p.norm_time
-    #     end
-    # end
-
 end

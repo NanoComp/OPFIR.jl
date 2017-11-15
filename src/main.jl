@@ -5,12 +5,12 @@ using NLsolve
 function func(p; sol_start=Array[])
     # initiate some of the parameters from alpha_0
     if p.solstart_flag==0
-        sol_0 = zeros(p.num_layers * p.layer_unknown + p.n_vib)
-        p_0 = p
         matrix_0 = 0
         lu_mat0 = 0
         if length(sol_start)>0
             sol_0 = sol_start
+        else
+            sol_0 = zeros(p.num_layers * p.layer_unknown + p.n_vib)
         end
     else
         tmp_power = p.power
@@ -23,58 +23,36 @@ function func(p; sol_start=Array[])
         p.solstart_flag = 1
     end
 
-    println("matrix size is ", size(sol_0,1))
+    OPFIRinfo(p, sol_0)
 
-    T_err = 1.0
-    N_err = 1.0
-    while T_err > 2e-2 && N_err > 1e-3
-        N_prev = total_NuInv(p, sol_0)
-        alpha_p = deepcopy(p.alpha_r)
-        rel_err = Float64[]
-        sol_in = deepcopy(sol_0)
-
-        if p.solstart_flag == 1
-            max_ele = p.num_freq * p.num_layers * (p.n_rot*(p.n_rot+2) + p.n_vib*(p.n_rot+p.n_vib+2))
-            rowind_0 = ones(Int64, max_ele)
-            colind_0 = ones(Int64, max_ele)
-            value_0 = zeros(max_ele)
-            compute_row_col_val(rowind_0, colind_0, value_0, p_0, sol_in)
-            matrix_0 = sparse(rowind_0, colind_0, value_0)
-            # mat_modify(matrix_0, p)
-            lu_mat0 = lufact(matrix_0)
-        end
-
-        sol_0 = andersonaccel(x -> begin
-                y = fixedpoint(x, p, matrix_0, lu_mat0)
-                push!(rel_err, norm(y - x) / norm(y))
-                y
-            end, sol_0, reltol=1e-6, m=40)
-        sol_0 == 0 && return (p, sol_0)
-
-        if p.model_flag == 1
-           break
-        end
-
-        alpha_err = norm(alpha_p - p.alpha_r)/norm(p.alpha_r)
-
-        T1 = [deepcopy(p.T_vA); deepcopy(p.T_vE)]
-        updateTv(p, sol_0)
-        if p.err_tv == true
-          return (p, sol_0)
-        end
-        updateks(p)
-        T2 = [deepcopy(p.T_vA); deepcopy(p.T_vE)]
-        T_err = norm(T1-T2)/norm(T2)
-
-        N_curr = total_NuInv(p, sol_0)
-        N_err = abs(N_curr - N_prev)/abs(N_curr)
-        println("T error: ", T_err, ", N_err:", N_err)
-        flush(STDOUT)
+    if p.solstart_flag == 1
+        max_ele = p.num_freq * p.num_layers * (p.n_rot*(p.n_rot+2) + p.n_vib*(p.n_rot+p.n_vib+2))
+        rowind_0 = ones(Int64, max_ele)
+        colind_0 = ones(Int64, max_ele)
+        value_0 = zeros(max_ele)
+        compute_row_col_val(rowind_0, colind_0, value_0, p_0, sol_in)
+        matrix_0 = sparse(rowind_0, colind_0, value_0)
+        # mat_modify(matrix_0, p)
+        lu_mat0 = lufact(matrix_0)
     end
+
+    rel_err = Float64[]
+    sol_0 = andersonaccel(x -> begin
+            y = fixedpoint(x, p, matrix_0, lu_mat0)
+            push!(rel_err, norm(y - x) / norm(y))
+            y
+        end, sol_0, reltol=1e-6, m=40)
 
     return (p, sol_0)
 end
 
+function OPFIRinfo(p, sol)
+    println("pressure: ", p.pressure, "mTorr, pump power: ", p.power, "W")
+    println("matrix size is ", size(sol, 1), ", with ", p.num_layers, " radial layers, ",
+    p.num_freq, " velocity subclasses, ", p.n_vib, " vib levels, ", p.n_rot, " rot levels")
+    println("pressure and Doppler boradening width is ", p.Δ_fP, "Hz, ", p.Δ_f₀D, "Hz",
+    " and frequency width is ", p.f_range, "Hz.")
+end
 
 function outputpower(p, level, cavitymode)
     p.WiU = p.WiL = 0.
@@ -102,18 +80,20 @@ function outputpower(p, level, cavitymode)
     else
         throw(ArgumentError("level can only be L or U!"))
     end
-
     taus = comptaus(vec(nonth_popinv), wi)*1e-6
-    alpha = cavityloss(p0, level, cavitymode)
-    ΔN = totinv(p0, sol0, level)
-    νTHZ = level=='U' ? p0.f_dir_lasing : p0.f_ref_lasing
-    σν = (p0.c/νTHZ)^2/8/π/p0.t_spont * 1/pi/p0.Δ_fP
-    Φ = (ΔN*σν/alpha-1)/taus/σν
-    laspower = Φ * (p0.h*νTHZ)/2 * pi * (p0.radius/100)^2 * efftrans(cavitymode)
+
+    laspower = outpowermode(p0, sol0, level, cavitymode, taus)
+    # alpha = cavityloss(p0, level, cavitymode)
+    # ΔN = totinv(p0, sol0, level)
+    # νTHZ = level=='U' ? p0.f_dir_lasing : p0.f_ref_lasing
+    # σν = (p0.c/νTHZ)^2/8/π/p0.t_spont * 1/pi/p0.Δ_fP
+    # Φ = (ΔN*σν/alpha-1)/taus/σν
+    # laspower = Φ * (p0.h*νTHZ)/2 * pi * (p0.radius/100)^2 * efftrans(cavitymode)
     return laspower
 end
 
-
+#############################################################################
+### time evolution functions
 function func_tevol(p)
   sol_0 = zeros(p.num_layers * p.layer_unknown)
   sol_f = zeros(p.num_layers * p.layer_unknown, length(p.evol_t)-1)
@@ -163,6 +143,8 @@ function dndt_p(p, t, sol)
 
 end
 
+###############################################################################
+### functions to compute the population inversion and output power ###
 function total_NuInv(p, sol)
     invU = zeros(p.num_layers)
     for k = 1:p.num_layers
@@ -233,18 +215,7 @@ function popinvth(p)
 end
 
 function ohmicloss(p, llevel, cavitymode)
-# p_library = [2.40 3.83 1.84 3.05 3.83]
-# % 1 -> TM01 cutoff
-# % 2 -> TM11 cutoff
-# % 3 -> TE11 cutoff
-# % 4 -> TE21 cutoff
-# % 5 -> TE01 cutoff
-
-# mode_num: 1: TE01 / 2: TE12 / 3: TE02 / 4: TE22 / 5: TE11 / 6: TE21 / 7: TM01 / 8: TM11
-#zeros of Bessel functions:
-# p_library = [3.83, 5.33, 7.02, 6.71, 1.84, 3.05, 2.4, 3.83]
 radius_m = p.radius/100
-# x0 = (llevel=='U' ? p.p_library[3] : p.p_library[1])# TE01 mode
 x0 = zerobessel(cavitymode)
 m = parse(Int, cavitymode[3])
 
@@ -427,8 +398,8 @@ function efftrans(cavitymode)
         P0 = (t^2-n^2) * besselj(n, t)^2
         t = 0.2*t
         Prad = t^2*(besselj(n-1, t)^2 - besselj(n-2, t)*besselj(n, t)) - 2*n*besselj(n,t)^2
-        # return Prad/P0
-        return maxT(n, zerobessel(cavitymode))
+        return Prad/P0
+        # return maxT(n, zerobessel(cavitymode))
     elseif contains(cavitymode, "TM")
         P0 = t^2 * derv_bessel(n, t)^2
         t = 0.2*t
@@ -451,7 +422,6 @@ end
 
 function maxT(n, t)
     ## here, it only works for hole size 4% of the cross section
-    # println(n, " ", t)
     r0 = zeros(26)
     avgk = zeros(25)
     for k in 1:25

@@ -1,5 +1,3 @@
-include("wallrates.jl")
-
 type Params{T<:Real}
     radius::T   # radius in cm
     pump_radius::T
@@ -47,7 +45,8 @@ type Params{T<:Real}
     f_36::T
     f_26::T
 
-    C3L::T
+    J0::Integer #Lasing: J+1 -> J
+    K0::Integer
     C4L::T
     C5L::T
     C4U::T
@@ -64,7 +63,6 @@ type Params{T<:Real}
     f_dir_lasing::T
     f_ref_lasing::T
     Δ_f₀D::T
-
     f_range::T
 
     n_rot::Integer
@@ -76,7 +74,7 @@ type Params{T<:Real}
     mode_num::Integer
     # zero point of the Bessel function:
     p_library::AbstractVector
-    n0::T
+    n0::T #refractive index
     t_spont::T
     Δν_THz::T
 
@@ -96,8 +94,6 @@ type Params{T<:Real}
     k36A::AbstractVector
     k63E::AbstractVector
     k36E::AbstractVector
-
-    netrate_36A::AbstractVector
 
     k3623::T
     k2336::T
@@ -251,11 +247,8 @@ function Params(DefaultT=Float64;
     E23 = 2100,
     E36 = 2250,
     E26 = 2400,
-    C3L = 0.005926302*2,
-    C4L = 0.007374597*2,
-    C5L = 0.008652703*2,
-    C4U = C4L,
-    C5U = C5L,
+    J0 = 4,
+    K0 = 3,
     g_L = 9.0,
     g_U = 11.0,
     NA = 6.0221413e23,
@@ -295,6 +288,25 @@ function Params(DefaultT=Float64;
     WiL = 0,
     optcavity = false,
     )
+    #### CJL:
+    C3L = 0.005926302*2
+    ΔEJ3 = ΔEr(3, J0, K0, "V0") # in Hz
+    C4L = C4U = exp(-ΔEJ3*h/(kB*T*ev)) * (2J0+1)/7 * C3L
+    ΔEJP13 = ΔEr(3, J0+1, K0, "V0") # in Hz
+    C5L = C5U = exp(-ΔEJP13*h/(kB*T*ev)) * (2(J0+1)+1)/7 * C3L
+
+    gL = 2J0 + 1
+    gU = 2(J0+1) + 1
+
+    f_dir_lasing = ΔEr(J0, J0+1, K0, "V3")
+    f_ref_lasing = ΔEr(J0, J0+1, K0, "V0")
+
+    ## back to master:
+    # C4L = C4U = 0.014749194
+    # C5L = C5U = 0.017305406
+
+    f₀ += ΔEr(5, J0+1, K0, "V3") - ΔEr(4, J0, K0, "V0")
+    f_pump = f₀ + f_offset
 
     if model_flag == 1
         n_vib = 12
@@ -313,7 +325,7 @@ function Params(DefaultT=Float64;
     # kvsplit = v_avg*σ_VSplit * (1e-10)^2/norm_time
 
     g_6 = 2
-    netrate_36A = zeros(num_layers)
+
     if model_flag==1
         Q = exp(EG) + exp(-E3/kBT) + 2*exp(-E6/kBT) + exp(-E23/kBT) +
             exp(-E36/kBT) + exp(-E26/kBT)
@@ -455,75 +467,42 @@ function Params(DefaultT=Float64;
 
     J = [3,4,5,6,7,8,9,10,11]
     # in 1/microsec. rate_ij = rate_DD * prob. of ij collision:
-    k98_G = kDD*Q_selectn_hl(J[9])/(1e3)
-    k87_G = kDD*Q_selectn_hl(J[8])/(1e3)
-    k76_G = kDD*Q_selectn_hl(J[7])/(1e3)
-    k65_G = kDD*Q_selectn_hl(J[6])/(1e3)
-    k54_G = kDD*Q_selectn_hl(J[5])/(1e3)
-    k43_G = kDD*Q_selectn_hl(J[4])/(1e3)
-    k32_G = kDD*Q_selectn_hl(J[3])/(1e3)
-    k21_G = kDD*Q_selectn_hl(J[2])/(1e3)
+    k98_3 = k98_G = kDD*Q_selectn_hl(J[9], K0)/(1e3)
+    k87_3 = k87_G = kDD*Q_selectn_hl(J[8], K0)/(1e3)
+    k76_3 = k76_G = kDD*Q_selectn_hl(J[7], K0)/(1e3)
+    k65_3 = k65_G = kDD*Q_selectn_hl(J[6], K0)/(1e3)
+    k54_3 = k54_G = kDD*Q_selectn_hl(J[5], K0)/(1e3)
+    k43_3 = k43_G = kDD*Q_selectn_hl(J[4], K0)/(1e3)
+    k32_3 = k32_G = kDD*Q_selectn_hl(J[3], K0)/(1e3)
+    k21_3 = k21_G = kDD*Q_selectn_hl(J[2], K0)/(1e3)
 
-    k89_G = kDD*Q_selectn_lh(J[8])/(1e3)
-    k78_G = kDD*Q_selectn_lh(J[7])/(1e3)
-    k67_G = kDD*Q_selectn_lh(J[6])/(1e3)
-    k56_G = kDD*Q_selectn_lh(J[5])/(1e3)
-    k45_G = kDD*Q_selectn_lh(J[4])/(1e3)
-    k34_G = kDD*Q_selectn_lh(J[3])/(1e3)
-    k23_G = kDD*Q_selectn_lh(J[2])/(1e3)
-    k12_G = kDD*Q_selectn_lh(J[1])/(1e3)
-
-    k98_3 = k98_G
-    k87_3 = k87_G
-    k76_3 = k76_G
-    k65_3 = k65_G
-    k54_3 = k54_G
-    k43_3 = k43_G
-    k32_3 = k32_G
-    k21_3 = k21_G
-
-    k89_3 = k89_G
-    k78_3 = k78_G
-    k67_3 = k67_G
-    k56_3 = k56_G
-    k45_3 = k45_G
-    k34_3 = k34_G
-    k23_3 = k23_G
-    k12_3 = k12_G
+    k89_3 = k89_G = kDD*Q_selectn_lh(J[8], K0)/(1e3)
+    k78_3 = k78_G = kDD*Q_selectn_lh(J[7], K0)/(1e3)
+    k67_3 = k67_G = kDD*Q_selectn_lh(J[6], K0)/(1e3)
+    k56_3 = k56_G = kDD*Q_selectn_lh(J[5], K0)/(1e3)
+    k45_3 = k45_G = kDD*Q_selectn_lh(J[4], K0)/(1e3)
+    k34_3 = k34_G = kDD*Q_selectn_lh(J[3], K0)/(1e3)
+    k23_3 = k23_G = kDD*Q_selectn_lh(J[2], K0)/(1e3)
+    k12_3 = k12_G = kDD*Q_selectn_lh(J[1], K0)/(1e3)
 
     # K-swap rates -> goes to thermal pool, in 1/microsec
+    k18a = k17a = k16a = k15a = k14a = k13a = k12a = k11a = k10a =
+    k9a = k8a = k7a = k6a = k5a = k4a = k3a = k2a =
     k1a = 19.8*pressure*σ_SPT/sqrt(T*M)/(1e3)
-    k2a = k1a
-    k3a = k1a
-    k4a = k1a
-    k5a = k1a
-    k6a = k1a
-    k7a = k1a
-    k8a = k1a
-    k9a = k1a
-    k10a = k1a
-    k11a = k1a
-    k12a = k1a
-    k13a = k1a
-    k14a = k1a
-    k15a = k1a
-    k16a = k1a
-    k17a = k1a
-    k18a = k1a
 
     return Params{DefaultT}(radius, pump_radius, L, L_eff, h, c, ev, kB, T, T_vA, T_vE, kBT, M, norm_time,
     σ_GKC, σ_DD, σ_SPT, σ_36, σ_VS,
     v_avg, kvs, #kvsplit,
     EG, E3, E6, E23, E36, E26, Q,
     f_G_0, f_3_0, f_6_0, f_GA, f_3A, f_6A, f_GE, f_3E, f_6E, f_23, f_36, f_26,
-    C3L, C4L, C5L, C4U, C5U, g_L, g_U, NA,
+    J0, K0, C4L, C5L, C4U, C5U, g_L, g_U, NA,
     f₀, f_offset, f_pump, f_dir_lasing, f_ref_lasing, Δ_f₀D, f_range,
     n_rot, n_vib,
     mu0, eps0,
     mode_num, p_library, n0, t_spont, Δν_THz,
     pressure, power, powerF, powerB, averagePF, averagePB,
     num_layers, ntotal,
-    k63A, k36A, k63E, k36E, netrate_36A, k3623, k2336, k2636, k3626, kro,
+    k63A, k36A, k63E, k36E, k3623, k2336, k2636, k3626, kro,
     Δ_fP, Δ_f_RabiF, Δ_f_RabiB, Δ_f_NTF, Δ_f_NTB,
     num_freq, layer_unknown, df, f_dist_end, f_dist_ctr, f_dist_ctrB,
     velocity, f_dist_dir_lasing, f_dist_ref_lasing,
@@ -549,13 +528,11 @@ function Params(DefaultT=Float64;
     )
 end
 
-function Q_selectn_hl(J)
-    K = 3
+function Q_selectn_hl(J, K)
     return (J^2-K^2)/(J*(2*J+1))
 end
 
-function Q_selectn_lh(J)
-    K = 3
+function Q_selectn_lh(J, K)
     return ((J+1)^2-K^2)/((J+1)*(2*J+1))
 end
 
@@ -590,20 +567,31 @@ function emission_broaden(ν, vi, p, df)
     (2*(γ^2-Ω^2)*τ^2*(1+2*γ^2*τ^2)-2)/(1+4γ^2*τ^2)/(1+(γ-Ω)^2*τ^2)/(1+(γ+Ω)^2*τ^2)
   end
   spectrum = df*(1+4*γ^2*τ^2)/(4*γ^2*τ) * spectrum
-  # spectrum = spectrum / max(spectrum)
-  # spectrum = df * spectrum * p.beta13^2/γ^2
   return spectrum
 end
 
 function Qv(kB, T, script)
-    if script == 1
-      data = readdlm("/Users/fanwang/.julia/v0.4/OPFIR/src/E_vib.jl")
-    else
-      data = readdlm("/Users/fanwang/.julia/v0.4/OPFIR/src/E_vib.jl")
-    end
+    data = viblevels()
     Q = 1.0
     for i in 1:size(data, 1)
         Q += data[i,2] * exp(-data[i, 1]/(kB*T*8065.73))
     end
     return Q
+end
+
+function ΔEr(J1, J2, K, V)
+    if V=="V0"
+        B = 24862.6427e6
+        DJ = 0.057683e6
+        DJK = 0.42441e6
+    elseif V=="V3"
+        B = 24542.1324e6
+        DJ = 0.055156
+        DJK = 0.47788
+    end
+    return (B-DJK*K^2)*(J2*(J2+1)-J1*(J1+1)) - DJ*(-J1^2*(J1+1)^2+J2^2*(J2+1)^2)
+end
+
+function derv_bessel(ν,x)
+    return 0.5.*(besselj(ν-1,x)-besselj(ν+1,x))
 end

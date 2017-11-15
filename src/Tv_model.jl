@@ -18,11 +18,7 @@ function fraction_V3(p, T)
 end
 
 function Qv_0(p, T)
-    if p.script == 1
-      data = readdlm("/Users/fanwang/.julia/v0.4/OPFIR/src/E_vib.jl")
-    else
-      data = readdlm("/Users/fanwang/.julia/v0.4/OPFIR/src/E_vib.jl")
-    end
+    data = viblevels()
     Q = 1.0
     for i in 1:size(data, 1)
         Q += data[i,2] * exp(-data[i, 1]/(p.kB*T*8065.73))

@@ -11,23 +11,12 @@ function ind_p_L(p, layer)
     return p.layer_unknown * layer - p.n_vib + 1
 end
 
-# population inversion of direct lasing in each radial layer
-# function pop_inv_dir_layer(p, sol, layer)
-#     index_offset = ind_offset(p, layer)
-#     pop_inv = 0
-#     for vi in 1:p.num_freq
-#         index_u = index_offset + (vi-1) * p.n_rot + 12
-#         pop_inv += (sol[index_u]/p.g_U - sol[index_u - 1]/p.g_L) * p.fp_lasing[vi]
-#     end
-#     return pop_inv
-# end
-
 # nonthermal/thermal/total Nu distribution (over freq/velocity) in each radial layer
 function Nu_NT_dist_layer(p, sol, layer)
     index_offset = ind_offset(p, layer)
     Nu = zeros(p.num_freq)
     for i in 1:p.num_freq
-        index_u = index_offset + (i-1) * p.n_rot + 12 # 12 comes from counting rot levels
+        index_u = index_offset + (i-1) * p.n_rot + (p.n_rot÷2 + p.J0-1) # 12 comes from counting rot levels
         Nu[i] = sol[index_u]
     end
     return Nu
@@ -46,7 +35,7 @@ function Nu_1_NT_dist_layer(p, sol, layer)
     index_offset = ind_offset(p, layer)
     N = zeros(p.num_freq)
     for i in 1:p.num_freq
-        index_u = index_offset + (i-1) * p.n_rot + 11
+        index_u = index_offset + (i-1) * p.n_rot + (p.n_rot÷2 + p.J0-2)
         N[i] = sol[index_u]
     end
     return N
@@ -65,7 +54,7 @@ function Nl_NT_dist_layer(p, sol, layer)
     index_offset = ind_offset(p, layer)
     Nl = zeros(p.num_freq)
     for i in 1:p.num_freq
-        index_l = index_offset + (i-1) * p.n_rot + 2
+        index_l = index_offset + (i-1) * p.n_rot + (p.J0-2)
         Nl[i] = sol[index_l]
     end
     return Nl
@@ -84,7 +73,7 @@ function Nl_1_NT_dist_layer(p, sol, layer)
     index_offset = ind_offset(p, layer)
     N = zeros(p.num_freq)
     for i in 1:p.num_freq
-        index_l = index_offset + (i-1) * p.n_rot + 3
+        index_l = index_offset + (i-1) * p.n_rot + (p.J0-1)
         N[i] = sol[index_l]
     end
     return N
@@ -162,150 +151,109 @@ function gain_profile_layer(p, sol, layer; ω=p.f_dist_dir_lasing)
     return dist
 end
 
-### gain calculation with integration over the field: ###
-function mode(mode_num)
-    if mode_num == 1 || mode_num == 3 || mode_num == 7
-        m = 0
-    elseif mode_num == 2 || mode_num == 5 || mode_num == 8
-        m = 1
-    elseif mode_num == 4 || mode_num == 6
-        m = 2
-    end
-    return m
-end
+# ### gain calculation with integration over the field: ###
+# function mode(mode_num)
+#     if mode_num == 1 || mode_num == 3 || mode_num == 7
+#         m = 0
+#     elseif mode_num == 2 || mode_num == 5 || mode_num == 8
+#         m = 1
+#     elseif mode_num == 4 || mode_num == 6
+#         m = 2
+#     end
+#     return m
+# end
+#
+# function gain_dir(p, sol; LasLevel="U", vi=0)
+#     m = mode(p.mode_num)
+#     radius_m = p.radius/100
+#     k_rol_library = p.p_library/radius_m
+#     k_rol = k_rol_library[p.mode_num]
+#
+#     ϕ_list = linspace(0, 2*pi, 150)
+#     denom = 0.0
+#     numerator = 0.0
+#     pop_inversion = zeros(size(p.r_int))
+#     gain_LU = 0.0
+#
+#     for ri in 1:p.num_layers
+#         r = p.r_int[ri]
+#         # update beta13 for each layer
+#         p.beta13 = 1.2 * sqrt(p.averagePF[ri])/p.radius * 1e6
+#         p.beta13 = 1.2 * sqrt(p.powerF[ri])/p.radius * 1e6
+#         if LasLevel=="U"
+#             pop_inversion[ri] = gain_dir_layer3(p, sol, ri, vi)[1]
+#             #pop_inversion[ri] = gain_dir_layer(p, sol, ri)
+#         elseif LasLevel=="L"
+#             pop_inversion[ri] = gain_ref_layer3(p, sol, ri, vi)[1]
+#             #pop_inversion[ri] = gain_ref_layer(p, sol, ri)
+#         else
+#             println("Only support L or U lasing!")
+#         end
+#
+#         for ϕ in ϕ_list
+#             if p.mode_num >= 7 ## TM modes
+#                 Ez = besselj(m, k_rol*r) * cos(m*ϕ)
+#                 Er = derv_bessel(m, k_rol*r) * cos(m*ϕ)
+#                 Eϕ = m/(k_rol*r) * besselj(m, k_rol*r) * (-sin(m*ϕ))
+#             else ## TE modes
+#                 Ez = 0
+#                 Er = m/(k_rol*r) * besselj(m, k_rol*r) * (-sin(m*ϕ))
+#                 Eϕ = derv_bessel(m, k_rol*r) * cos(m*ϕ)
+#             end
+#             E_sq = Ez*conj(Ez) + Er*conj(Er) + Eϕ*conj(Eϕ)
+#             denom += E_sq * r # cylindrical coordinate
+#             numerator += E_sq * r * pop_inversion[ri]
+#         end
+#     end
+#     if LasLevel=="U"
+#         λ_las = p.c/p.f_dir_lasing
+#     elseif LasLevel=="L"
+#         λ_las = p.c/p.f_ref_lasing
+#     end
+#     gain_LU = numerator/denom *
+#            λ_las^2/(8*pi*p.n0^2*p.t_spont)/p.Δν_THz*0.01 # in cm^-1
+#     return gain_LU #* (p.L_eff/p.L)
+# end
+#
 
-function gain_dir(p, sol; LasLevel="U", vi=0)
-    m = mode(p.mode_num)
-    radius_m = p.radius/100
-    k_rol_library = p.p_library/radius_m
-    k_rol = k_rol_library[p.mode_num]
-
-    ϕ_list = linspace(0, 2*pi, 150)
-    denom = 0.0
-    numerator = 0.0
-    pop_inversion = zeros(size(p.r_int))
-    gain_LU = 0.0
-
-    for ri in 1:p.num_layers
-        r = p.r_int[ri]
-        # update beta13 for each layer
-        p.beta13 = 1.2 * sqrt(p.averagePF[ri])/p.radius * 1e6
-        p.beta13 = 1.2 * sqrt(p.powerF[ri])/p.radius * 1e6
-        if LasLevel=="U"
-            pop_inversion[ri] = gain_dir_layer3(p, sol, ri, vi)[1]
-            #pop_inversion[ri] = gain_dir_layer(p, sol, ri)
-        elseif LasLevel=="L"
-            pop_inversion[ri] = gain_ref_layer3(p, sol, ri, vi)[1]
-            #pop_inversion[ri] = gain_ref_layer(p, sol, ri)
-        else
-            println("Only support L or U lasing!")
-        end
-
-        for ϕ in ϕ_list
-            if p.mode_num >= 7 ## TM modes
-                Ez = besselj(m, k_rol*r) * cos(m*ϕ)
-                Er = derv_bessel(m, k_rol*r) * cos(m*ϕ)
-                Eϕ = m/(k_rol*r) * besselj(m, k_rol*r) * (-sin(m*ϕ))
-            else ## TE modes
-                Ez = 0
-                Er = m/(k_rol*r) * besselj(m, k_rol*r) * (-sin(m*ϕ))
-                Eϕ = derv_bessel(m, k_rol*r) * cos(m*ϕ)
-            end
-            E_sq = Ez*conj(Ez) + Er*conj(Er) + Eϕ*conj(Eϕ)
-            denom += E_sq * r # cylindrical coordinate
-            numerator += E_sq * r * pop_inversion[ri]
-        end
-    end
-    if LasLevel=="U"
-        λ_las = p.c/p.f_dir_lasing
-    elseif LasLevel=="L"
-        λ_las = p.c/p.f_ref_lasing
-    end
-    gain_LU = numerator/denom *
-           λ_las^2/(8*pi*p.n0^2*p.t_spont)/p.Δν_THz*0.01 # in cm^-1
-    return gain_LU #* (p.L_eff/p.L)
-end
-
-function derv_bessel(ν,x)
-    return 0.5.*(besselj(ν-1,x)-besselj(ν+1,x))
-end
-
-
-###############################
-function gain_dir_layer3(p, sol, layer, vi)
-    df_dir = p.df *p.f_dir_lasing/p.f₀
-    freq2 = p.f_dirgain_dist
-    dfreq2 = freq2[2] - freq2[1]
-    # Nu_broaden = 0.0
-    # invU = inv_U_dist_layer(p, sol, layer)
-    invU_T = Nu_T_dist_layer(p,sol,layer) - Nu_1_T_dist_layer(p,sol,layer)*p.g_U/p.g_L
-    invU_NT = Nu_NT_dist_layer(p,sol,layer) - Nu_1_NT_dist_layer(p,sol,layer)*p.g_U/p.g_L
-    inv_NT = 0.0
-    inv_T = 0.0
-    for j in 1:p.num_freq
-      # inv_NT += emission_broaden(freq2[vi], j, p, dfreq2) * invU_NT[j]
-      inv_NT += f_NT_normalized(freq2[vi], p.Δ_f_NTF[layer], p.f_dist_dir_lasing[j], dfreq2) * invU_NT[j]
-      inv_T += f_NT_normalized(freq2[vi], p.Δ_fP, p.f_dist_dir_lasing[j], dfreq2) * invU_T[j]
-    end
-
-    inv_U = inv_NT + inv_T
-
-    # broaden Nu by AC stark effect
-    # Δ_f_THZ = p.Δ_f_NTF[layer]
-    # for j in 1:p.num_freq
-    #     Nu_broaden += Nu[j] *
-    #     1/π * Δ_f_THZ / ((freq2[vi]-p.f_dist_dir_lasing[j]).^2 + Δ_f_THZ^2) * dfreq2
-    # end
-    #
-    # Nu_1 = Nu_1_total_dist_layer(p, sol, layer)
-    # Nu_1_broaden = 0
-    # Δ_f_THZ = p.Δ_f_NTF[layer]
-    # for j in 1:p.num_freq
-    #     Nu_1_broaden += Nu_1[j] *
-    #     1/π * Δ_f_THZ / ((freq2[vi]-p.f_dist_dir_lasing[j]).^2 + Δ_f_THZ^2) * dfreq2
-    # end
-    #
-    # inv_U = Nu_broaden - Nu_1_broaden*p.g_U/p.g_L
-    return inv_U
-end
-
-function gain_ref_layer3(p, sol, layer, vi)
-    # df_dir = p.df *p.f_ref_lasing/p.f₀
-    freq2 = p.f_refgain_dist
-    dfreq2 = freq2[2] - freq2[1]
-    # invL = inv_L_dist_layer(p, sol, layer)
-    # inv_L = 0.0
-    # for j in 1:p.num_freq
-      # inv_L += emission_broaden(freq2[vi], j, p, dfreq2) * invL[j]
-    # end
-
-    invL_T = Nl_1_T_dist_layer(p,sol,layer) - Nl_T_dist_layer(p,sol,layer)*p.g_U/p.g_L
-    invL_NT = Nl_1_NT_dist_layer(p,sol,layer) - Nl_NT_dist_layer(p,sol,layer)*p.g_U/p.g_L
-    inv_NT = 0.0
-    inv_T = 0.0
-    for j in 1:p.num_freq
-      # inv_NT += emission_broaden(freq2[vi], j, p, dfreq2) * invU_NT[j]
-      inv_NT += f_NT_normalized(freq2[vi], p.Δ_f_NTF[layer], p.f_dist_ref_lasing[j], dfreq2) * invL_NT[j]
-      inv_T += f_NT_normalized(freq2[vi], p.Δ_f_NTF[layer], p.f_dist_ref_lasing[j], dfreq2) * invL_T[j]
-    end
-    inv_L = inv_NT + inv_T
-    # Nl_broaden = 0.0
-    # Nl = Nl_total_dist_layer(p, sol, layer)
-    # # broaden Nu by AC stark effect
-    # Δ_f_THZ = p.Δ_f_NTF[layer]
-    # for j in 1:p.num_freq
-    #     Nl_broaden += Nl[j] *
-    #     1/π * Δ_f_THZ / ((freq2[vi]-p.f_dist_ref_lasing[j]).^2 + Δ_f_THZ^2) * dfreq2
-    # end
-    #
-    # Nl_1 = Nl_1_total_dist_layer(p, sol, layer)
-    # Nl_1_broaden = 0
-    # Δ_f_THZ = p.Δ_f_NTF[layer]
-    # for j in 1:p.num_freq
-    #     Nl_1_broaden += Nl_1[j] *
-    #     1/π * Δ_f_THZ / ((freq2[vi]-p.f_dist_ref_lasing[j]).^2 + Δ_f_THZ^2) * dfreq2
-    # end
-    #
-    # inv_L = Nl_1_broaden - Nl_broaden*p.g_U/p.g_L
-    return inv_L
-end
+#
+#
+# ###############################
+# function gain_dir_layer3(p, sol, layer, vi)
+#     df_dir = p.df *p.f_dir_lasing/p.f₀
+#     freq2 = p.f_dirgain_dist
+#     dfreq2 = freq2[2] - freq2[1]
+#     # Nu_broaden = 0.0
+#     # invU = inv_U_dist_layer(p, sol, layer)
+#     invU_T = Nu_T_dist_layer(p,sol,layer) - Nu_1_T_dist_layer(p,sol,layer)*p.g_U/p.g_L
+#     invU_NT = Nu_NT_dist_layer(p,sol,layer) - Nu_1_NT_dist_layer(p,sol,layer)*p.g_U/p.g_L
+#     inv_NT = 0.0
+#     inv_T = 0.0
+#     for j in 1:p.num_freq
+#       # inv_NT += emission_broaden(freq2[vi], j, p, dfreq2) * invU_NT[j]
+#       inv_NT += f_NT_normalized(freq2[vi], p.Δ_f_NTF[layer], p.f_dist_dir_lasing[j], dfreq2) * invU_NT[j]
+#       inv_T += f_NT_normalized(freq2[vi], p.Δ_fP, p.f_dist_dir_lasing[j], dfreq2) * invU_T[j]
+#     end
+#
+#     inv_U = inv_NT + inv_T
+#
+#     return inv_U
+# end
+#
+# function gain_ref_layer3(p, sol, layer, vi)
+#     # df_dir = p.df *p.f_ref_lasing/p.f₀
+#     freq2 = p.f_refgain_dist
+#     dfreq2 = freq2[2] - freq2[1]
+#
+#     invL_T = Nl_1_T_dist_layer(p,sol,layer) - Nl_T_dist_layer(p,sol,layer)*p.g_U/p.g_L
+#     invL_NT = Nl_1_NT_dist_layer(p,sol,layer) - Nl_NT_dist_layer(p,sol,layer)*p.g_U/p.g_L
+#     inv_NT = 0.0
+#     inv_T = 0.0
+#     for j in 1:p.num_freq
+#       # inv_NT += emission_broaden(freq2[vi], j, p, dfreq2) * invU_NT[j]
+#       inv_NT += f_NT_normalized(freq2[vi], p.Δ_f_NTF[layer], p.f_dist_ref_lasing[j], dfreq2) * invL_NT[j]
+#       inv_T += f_NT_normalized(freq2[vi], p.Δ_f_NTF[layer], p.f_dist_ref_lasing[j], dfreq2) * invL_T[j]
+#     end
+#     inv_L = inv_NT + inv_T
+#     return inv_L
+# end

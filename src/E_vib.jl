@@ -1,5 +1,6 @@
+function viblevels()
 ## data for vibrational energy levels and degeneracy without E0
-1049    1
+return [1049    1
 1182    2
 1460    1
 1468    2
@@ -120,3 +121,5 @@
 6889    1
 6921    2
 6959    2
+]
+end

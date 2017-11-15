@@ -24,13 +24,13 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
     if p.model_flag == 1
         mat_rhs_modify(matrix, rhs, p)
     end
-    # println("matrix size: ", size(matrix))
+
     if p.solstart_flag == 1
         matrix_B0 = matrix - matrix_0
         rhs = rhs + matrix_B0 * sol_0
-        sol_1 = lu_mat0 \ (-rhs)
+        sol_1 = lu_mat0 \ rhs
     else
-        sol_1 = - matrix \ rhs
+        sol_1 = matrix \ rhs
     end
     # println(matrix[p.layer_unknown-p.n_vib+1, :], ", rhs:", rhs[p.layer_unknown-p.n_vib+1])
 
@@ -50,20 +50,6 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
 end
 
 function mat_modify(matrix, p)
-    # for j = 1:size(matrix,2)
-    #     matrix[1, j] = 0
-    #     matrix[end, j] = 0
-    # end
-    # scalefactor = maximum(matrix)/(p.r_int[end]/2)
-    # for j = 1:p.num_layers
-    #     index1 = p.layer_unknown * (j-1) + 1
-    #     index2 = p.layer_unknown * j
-    #     matrix[1, index1:index2] = p.r_int[j] * scalefactor
-    #
-    #     index1 = p.layer_unknown * j - p.n_vib + p.n_vib÷2 + 1
-    #     index2 = p.layer_unknown * j
-    #     matrix[end, index1:index2] = p.r_int[j] * scalefactor
-    # end
     for ri in 1:p.num_layers
         # V26A and V26E:
         rowA = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 6
