@@ -89,7 +89,7 @@ function outputpower(p, level, cavitymode)
     # σν = (p0.c/νTHZ)^2/8/π/p0.t_spont * 1/pi/p0.Δ_fP
     # Φ = (ΔN*σν/alpha-1)/taus/σν
     # laspower = Φ * (p0.h*νTHZ)/2 * pi * (p0.radius/100)^2 * efftrans(cavitymode)
-    return laspower
+    return laspower, sol0, p0, taus
 end
 
 #############################################################################
@@ -219,7 +219,7 @@ radius_m = p.radius/100
 x0 = zerobessel(cavitymode)
 m = parse(Int, cavitymode[3])
 
-resitivityCu = 1/4e7 # copper resistivity at room temperature;
+resitivityCu = 2.0e-8 # copper resistivity at room temperature;
 conductivityCu = 1/resitivityCu # copper conductivity at room temperature;
 mu = 4*pi*1e-7 # magnetic permeability in copper
 

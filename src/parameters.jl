@@ -265,7 +265,7 @@ function Params(DefaultT=Float64;
     #zeros of Bessel functions:
     p_library = [3.83, 5.33, 7.02, 6.71, 1.84, 3.05, 2.4, 3.83],
     n0 = 1.0,
-    t_spont = 100,
+    t_spont = 10,
     Δν_THz = 25e6,
     ## pressure and power related parameters:
     pressure = 100.0,
