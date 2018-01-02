@@ -198,8 +198,8 @@ function nonthpopinv(p, sol)
     invU = zeros(p.num_layers)
     invL = zeros(p.num_layers)
     for kl = 1:p.num_layers
-        invU[kl] = sum(Nu_NT_dist_layer(p,sol,kl) - p.g_U/p.g_L*Nu_1_NT_dist_layer(p,sol,kl))
-        invL[kl] = sum(Nl_1_NT_dist_layer(p,sol,kl) - p.g_U/p.g_L*Nl_NT_dist_layer(p,sol,kl))
+        invU[kl] = sum(Nu_NT_dist_layer(p,sol,kl) - p.g_U/(p.g_U-2)*Nu_1_NT_dist_layer(p,sol,kl))
+        invL[kl] = sum(Nl_1_NT_dist_layer(p,sol,kl) - (p.g_L+2)/p.g_L*Nl_NT_dist_layer(p,sol,kl))
     end
     total_invU = sum(p.r_int.*invU)/sum(p.r_int)
     total_invL = sum(p.r_int.*invL)/sum(p.r_int)
