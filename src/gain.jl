@@ -16,14 +16,14 @@ function Nu_NT_dist_layer(p, sol, layer)
     index_offset = ind_offset(p, layer)
     Nu = zeros(p.num_freq)
     for i in 1:p.num_freq
-        index_u = index_offset + (i-1) * p.n_rot + (p.n_rot÷2 + p.J0-1) # 12 comes from counting rot levels
+        index_u = index_offset + (i-1) * p.n_rot + (p.n_rot÷2 + p.JU-2) # 12 comes from counting rot levels
         Nu[i] = sol[index_u]
     end
     return Nu
 end
 function Nu_T_dist_layer(p, sol, layer)
     index_p = ind_p_U(p, layer)
-    return p.C5U * (p.ntotal * p.f_3_0/2 + sol[index_p]) .* p.gauss_dist
+    return p.CU * (p.ntotal * p.f_3_0/2 + sol[index_p]) .* p.gauss_dist
 end
 
 function Nu_total_dist_layer(p, sol, layer)
@@ -35,14 +35,14 @@ function Nu_1_NT_dist_layer(p, sol, layer)
     index_offset = ind_offset(p, layer)
     N = zeros(p.num_freq)
     for i in 1:p.num_freq
-        index_u = index_offset + (i-1) * p.n_rot + (p.n_rot÷2 + p.J0-2)
+        index_u = index_offset + (i-1) * p.n_rot + (p.n_rot÷2 + p.JU-3)
         N[i] = sol[index_u]
     end
     return N
 end
 function Nu_1_T_dist_layer(p, sol, layer)
     index_p = ind_p_U(p, layer)
-    return p.C4U * (p.ntotal * p.f_3_0/2 + sol[index_p]) .* p.gauss_dist
+    return p.CU1 * (p.ntotal * p.f_3_0/2 + sol[index_p]) .* p.gauss_dist
 end
 
 function Nu_1_total_dist_layer(p, sol, layer)
@@ -54,14 +54,14 @@ function Nl_NT_dist_layer(p, sol, layer)
     index_offset = ind_offset(p, layer)
     Nl = zeros(p.num_freq)
     for i in 1:p.num_freq
-        index_l = index_offset + (i-1) * p.n_rot + (p.J0-2)
+        index_l = index_offset + (i-1) * p.n_rot + (p.JL-2)
         Nl[i] = sol[index_l]
     end
     return Nl
 end
 function Nl_T_dist_layer(p, sol, layer)
     index_p = ind_p_L(p, layer)
-    return p.C4L * (p.ntotal * p.f_G_0/2 + sol[index_p]) .* p.gauss_dist
+    return p.CL * (p.ntotal * p.f_G_0/2 + sol[index_p]) .* p.gauss_dist
 end
 
 function Nl_total_dist_layer(p, sol, layer)
@@ -73,14 +73,14 @@ function Nl_1_NT_dist_layer(p, sol, layer)
     index_offset = ind_offset(p, layer)
     N = zeros(p.num_freq)
     for i in 1:p.num_freq
-        index_l = index_offset + (i-1) * p.n_rot + (p.J0-1)
+        index_l = index_offset + (i-1) * p.n_rot + (p.JL-1)
         N[i] = sol[index_l]
     end
     return N
 end
 function Nl_1_T_dist_layer(p, sol, layer)
     index_p = ind_p_L(p, layer)
-    return p.C5L * (p.ntotal * p.f_G_0/2 + sol[index_p]) .* p.gauss_dist
+    return p.CL1 * (p.ntotal * p.f_G_0/2 + sol[index_p]) .* p.gauss_dist
 end
 
 function Nl_1_total_dist_layer(p, sol, layer)
@@ -102,54 +102,54 @@ end
 function inv_U_dist_layer(p, sol, layer)
     Nu = Nu_total_dist_layer(p, sol, layer)
     Nu_1 = Nu_1_total_dist_layer(p, sol, layer)
-    return (Nu - Nu_1*p.g_U/p.g_L)
+    return (Nu - Nu_1*p.g_U/(p.g_U-2))
 end
 
 # pop inv distribution over velocity between L+1 and L
 function inv_L_dist_layer(p, sol, layer)
     Nl = Nl_total_dist_layer(p, sol, layer)
     Nl_1 = Nl_1_total_dist_layer(p, sol, layer)
-    return (Nl_1 - Nl*p.g_U/p.g_L)
+    return (Nl_1 - Nl*(p.g_L+2)/p.g_L)
 end
 
 ##
-function gain_dir_layer(p, sol, layer)
-    inv_U = inv_U_dist_layer(p, sol, layer)
-    inv = 0.0
-    for i in 1:length(inv_U)
-        g(ν) = 1/π * p.Δ_f_NTF[layer] ./ ((ν - p.f_dist_dir_lasing[i]).^2 + p.Δ_f_NTF[layer]^2)
-#        fraction = quadgk(g, p.f_dir_lasing-3e6, p.f_dir_lasing+3e6)[1]
-        fraction = g(p.f_dir_lasing)
-        inv += inv_U[i] * fraction
-    end
-##    sum(inv_U .* p.fp_lasing)
-    return inv
-end
+# function gain_dir_layer(p, sol, layer)
+#     inv_U = inv_U_dist_layer(p, sol, layer)
+#     inv = 0.0
+#     for i in 1:length(inv_U)
+#         g(ν) = 1/π * p.Δ_f_NTF[layer] ./ ((ν - p.f_dist_dir_lasing[i]).^2 + p.Δ_f_NTF[layer]^2)
+# #        fraction = quadgk(g, p.f_dir_lasing-3e6, p.f_dir_lasing+3e6)[1]
+#         fraction = g(p.f_dir_lasing)
+#         inv += inv_U[i] * fraction
+#     end
+# ##    sum(inv_U .* p.fp_lasing)
+#     return inv
+# end
+#
+# function gain_ref_layer(p, sol, layer)
+#     inv_L = inv_L_dist_layer(p, sol, layer)
+#     inv = 0.0
+#     for i in 1:length(inv_L)
+#         g(ν) = 1/π * p.Δ_f_NTF[layer] ./ ((ν - p.f_dist_ref_lasing[i]).^2 + p.Δ_f_NTF[layer]^2)
+#  #       fraction = quadgk(g, p.f_ref_lasing-3e6, p.f_ref_lasing+3e6)[1]
+#          fraction = g(p.f_ref_lasing)
+#          inv += inv_L[i] * fraction
+#     end
+#     return inv
+# end
 
-function gain_ref_layer(p, sol, layer)
-    inv_L = inv_L_dist_layer(p, sol, layer)
-    inv = 0.0
-    for i in 1:length(inv_L)
-        g(ν) = 1/π * p.Δ_f_NTF[layer] ./ ((ν - p.f_dist_ref_lasing[i]).^2 + p.Δ_f_NTF[layer]^2)
- #       fraction = quadgk(g, p.f_ref_lasing-3e6, p.f_ref_lasing+3e6)[1]
-         fraction = g(p.f_ref_lasing)
-         inv += inv_L[i] * fraction
-    end
-    return inv
-end
-
-
-function gain_profile_layer(p, sol, layer; ω=p.f_dist_dir_lasing)
-    dist = Array(Float64, length(ω))
-    inv_U = inv_U_dist_layer(p, sol, layer)
-    for i in 1:length(ω)
-        ωi = ω[i]
-        ω_dist = f_NT_ampl(ω, p.Δ_f_NT, ωi)
-        ω_dist = ω_dist/sum(ω_dist)
-        dist[i] = sum(inv_U .* ω_dist)
-    end
-    return dist
-end
+#
+# function gain_profile_layer(p, sol, layer; ω=p.f_dist_dir_lasing)
+#     dist = Array(Float64, length(ω))
+#     inv_U = inv_U_dist_layer(p, sol, layer)
+#     for i in 1:length(ω)
+#         ωi = ω[i]
+#         ω_dist = f_NT_ampl(ω, p.Δ_f_NT, ωi)
+#         ω_dist = ω_dist/sum(ω_dist)
+#         dist[i] = sum(inv_U .* ω_dist)
+#     end
+#     return dist
+# end
 
 # ### gain calculation with integration over the field: ###
 # function mode(mode_num)

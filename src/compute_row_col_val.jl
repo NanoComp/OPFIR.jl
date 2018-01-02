@@ -210,31 +210,31 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
     ### pump term:
     for vi in 1:p.num_freq
         for ri in 1:p.num_layers
-            ### pumping:
-            row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.J0-2)
-            val = -p.pump_IR[vi, ri]
+            ### pumping L:
+            row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.JL-2)
+            val = - p.pump_IR[vi, ri]
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
             col = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 1 #V0
-            val = - p.pump_IR[vi, ri] * p.C4L * p.gauss_dist[vi]
+            val = - p.pump_IR[vi, ri] * p.CL * p.gauss_dist[vi]
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
 
-            col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.n_rot÷2 + p.J0-1)
+            col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.n_rot÷2 + p.JU-2)
             val = p.pump_IR[vi, ri] * p.g_L/p.g_U
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
 
             col = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 2 #V3
-            val = p.pump_IR[vi, ri] * p.C5U * p.gauss_dist[vi] * p.g_L/p.g_U
+            val = p.pump_IR[vi, ri] * p.CU * p.gauss_dist[vi] * p.g_L/p.g_U
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
 
             ### pumping for U level
-            row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.n_rot÷2 + p.J0-1)
-            col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.J0-2) #
+            row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.n_rot÷2 + p.JU-2)
+            col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.JL-2) #
             val = p.pump_IR[vi, ri]
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
 
             col = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 1 # V0
-            val = p.pump_IR[vi, ri] * p.C4L * p.gauss_dist[vi]
+            val = p.pump_IR[vi, ri] * p.CL * p.gauss_dist[vi]
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
 
             col = row
@@ -242,7 +242,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
 
             col = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 2 # V3
-            val = - p.pump_IR[vi, ri] * p.C5L * p.gauss_dist[vi] * p.g_L/p.g_U
+            val = - p.pump_IR[vi, ri] * p.CU * p.gauss_dist[vi] * p.g_L/p.g_U
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
         end
     end
@@ -250,28 +250,28 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
     ### stimulated emission term:
     for vi in 1:p.num_freq
         for ri in 1:p.num_layers
-            row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.J0-2) #V0, J4 level
-            val = - p.WiL*p.g_U/p.g_L ## J4 -> J5 (diagonal):
+            row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.JL-2) #V0, J4 level
+            val = - p.WiL*(p.g_L+2)/p.g_L ## J4 -> J5 (diagonal):
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
             val = p.WiL ## J5 -> J4:
             s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
 
-            row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.J0-1) #V0, J5 level
+            row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.JL-1) #V0, J5 level
             val = - p.WiL  # J5 -> J4 (diagonal)
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
-            val = p.WiL*p.g_U/p.g_L # J4 -> J5
+            val = p.WiL*(p.g_L+2)/p.g_L # J4 -> J5
             s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
 
-            row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.n_rot÷2 + p.J0-2) #V3, J4
-            val = - p.WiU*p.g_U/p.g_L ## J4 -> J5 (diagonal)
+            row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.n_rot÷2 + p.JU-3) #V3, J4
+            val = - p.WiU*p.g_U/(p.g_U-2) ## J4 -> J5 (diagonal)
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
             val = p.WiU ## J5 -> J4:
             s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
 
-            row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.n_rot÷2 + p.J0-1) #V3, J5
+            row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.n_rot÷2 + p.JU-2) #V3, J5
             val = - p.WiU ## J5 -> J4
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
-            val = p.WiU*p.g_U/p.g_L ## J4 -> J5
+            val = p.WiU*p.g_U/(p.g_U-2) ## J4 -> J5
             s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
         end
     end

@@ -1,6 +1,6 @@
 function alphaback(p, sol) # in m^-1
-    tmp_factor = 8*π^3/3/p.h/p.c * 1e-36 * 0.2756^2*((p.J0+1)^2-p.K0^2)/(p.J0+1)/(2p.J0+1) *
-                  p.f_pump * 1e-13 / p.df
+    tmp_factor = 8*π^3/3/p.h/p.c * 1e-36 * dipolemom(p) * p.f_pump * 1e-13 / p.df
+
     alphab = zeros(p.num_layers)
     for ri in 1:p.num_layers
         Nl_dist = Nl_total_dist_layer(p, sol, ri)
@@ -38,15 +38,15 @@ function comppumprate!(p, alphab)
         p.SHBB[:, ri] = f_NT_normalized(p.f_dist_ctrB, fV, p.f_pump, p.df)
 
         p.pump_IR[:, ri] =
-        8*π^3/(3*p.h^2*p.c)*1e-36*(0.2756^2*((p.J0+1)^2-p.K0^2)/(p.J0+1)/(2p.J0+1))/(π*p.radius^2)*1e-9 *
+        8*π^3/(3*p.h^2*p.c)*1e-36*dipolemom(p)/(π*p.radius^2)*1e-9 *
         (p.SHBF[:, ri]/p.df * pavgforw +
          p.SHBB[:, ri]/p.df * pavgback)/p.norm_time
      end
 end
 
 function update_alpha_from_N!(p, sol) # in m^-1
-    tmp_factor = 8*π^3/3/p.h/p.c * 1e-36 * 0.2756^2*((p.J0+1)^2-p.K0^2)/(p.J0+1)/(2p.J0+1) *
-                  p.f_pump * 1e-13 / p.df
+    tmp_factor = 8*π^3/3/p.h/p.c * 1e-36 * dipolemom(p) * p.f_pump * 1e-13 / p.df
+
     for ri in 1:p.num_layers
         Nl_dist = Nl_total_dist_layer(p, sol, ri)
         Nu_dist = Nu_total_dist_layer(p, sol, ri)
@@ -66,4 +66,16 @@ function update_Param_from_alpha!(p, sol)
 
     alphab = sum(alphaback(p, sol).*p.r_int)/sum(p.r_int) * ones(p.num_layers)
     comppumprate!(p, alphab)
+end
+
+function dipolemom(p)
+    matele = 0.
+    if p.pumpbranch == "R"
+        matele = 0.2756^2*((p.JL+1)^2-p.K0^2)/(p.JL+1)/(2p.JL+1)
+    elseif p.pumpbranch == "Q"
+        matele = 0.2756^2*p.K0^2/(p.JL+1)/p.JL
+    else
+        matele = 0.2756^2*(p.JL^2-p.K0^2)/p.JL/(2p.JL+1)
+    end
+    return matele
 end

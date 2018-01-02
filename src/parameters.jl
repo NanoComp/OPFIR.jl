@@ -45,12 +45,16 @@ type Params{T<:Real}
     f_36::T
     f_26::T
 
-    J0::Integer #Lasing: J+1 -> J
+    JL::Integer #pump: JL in V0 ->JU in V3
+    JU::Integer
     K0::Integer
-    C4L::T
-    C5L::T
-    C4U::T
-    C5U::T
+
+    pumpbranch::AbstractString #'R' or 'P' or 'Q'
+
+    CL::T
+    CL1::T
+    CU::T
+    CU1::T
 
     g_L::T
     g_U::T
@@ -247,8 +251,10 @@ function Params(DefaultT=Float64;
     E23 = 2100,
     E36 = 2250,
     E26 = 2400,
-    J0 = 4,
+    JL = 4,
+    JU = 5,
     K0 = 3,
+    pumpbranch = "R",
     g_L = 9.0,
     g_U = 11.0,
     NA = 6.0221413e23,
@@ -289,23 +295,36 @@ function Params(DefaultT=Float64;
     optcavity = false,
     )
     #### CJL:
-    C3L = 0.005926302*2
-    ΔEJ3 = ΔEr(3, J0, K0, "V0") # in Hz
-    C4L = C4U = exp(-ΔEJ3*h/(kB*T*ev)) * (2J0+1)/7 * C3L
-    ΔEJP13 = ΔEr(3, J0+1, K0, "V0") # in Hz
-    C5L = C5U = exp(-ΔEJP13*h/(kB*T*ev)) * (2(J0+1)+1)/7 * C3L
+    C3L = C3U = 0.005926302*2
+    ΔEL3 = ΔEr(3, JL, K0, "V0") # in Hz
+    CL = exp(-ΔEL3*h/(kB*T*ev)) * (2JL+1)/7 * C3L
+    CL1 = exp(-ΔEr(3, JL+1, K0, "V0")*h/(kB*T*ev)) * (2(JL+1)+1)/7 * C3L
+    if pumpbranch == "R"
+        JU = JL+1
+    elseif pumpbranch == "Q"
+        JU = JL
+    elseif pumpbranch == "P"
+        JU = JL-1
+    else
+        throw(ArgumentError("pump branch can only be P, Q, R!"))
+    end
+    CU = exp(-ΔEr(3, JU, K0, "V3")*h/(kB*T*ev)) * (2JU+1)/7 * C3U
+    CU1 = exp(-ΔEr(3, JU-1, K0, "V3")*h/(kB*T*ev)) * (2(JU-1)+1)/7 * C3U
 
-    gL = 2J0 + 1
-    gU = 2(J0+1) + 1
+    if JU<=3 || JL>=11 || JU>=12 || JL<3
+        throw(ArgumentError("JL or JU is out of bounds!"))
+    end
+    g_L = 2JL + 1
+    g_U = 2JU + 1
 
-    f_dir_lasing = ΔEr(J0, J0+1, K0, "V3")
-    f_ref_lasing = ΔEr(J0, J0+1, K0, "V0")
+    f_dir_lasing = ΔEr(JU, JU-1, K0, "V3")
+    f_ref_lasing = ΔEr(JL+1, JL, K0, "V0")
 
     ## back to master:
     # C4L = C4U = 0.014749194
     # C5L = C5U = 0.017305406
 
-    f₀ += ΔEr(5, J0+1, K0, "V3") - ΔEr(4, J0, K0, "V0")
+    f₀ += ΔEr(5, JU, K0, "V3") - ΔEr(4, JL, K0, "V0")
     f_pump = f₀ + f_offset
 
     if model_flag == 1
@@ -434,8 +453,8 @@ function Params(DefaultT=Float64;
     averagePF = power * ones(num_layers)
     averagePB = power * ones(num_layers)
 
-    totalNL0 = C4L * ntotal * f_G_0/2
-    totalNU0 = C5U * ntotal * f_3_0/2
+    totalNL0 = CL * ntotal * f_G_0/2
+    totalNU0 = CU * ntotal * f_3_0/2
     # alpha_0 in m^-1
     alpha_0 = exp(-log(2)*((f_pump-f₀)/Δ_f₀D)^2)*sqrt(log(2)/pi)/Δ_f₀D *
               8*pi^3/3/h/c * (totalNL0 - totalNU0) *
@@ -495,7 +514,7 @@ function Params(DefaultT=Float64;
     v_avg, kvs, #kvsplit,
     EG, E3, E6, E23, E36, E26, Q,
     f_G_0, f_3_0, f_6_0, f_GA, f_3A, f_6A, f_GE, f_3E, f_6E, f_23, f_36, f_26,
-    J0, K0, C4L, C5L, C4U, C5U, g_L, g_U, NA,
+    JL, JU, K0, pumpbranch, CL, CL1, CU, CU1, g_L, g_U, NA,
     f₀, f_offset, f_pump, f_dir_lasing, f_ref_lasing, Δ_f₀D, f_range,
     n_rot, n_vib,
     mu0, eps0,
