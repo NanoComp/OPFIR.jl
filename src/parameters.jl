@@ -312,8 +312,8 @@ function Params(DefaultT=Float64;
     CU1 = exp(-ΔEr(3, JU-1, K0, "V3")*h/(kB*T*ev)) * (2(JU-1)+1)/7 * C3U
 
     # debug:
-    CU1 = 0.014761908961324196
-    CU = 0.01733898887241127
+    # CU1 = 0.014761908961324196
+    # CU = 0.01733898887241127
 
     if JU<=3 || JL>=11 || JU>=12 || JL<3
         throw(ArgumentError("JL or JU is out of bounds!"))
@@ -322,7 +322,7 @@ function Params(DefaultT=Float64;
     g_U = 2JU + 1
 
     f_dir_lasing = ΔEr(JU-1, JU, K0, "V3")
-    f_ref_lasing = ΔEr(JL+1, JL, K0, "V0")
+    f_ref_lasing = ΔEr(JL, JL+1, K0, "V0")
 
     ## back to master:
     # C4L = C4U = 0.014749194
