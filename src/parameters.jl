@@ -297,6 +297,13 @@ function Params(DefaultT=Float64;
     # debug:
     # CU1 = 0.014761908961324196
     # CU = 0.01733898887241127
+    if pumpbranch == "R"
+        n_rot = max(2(JL+2), 18)
+    elseif pumpbranch == "P"
+        n_rot = max(2JL, 18)
+    elseif pumpbranch == "Q"
+        n_rot = max(2(JL+1), 18)
+    end
 
     if JU<=3 || JL>=2+n_rot÷2 || JU>=3+n_rot÷2 || JL<3
         throw(ArgumentError("JL or JU is out of bounds!"))
