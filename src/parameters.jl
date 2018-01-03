@@ -298,7 +298,7 @@ function Params(DefaultT=Float64;
     # CU1 = 0.014761908961324196
     # CU = 0.01733898887241127
 
-    if JU<=3 || JL>=11 || JU>=12 || JL<3
+    if JU<=3 || JL>=2+n_rot÷2 || JU>=3+n_rot÷2 || JL<3
         throw(ArgumentError("JL or JU is out of bounds!"))
     end
     g_L = 2JL + 1
