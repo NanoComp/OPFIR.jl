@@ -140,60 +140,43 @@ type Params{T<:Real}
     MFP::T
     D::T
 
-    k98_G::T
-    k87_G::T
-    k76_G::T
-    k65_G::T
-    k54_G::T
-    k43_G::T
-    k32_G::T
-    k21_G::T
-
-    k89_G::T
-    k78_G::T
-    k67_G::T
-    k56_G::T
-    k45_G::T
-    k34_G::T
-    k23_G::T
-    k12_G::T
-
-    k98_3::T
-    k87_3::T
-    k76_3::T
-    k65_3::T
-    k54_3::T
-    k43_3::T
-    k32_3::T
-    k21_3::T
-
-    k89_3::T
-    k78_3::T
-    k67_3::T
-    k56_3::T
-    k45_3::T
-    k34_3::T
-    k23_3::T
-    k12_3::T
-
-    k1a::T
-    k2a::T
-    k3a::T
-    k4a::T
-    k5a::T
-    k6a::T
-    k7a::T
-    k8a::T
-    k9a::T
-    k10a::T
-    k11a::T
-    k12a::T
-    k13a::T
-    k14a::T
-    k15a::T
-    k16a::T
-    k17a::T
-    k18a::T
+    # k98_G::T
+    # k87_G::T
+    # k76_G::T
+    # k65_G::T
+    # k54_G::T
+    # k43_G::T
+    # k32_G::T
+    # k21_G::T
+    #
+    # k89_G::T
+    # k78_G::T
+    # k67_G::T
+    # k56_G::T
+    # k45_G::T
+    # k34_G::T
+    # k23_G::T
+    # k12_G::T
+    #
+    # k98_3::T
+    # k87_3::T
+    # k76_3::T
+    # k65_3::T
+    # k54_3::T
+    # k43_3::T
+    # k32_3::T
+    # k21_3::T
+    #
+    # k89_3::T
+    # k78_3::T
+    # k67_3::T
+    # k56_3::T
+    # k45_3::T
+    # k34_3::T
+    # k23_3::T
+    # k12_3::T
+    kDDmat::AbstractArray
+    ka::AbstractVector
 
     niter::Integer
     lin_solver::AbstractString
@@ -488,30 +471,20 @@ function Params(DefaultT=Float64;
 
     kDD = 19.8 * pressure * σ_DD/ sqrt(T*M)
 
-    J = [3,4,5,6,7,8,9,10,11]
-    # in 1/microsec. rate_ij = rate_DD * prob. of ij collision:
-    k98_3 = k98_G = kDD*Q_selectn_hl(J[9], K0)/(1e3)
-    k87_3 = k87_G = kDD*Q_selectn_hl(J[8], K0)/(1e3)
-    k76_3 = k76_G = kDD*Q_selectn_hl(J[7], K0)/(1e3)
-    k65_3 = k65_G = kDD*Q_selectn_hl(J[6], K0)/(1e3)
-    k54_3 = k54_G = kDD*Q_selectn_hl(J[5], K0)/(1e3)
-    k43_3 = k43_G = kDD*Q_selectn_hl(J[4], K0)/(1e3)
-    k32_3 = k32_G = kDD*Q_selectn_hl(J[3], K0)/(1e3)
-    k21_3 = k21_G = kDD*Q_selectn_hl(J[2], K0)/(1e3)
-
-    k89_3 = k89_G = kDD*Q_selectn_lh(J[8], K0)/(1e3)
-    k78_3 = k78_G = kDD*Q_selectn_lh(J[7], K0)/(1e3)
-    k67_3 = k67_G = kDD*Q_selectn_lh(J[6], K0)/(1e3)
-    k56_3 = k56_G = kDD*Q_selectn_lh(J[5], K0)/(1e3)
-    k45_3 = k45_G = kDD*Q_selectn_lh(J[4], K0)/(1e3)
-    k34_3 = k34_G = kDD*Q_selectn_lh(J[3], K0)/(1e3)
-    k23_3 = k23_G = kDD*Q_selectn_lh(J[2], K0)/(1e3)
-    k12_3 = k12_G = kDD*Q_selectn_lh(J[1], K0)/(1e3)
+    J = 3:(n_rot÷2+2)
+    # in 1/microsec. rate_ij = rate_DD * prob. of ij collision, also kDDmat[i,j]:
+    kDDmat = zeros(n_rot, n_rot)
+    for i in 2:length(J)
+        kDDmat[i, i-1] = kDDmat[i+n_rot÷2, i+n_rot÷2-1] =
+        kDD*Q_selectn_hl(J[i], K0)/(1e3)
+    end
+    for i in 1:length(J)-1
+        kDDmat[i, i+1] = kDDmat[i+n_rot÷2, i+n_rot÷2+1] =
+        kDD*Q_selectn_lh(J[i], K0)/(1e3)
+    end
 
     # K-swap rates -> goes to thermal pool, in 1/microsec
-    k18a = k17a = k16a = k15a = k14a = k13a = k12a = k11a = k10a =
-    k9a = k8a = k7a = k6a = k5a = k4a = k3a = k2a =
-    k1a = 19.8*pressure*σ_SPT/sqrt(T*M)/(1e3)
+    ka = 19.8*pressure*σ_SPT/sqrt(T*M)/(1e3) * ones(n_rot)
 
     return Params{DefaultT}(radius, pump_radius, L, L_eff, h, c, ev, kB, T, T_vA, T_vE, kBT, M, norm_time,
     σ_GKC, σ_DD, σ_SPT, σ_36, σ_VS,
@@ -533,12 +506,8 @@ function Params(DefaultT=Float64;
     alpha_0, alpha_r, pump_0, pump_IR,
     Δr, r_int,
     kwall, MFP, D,
-    k98_G, k87_G, k76_G, k65_G, k54_G, k43_G, k32_G, k21_G,
-    k89_G, k78_G, k67_G, k56_G, k45_G, k34_G, k23_G, k12_G,
-    k98_3, k87_3, k76_3, k65_3, k54_3, k43_3, k32_3, k21_3,
-    k89_3, k78_3, k67_3, k56_3, k45_3, k34_3, k23_3, k12_3,
-    k1a, k2a, k3a, k4a, k5a, k6a, k7a, k8a, k9a, k10a, k11a,
-    k12a, k13a, k14a, k15a, k16a, k17a, k18a,
+    kDDmat,
+    ka,
     niter, lin_solver, model_flag, solstart_flag,
     backward, ACStark, effectiveL, MultRef, D_factor,
     f_dirgain_dist, f_refgain_dist, dirgain, refgain,
