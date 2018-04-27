@@ -140,41 +140,6 @@ type Params{T<:Real}
     MFP::T
     D::T
 
-    # k98_G::T
-    # k87_G::T
-    # k76_G::T
-    # k65_G::T
-    # k54_G::T
-    # k43_G::T
-    # k32_G::T
-    # k21_G::T
-    #
-    # k89_G::T
-    # k78_G::T
-    # k67_G::T
-    # k56_G::T
-    # k45_G::T
-    # k34_G::T
-    # k23_G::T
-    # k12_G::T
-    #
-    # k98_3::T
-    # k87_3::T
-    # k76_3::T
-    # k65_3::T
-    # k54_3::T
-    # k43_3::T
-    # k32_3::T
-    # k21_3::T
-    #
-    # k89_3::T
-    # k78_3::T
-    # k67_3::T
-    # k56_3::T
-    # k45_3::T
-    # k34_3::T
-    # k23_3::T
-    # k12_3::T
     kDDmat::AbstractArray
     ka::AbstractVector
 
@@ -212,76 +177,112 @@ type Params{T<:Real}
 end
 
 function Params(DefaultT=Float64;
-    radius = 0.25,
-    pump_radius = radius,
-    L = 15,
-    L_eff = 15,
-    h = 6.626068e-34,
-    c = 3.0e8,
-    ev = 1.60217646e-19,
-    kB = 8.617342e-5, # in ev/K
+    radius = 0.25, # in cm
+    L = 15, # in cm
     T = 300,
-    M = 35,
-    norm_time = 1e6,
-    σ_GKC = 44,
-    σ_DD = 320,
-    σ_SPT = 137,
-    σ_36 = 1.61,
-    σ_VS = 21,
-    EG = 0,
-    E3 = 1050,
-    E6 = 1200,
-    E23 = 2100,
-    E36 = 2250,
-    E26 = 2400,
-    JL = 4,
-    JU = 5,
-    K0 = 3,
-    pumpbranch = "R",
-    g_L = 9.0,
-    g_U = 11.0,
-    NA = 6.0221413e23,
-    f₀ = 31.042748176e12,
-    f_offset = 30e6,
-    f_pump = f₀ + f_offset,
-    f_dir_lasing = 245.38e9,
-    f_ref_lasing = 248.56e9,
-    n_rot = 18,
-    mu0 = 4e-7*pi,
-    eps0 = 8.85e-12,
-    # mode_num: 1: TE01 / 2: TE12 / 3: TE02 / 4: TE22 / 5: TE11 / 6: TE21 / 7: TM01 / 8: TM11
-    mode_num = 1,
-    #zeros of Bessel functions:
-    p_library = [3.83, 5.33, 7.02, 6.71, 1.84, 3.05, 2.4, 3.83],
-    n0 = 1.0,
-    t_spont = 10,
-    Δν_THz = 25e6,
-    ## pressure and power related parameters:
     pressure = 100.0,
     power = 10.0,
+    ####################################
+    ## molecule setup
+    ####################################
+    M = 35,
+    ####################################
+    ## pump setup
+    ####################################
+    JL = 4,
+    K0 = 3,
+    pumpbranch = "R",
+    f_offset = 30e6,
+    n_rot = 18,
+    n0 = 1.0,
+    t_spont = 10,
+    ####################################
+    ## model/solver setup
+    ####################################
     num_layers = 10,
-    alpha_0 = 65.0,
-    niter = 10,
-    lin_solver = "Default",
     model_flag = 1,
     solstart_flag = 0,
-    backward = 1,
-    ACStark = 1,
-    effectiveL = 0,
-    MultRef = 1,
-    D_factor = 1.0,
-    script = 0,
-    evol_t = 0:.1:1,
-    err_tv = false,
-    WiU = 0,
-    WiL = 0,
     optcavity = false,
+    D_factor = 1.0,
+    WiU = 0,
+    WiL = 0
     )
-    #### CJL:
-    C3L = C3U = 0.005926302*2
-    ΔEL3 = ΔEr(3, JL, K0, "V0") # in Hz
-    CL = exp(-ΔEL3*h/(kB*T*ev)) * (2JL+1)/7 * C3L
-    CL1 = exp(-ΔEr(3, JL+1, K0, "V0")*h/(kB*T*ev)) * (2(JL+1)+1)/7 * C3L
+
+    ###################################################
+    #### physical constants
+    ###################################################
+    h = 6.626068e-34
+    c = 2.99792458e8
+    ev = 1.60217646e-19
+    kB = 8.617342e-5 # in ev/K
+    mu0 = 4e-7*pi
+    eps0 = 8.85e-12
+    NA = 6.0221413e23
+    kBT = kB*T*8065.73 # in cm^-1
+
+    #### unit constants
+    norm_time = 1e6
+
+    ###################################################
+    #### model configuration
+    ###################################################
+    niter = 10 # deprecated
+    lin_solver = "Default" # deprecated
+    backward = 1 # not used
+    ACStark = 1 # not used
+    effectiveL = 0 # deprecated
+    script = 0 # deprecated
+    MultRef = 1 # deprecated
+    Δν_THz = 25e6 # deprecated
+    mode_num = 1 # deprecated
+    # mode_num: 1: TE01 / 2: TE12 / 3: TE02 / 4: TE22 / 5: TE11 / 6: TE21 / 7: TM01 / 8: TM11
+    #zeros of Bessel functions:
+    p_library = [3.83, 5.33, 7.02, 6.71, 1.84, 3.05, 2.4, 3.83] # deprecated
+
+    evol_t = 0:.1:1
+    err_tv = false
+
+    pump_radius = radius # deprecated
+    L_eff = L
+
+    ###################################################
+    #### molecule setup
+    ###################################################
+    if M == 35 # 13CH3F
+        σ_GKC = 44
+        σ_DD = 320
+        σ_SPT = 137
+        σ_36 = 1.61
+        σ_VS = 21
+        EG = 0
+        E3 = 1027.49
+        E6 = 1175
+        E23 = 2100
+        E36 = 2250
+        E26 = 2400
+        A0, B0, DJ0, DJK0 = (155.3528, 24.8626427, 5.77E-05, 0.00042441)
+        A3, B3, DJ3, DJK3 = (155.3528, 24.5421324, 0.000055156, 0.00047788)
+    elseif M == 34
+        σ_GKC = 44
+        σ_DD = 320
+        σ_SPT = 50.0
+        σ_36 = 3.21
+        σ_VS = 18.9
+        EG = 0
+        E3 = 1048.61
+        E6 = 1182.35
+        E23 = 2100
+        E36 = 2250
+        E26 = 2400
+        A0, B0, DJ0, DJK0 = (155.3528, 25.5361499, 0.000060233, 0.000439574) # in GHz
+        A3, B3, DJ3, DJK3 = (155.3528, 25.1975092, 5.68788E-05, 0.000518083) # in GHz
+    end
+    g_6 = 2
+
+    ###################################################
+    #### pump setup
+    ###################################################
+
     if pumpbranch == "R"
         JU = JL+1
     elseif pumpbranch == "Q"
@@ -291,53 +292,36 @@ function Params(DefaultT=Float64;
     else
         throw(ArgumentError("pump branch can only be P, Q, R!"))
     end
-    CU = exp(-ΔEr(3, JU, K0, "V3")*h/(kB*T*ev)) * (2JU+1)/7 * C3U
-    CU1 = exp(-ΔEr(3, JU-1, K0, "V3")*h/(kB*T*ev)) * (2(JU-1)+1)/7 * C3U
-
-    # debug:
-    # CU1 = 0.014761908961324196
-    # CU = 0.01733898887241127
-    if pumpbranch == "R"
-        n_rot = max(2(JL+2), 18)
-    elseif pumpbranch == "P"
-        n_rot = max(2JL, 18)
-    elseif pumpbranch == "Q"
-        n_rot = max(2(JL+1), 18)
-    end
-
-    if JU<=3 || JL>=2+n_rot÷2 || JU>=3+n_rot÷2 || JL<3
-        throw(ArgumentError("JL or JU is out of bounds!"))
-    end
     g_L = 2JL + 1
     g_U = 2JU + 1
+    CL, CL1, CU, CU1 = compCs(JL, JU, K0, h, T, M)
 
-    f_dir_lasing = ΔEr(JU-1, JU, K0, "V3")
-    f_ref_lasing = ΔEr(JL, JL+1, K0, "V0")
-
-    ## back to master:
-    # C4L = C4U = 0.014749194
-    # C5L = C5U = 0.017305406
-
-    f₀ += ΔEr(5, JU, K0, "V3") - ΔEr(4, JL, K0, "V0")
+    EU = E3*c/1e7 + B3*JU*(JU+1) + (A3-B3)*K0^2 - DJ3*JU^2*(JU+1)^2 -DJK3*JU*(JU+1)*K0^2 # in GHz
+    EL = B0*JU*(JU+1) + (A0-B0)*K0^2 - DJ0*JU^2*(JU+1)^2 -DJK0*JU*(JU+1)*K0^2
+    f₀ = (EU - EL) * 1e9 # in Hz
     f_pump = f₀ + f_offset
 
-    if model_flag == 1
-        n_vib = 12
-    elseif model_flag == 2
-        n_vib = 6
-    end
+    f_dir_lasing = ΔEr(JU-1, JU, K0, "V3", M)
+    f_ref_lasing = ΔEr(JL, JL+1, K0, "V0", M)
 
-    T_vA = T * ones(num_layers)
-    T_vE = T * ones(num_layers)
-
-    kBT = kB*T*8065.73 # in cm^-1
+    ###################################################
+    #### derived molecular parameters
+    ###################################################
     v_avg = 205*sqrt(T/M)
+    vel = v_avg/sqrt(2)/norm_time # avg absolute vel in m/microsec
     kvs = v_avg*σ_VS * (1e-10)^2/norm_time
-
+    MFP = 0.732*T/pressure/σ_GKC # in cm
     # σ_VSplit = 12.4
     # kvsplit = v_avg*σ_VSplit * (1e-10)^2/norm_time
+    # diffusion coefficient in m^2/microsec. Einstein-Smoluchowski equation;
+    D = 1/3 * vel * MFP * 1e-2 * D_factor
+    kDD = 19.8 * pressure * σ_DD/ sqrt(T*M)
 
-    g_6 = 2
+    Δ_f₀D = 3.58e-7*f₀*sqrt(T/M)
+    Δ_fP = 15e6*(pressure/1e3)
+
+    ntotal = 9.66e24 * pressure * 1e-3 / T # with unit m^-3
+    kro = ntotal * v_avg * σ_VS * (1e-10)^2 / norm_time
 
     if model_flag==1
         Q = exp(EG) + exp(-E3/kBT) + 2*exp(-E6/kBT) + exp(-E23/kBT) +
@@ -345,38 +329,16 @@ function Params(DefaultT=Float64;
         f_G_0 = exp(EG)/Q
         f_3_0 = exp(-E3/kBT)/Q
         f_6_0 = g_6*exp(-E6/kBT)/Q
-        f_GA = f_G_0 * ones(num_layers)
-        f_3A = f_3_0 * ones(num_layers)
-        f_6A = f_6_0 * ones(num_layers)
-        f_GE = f_G_0 * ones(num_layers)
-        f_3E = f_3_0 * ones(num_layers)
-        f_6E = f_6_0 * ones(num_layers)
     elseif model_flag==2
-        Q = Qv(kB, T, script)
+        Q = Qv(kB, T)
         f_G_0 = exp(EG)/Q
         f_3_0 = exp(-E3/kBT)/Q
         f_6_0 = 1- f_G_0 - f_3_0
-        f_GA = f_G_0 * ones(num_layers)
-        f_3A = f_3_0 * ones(num_layers)
-        f_6A = f_6_0 * ones(num_layers)
-        f_GE = f_G_0 * ones(num_layers)
-        f_3E = f_3_0 * ones(num_layers)
-        f_6E = f_6_0 * ones(num_layers)
-        # println(f_G_0, f_3_0, f_6_0)
     end
     f_23 = exp(-E23/kBT)/Q
     f_36 = exp(-E36/kBT)/Q
     f_26 = exp(-E26/kBT)/Q
 
-    Δ_f₀D = 3.58e-7*f₀*sqrt(T/M)
-    f_range = 5*Δ_f₀D
-
-    ### parameters that are directly related to pressure and power:
-    ntotal = 9.66e24 * pressure * 1e-3 / T # with unit m^-3
-
-    # k63 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time/2 # in 1/microsec
-    # k36 = exp(-(E6-E3)/kBT) * k63 * g_6
-    # k36 = f_6_0/f_3_0 * k63
     if model_flag == 1
         k63 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time/2 # in 1/microsec
         k36 = exp(-(E6-E3)/kBT) * k63 * g_6
@@ -384,27 +346,25 @@ function Params(DefaultT=Float64;
         k36 = 100.0
         k63 = k36 * f_3_0/f_6_0
     end
-
-    k63A = k63 * ones(num_layers)
-    k63E = k63 * ones(num_layers)
-    k36A = k36 * ones(num_layers)
-    k36E = k36 * ones(num_layers)
-
     k3623 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time
     k2336 = exp(-(E36-E23)/kBT) * k3623
     k2636 = ntotal*v_avg*σ_36*(1e-10)^2/norm_time
     k3626 = exp(-(E26-E36)/kBT) * k2636
-    kro = ntotal * v_avg * σ_VS * (1e-10)^2 / norm_time
-    # kro = 0
 
-    Δ_fP = 15e6*(pressure/1e3)
+    beta13 = 1.20 * sqrt(power)/radius
 
+    totalNL0 = CL * ntotal * f_G_0/2
+    totalNU0 = CU * ntotal * f_3_0/2
+
+    ###################################################
+    #### solver/discretization parameters
+    ###################################################
+    Δr = radius/100 / num_layers # in m
+    r_ext = linspace(0,radius/100,num_layers+1)
+    r_int = 0.5*(r_ext[1:end-1] + r_ext[2:end]) # in m
+
+    f_range = 5*Δ_f₀D
     num_freq = round(Int64,max(50,2*f_range/(Δ_fP/4)))
-    # num_freq = 1
-    # num_freq = round(Int64, num_freq * pressure/100)
-    # println("num_freq = ", num_freq)
-
-    layer_unknown = n_rot*num_freq + n_vib
     df = 2.0 * f_range / num_freq
     f_dist_end = linspace(-f_range, f_range, num_freq + 1) + f₀
     f_dist_ctr = f_dist_end[1:end-1] + df/2
@@ -418,65 +378,23 @@ function Params(DefaultT=Float64;
     norm_dist = Normal(f₀, Δ_f₀D / sqrt(2*log(2)))
     pdf1 = pdf(norm_dist, f_dist_ctr)
     gauss_dist = pdf1 / sum(pdf1)
-    # p_dist satisfies sum(p_dist) * df ~ 1.0 ;
-    #p_dist = lorentz_dist(f_dist_ctr, Δ_f_NT, f_pump)
-    fp_lasing = f_NT_ampl(f_dist_dir_lasing, Δ_fP, f_dir_lasing)
-    fp_lasing = fp_lasing/sum(fp_lasing)
-    fp_lasing = f_NT_normalized(f_dist_dir_lasing, Δ_fP, f_dir_lasing, df*f_dir_lasing/f₀)
 
-    fp_ref_lasing = f_NT_ampl(f_dist_ref_lasing, Δ_fP, f_ref_lasing)
-    fp_ref_lasing = fp_ref_lasing/sum(fp_ref_lasing)
-    fp_ref_lasing = f_NT_normalized(f_dist_ref_lasing, Δ_fP, f_ref_lasing, df*f_ref_lasing/f₀)
+    if pumpbranch == "R"
+        n_rot = max(2(JL+2), 18)
+    elseif pumpbranch == "P"
+        n_rot = max(2JL, 18)
+    elseif pumpbranch == "Q"
+        n_rot = max(2(JL+1), 18)
+    end
+    if JU<=K0 || JL>=K0-1+n_rot÷2 || JU>=K0+n_rot÷2 || JL<K0
+        throw(ArgumentError("JL or JU is out of bounds!"))
+    end
 
-    f_dirgain_dist = linspace(f_dir_lasing-40e6, f_dir_lasing+40e6, 500)
-    f_refgain_dist = linspace(f_ref_lasing-40e6, f_ref_lasing+40e6, 500)
-    dirgain = zeros(size(f_dirgain_dist))
-    refgain = zeros(size(f_refgain_dist))
-    # alpha_0 from eq (2.B.3) first line in unit m^-1:
-
-    beta13 = 1.20 * sqrt(power)/radius
-
-    Δ_f_RabiF = zeros(num_layers)
-    Δ_f_RabiB = zeros(num_layers)
-    Δ_f_NTF = ones(num_layers) * Δ_fP
-    Δ_f_NTB = ones(num_layers) * Δ_fP
-    SHBF = zeros(num_freq, num_layers)
-    SHBB = zeros(num_freq, num_layers)
-    powerF = zeros(num_layers)
-    powerB = zeros(num_layers)
-    averagePF = power * ones(num_layers)
-    averagePB = power * ones(num_layers)
-
-    totalNL0 = CL * ntotal * f_G_0/2
-    totalNU0 = CU * ntotal * f_3_0/2
-    # alpha_0 in m^-1
-    alpha_0 = exp(-log(2)*((f_pump-f₀)/Δ_f₀D)^2)*sqrt(log(2)/pi)/Δ_f₀D *
-              8*pi^3/3/h/c * (totalNL0 - totalNU0) *
-              1e-36 * (0.2756^2*16.0/45) * f_pump * 1e-13
-    alpha_r = alpha_0 * ones(num_layers)
-    pump_IR = zeros(num_freq, num_layers)
-    # in unit m^-3 microsec^-1
-    pump_0 = 0
-    # (1-exp(-alpha_0*L/100)) * power/(pi*(radius/100)^2*L/100 * h*f_pump *
-    #          ntotal * f_G_0/2 * C4L) / norm_time
-    pump_0 = 9.4e13 * power/(radius^2)/Δ_f₀D * (0.2756^2*16.0/45) *
-                exp(-log(2)*((f_pump-f₀)/Δ_f₀D)^2)/norm_time
-
-    Δr = radius/100 / num_layers # in m
-    r_ext = linspace(0,radius/100,num_layers+1)
-    r_int = 0.5*(r_ext[1:end-1] + r_ext[2:end]) # in m
-
-    # kwall = WallRate(radius, pressure, r_int, ntotal, M, T, NA, v_avg, σ_GKC) + 1e-10
-    kwall = zeros(num_layers)
-
-
-    MFP = 0.732*T/pressure/σ_GKC # in cm
-    # avg absolute vel in m/microsec (p5 in Henry's thesis)
-    vel = v_avg/sqrt(2)/norm_time
-    # diffusion coefficient in m^2/microsec. Einstein-Smoluchowski equation;
-    D = 1/3 * vel * MFP * 1e-2 * D_factor
-
-    kDD = 19.8 * pressure * σ_DD/ sqrt(T*M)
+    if model_flag == 1
+        n_vib = 12
+    elseif model_flag == 2
+        n_vib = 6
+    end
 
     J = 3:(n_rot÷2+2)
     # in 1/microsec. rate_ij = rate_DD * prob. of ij collision, also kDDmat[i,j]:
@@ -489,9 +407,59 @@ function Params(DefaultT=Float64;
         kDDmat[i, i+1] = kDDmat[i+n_rot÷2, i+n_rot÷2+1] =
         kDD*Q_selectn_lh(J[i], K0)/(1e3)
     end
-
     # K-swap rates -> goes to thermal pool, in 1/microsec
     ka = 19.8*pressure*σ_SPT/sqrt(T*M)/(1e3) * ones(n_rot)
+
+    layer_unknown = n_rot*num_freq + n_vib
+
+    ###################################################
+    #### physical terms initialization
+    ###################################################
+    T_vA = T * ones(num_layers)
+    T_vE = T * ones(num_layers)
+    f_GA = f_G_0 * ones(num_layers)
+    f_3A = f_3_0 * ones(num_layers)
+    f_6A = f_6_0 * ones(num_layers)
+    f_GE = f_G_0 * ones(num_layers)
+    f_3E = f_3_0 * ones(num_layers)
+    f_6E = f_6_0 * ones(num_layers)
+
+    k63A = k63 * ones(num_layers)
+    k63E = k63 * ones(num_layers)
+    k36A = k36 * ones(num_layers)
+    k36E = k36 * ones(num_layers)
+
+    fp_lasing = f_NT_normalized(f_dist_dir_lasing, Δ_fP, f_dir_lasing, df*f_dir_lasing/f₀) # not used
+    fp_ref_lasing = f_NT_normalized(f_dist_ref_lasing, Δ_fP, f_ref_lasing, df*f_ref_lasing/f₀) # not used
+
+    f_dirgain_dist = linspace(f_dir_lasing-40e6, f_dir_lasing+40e6, 500)
+    f_refgain_dist = linspace(f_ref_lasing-40e6, f_ref_lasing+40e6, 500)
+    dirgain = zeros(size(f_dirgain_dist))
+    refgain = zeros(size(f_refgain_dist))
+
+    Δ_f_RabiF = zeros(num_layers)
+    Δ_f_RabiB = zeros(num_layers)
+    Δ_f_NTF = ones(num_layers) * Δ_fP
+    Δ_f_NTB = ones(num_layers) * Δ_fP
+    SHBF = zeros(num_freq, num_layers)
+    SHBB = zeros(num_freq, num_layers)
+    powerF = zeros(num_layers)
+    powerB = zeros(num_layers)
+    averagePF = power * ones(num_layers)
+    averagePB = power * ones(num_layers)
+
+    # alpha_0 in m^-1
+    alpha_0 = exp(-log(2)*((f_pump-f₀)/Δ_f₀D)^2)*sqrt(log(2)/pi)/Δ_f₀D *
+              8*pi^3/3/h/c * (totalNL0 - totalNU0) *
+              1e-36 * (0.2756^2*16.0/45) * f_pump * 1e-13
+    alpha_r = alpha_0 * ones(num_layers)
+    pump_IR = zeros(num_freq, num_layers)
+    # in unit m^-3 microsec^-1
+    pump_0 = 9.4e13 * power/(radius^2)/Δ_f₀D * (0.2756^2*16.0/45) *
+                exp(-log(2)*((f_pump-f₀)/Δ_f₀D)^2)/norm_time
+
+    # kwall = WallRate(radius, pressure, r_int, ntotal, M, T, NA, v_avg, σ_GKC) + 1e-10
+    kwall = zeros(num_layers)
 
     return Params{DefaultT}(radius, pump_radius, L, L_eff, h, c, ev, kB, T, T_vA, T_vE, kBT, M, norm_time,
     σ_GKC, σ_DD, σ_SPT, σ_36, σ_VS,
@@ -569,7 +537,7 @@ function emission_broaden(ν, vi, p, df)
   return spectrum
 end
 
-function Qv(kB, T, script)
+function Qv(kB, T)
     data = viblevels()
     Q = 1.0
     for i in 1:size(data, 1)
@@ -578,19 +546,94 @@ function Qv(kB, T, script)
     return Q
 end
 
-function ΔEr(J1, J2, K, V)
-    if V=="V0"
+function ΔEr(J1, J2, K, V, M)
+    if V=="V0" && M==35
         B = 24862.6427e6
         DJ = 0.057683e6
         DJK = 0.42441e6
-    elseif V=="V3"
+    elseif V=="V3" && M==35
         B = 24542.1324e6
         DJ = 0.055156
         DJK = 0.47788
+    elseif V=="V0" && M==34
+        B = 25.5361499e9
+        DJ = 0.000060233e9
+        DJK = 0.000439574e9
+    elseif V=="V3" && M==34
+        B = 25.1975092e9
+        DJ = 5.68788E4
+        DJK = 0.000518083e9
     end
     return (B-DJK*K^2)*(J2*(J2+1)-J1*(J1+1)) - DJ*(-J1^2*(J1+1)^2+J2^2*(J2+1)^2)
 end
 
 function derv_bessel(ν,x)
     return 0.5.*(besselj(ν-1,x)-besselj(ν+1,x))
+end
+
+function compCs(JL, JU, K0, h, T, M)
+    JKE = JKEgenerate(100, M) # K from -J to J
+    Qi, Q, QA = Qcompute(JKE, h, T)
+    CL = CL1 = CU = CU1 = 0.
+    for i in 1:size(JKE, 1)
+        if JKE[i, 1] == JL && JKE[i, 2] == K0
+            CL = K0==0 ? Qi[i]/QA : Qi[i]/QA * 2
+        elseif JKE[i, 1] == JL+1 && JKE[i, 2] == K0
+            CL1 = K0==0 ? Qi[i]/QA : Qi[i]/QA * 2
+        end
+    end
+
+    for i in 1:size(JKE, 1)
+        if JKE[i, 1] == JU && JKE[i, 2] == K0
+            CU = K0==0 ? Qi[i]/QA : Qi[i]/QA * 2
+        elseif JKE[i, 1] == JU-1 && JKE[i, 2] == K0
+            CU1 = K0==0 ? Qi[i]/QA : Qi[i]/QA * 2
+        end
+    end
+
+    return (CL, CL1, CU, CU1)
+end
+
+function Qcompute(JKE, h, T)
+    J = JKE[:,1]
+    K = JKE[:,2]
+    E = JKE[:,3]
+    n = length(J)
+    Q = QA = 0.0
+    Qi = zeros(n)
+    for i = 1:n
+        gi = 2J[i] + 1
+        if K[i]%3 == 0
+            gi *= 2
+        end
+        qi = gi * exp(-E[i]*1e9*h/(1.38064852e-23*T))
+        Q += qi
+        if K[i]%3 == 0
+            QA += qi
+        end
+        Qi[i] = qi
+    end
+    return (Qi, Q, QA)
+end
+
+function JKEgenerate(n, M)
+    # generate J, K, E array up to J = n
+    if M == 35 # 13CH3F
+        A, B, DJ, DJK = (155.3528, 24.8626427, 5.77E-05, 0.00042441)
+    elseif M == 34 # 12CH3F
+        A, B, DJ, DJK = (155.3528, 25.5361499, 0.000060233, 0.000439574)
+    else
+        throw(ArgumentError("M can only be 34 (12CH3F) or 35 (13CH3F)"))
+    end
+    JKE = zeros((n+1)^2, 3)
+    linenum = 0
+    for j in 0:n
+        for k in -j:1:j
+            linenum += 1
+            JKE[linenum, 1] = j
+            JKE[linenum, 2] = k
+            JKE[linenum, 3] = B*j*(j+1) + (A-B)*k^2 - DJ*j^2*(j+1)^2 -DJK*j*(j+1)*k^2
+        end
+    end
+    return JKE
 end

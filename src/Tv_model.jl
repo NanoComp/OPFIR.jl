@@ -25,15 +25,15 @@ function Qv_0(p, T)
     end
     return Q
 end
-
-function solve_Tv(Q_v, p)
-    Qv_diff(T) = Qv_0(p, T) - Q_v
-    function Qv(x, fvec)
-        fvec[1] = Qv_diff(x[1])
-    end
-    T_v = nlsolve(Qv, [300.0])
-    return T_v.zero
-end
+# 
+# function solve_Tv(Q_v, p)
+#     Qv_diff(T) = Qv_0(p, T) - Q_v
+#     function Qv(x, fvec)
+#         fvec[1] = Qv_diff(x[1])
+#     end
+#     T_v = nlsolve(Qv, [300.0])
+#     return T_v.zero
+# end
 
 function updateTv(p, sol)
     for j in 1:p.num_layers
