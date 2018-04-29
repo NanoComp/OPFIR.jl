@@ -27,7 +27,7 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
 
     if p.solstart_flag == 1
         matrix_B0 = matrix - matrix_0
-        rhs = rhs + matrix_B0 * sol_0
+        rhs = rhs - matrix_B0 * sol_0
         sol_1 = lu_mat0 \ rhs
     else
         sol_1 = matrix \ rhs
