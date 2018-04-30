@@ -379,14 +379,8 @@ function Params(DefaultT=Float64;
     pdf1 = pdf(norm_dist, f_dist_ctr)
     gauss_dist = pdf1 / sum(pdf1)
 
-    if pumpbranch == "R"
-        n_rot = max(2(JL+2), 18)
-    elseif pumpbranch == "P"
-        n_rot = max(2JL, 18)
-    elseif pumpbranch == "Q"
-        n_rot = max(2(JL+1), 18)
-    end
-    if JU<=K0 || JL>=K0-1+n_rot÷2 || JU>=K0+n_rot÷2 || JL<K0
+    # assign J levels
+    if JU<=K0 || JL<K0 # JL>=K0-1+n_rot÷2 || JU>=K0+n_rot÷2 ||
         throw(ArgumentError("JL or JU is out of bounds!"))
     end
 
@@ -396,7 +390,7 @@ function Params(DefaultT=Float64;
         n_vib = 6
     end
 
-    J = 3:(n_rot÷2+2)
+    J = Jlevels(n_rot, JL, JU, K0) #3:(n_rot÷2+2)
     # in 1/microsec. rate_ij = rate_DD * prob. of ij collision, also kDDmat[i,j]:
     kDDmat = zeros(n_rot, n_rot)
     for i in 2:length(J)
@@ -636,4 +630,10 @@ function JKEgenerate(n, M)
         end
     end
     return JKE
+end
+
+function Jlevels(n_rot, JL, JU, K0)
+    Jmin = max(K0, min(JL-n_rot÷4, JU-n_rot÷4))
+    Jmax = n_rot÷2 + Jmin - 1
+    return Jmin:Jmax
 end
