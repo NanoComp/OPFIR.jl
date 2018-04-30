@@ -260,7 +260,7 @@ function Params(DefaultT=Float64;
         E23 = 2100
         E36 = 2250
         E26 = 2400
-        A0, B0, DJ0, DJK0 = (155.3528, 24.8626427, 5.77E-05, 0.00042441)
+        A0, B0, DJ0, DJK0 = (155.3528, 24.8626427, 5.7683E-05, 0.00042441)
         A3, B3, DJ3, DJK3 = (155.3528, 24.5421324, 0.000055156, 0.00047788)
     elseif M == 34
         σ_GKC = 44
@@ -297,7 +297,7 @@ function Params(DefaultT=Float64;
     CL, CL1, CU, CU1 = compCs(JL, JU, K0, h, T, M)
 
     EU = E3*c/1e7 + B3*JU*(JU+1) + (A3-B3)*K0^2 - DJ3*JU^2*(JU+1)^2 -DJK3*JU*(JU+1)*K0^2 # in GHz
-    EL = B0*JU*(JU+1) + (A0-B0)*K0^2 - DJ0*JU^2*(JU+1)^2 -DJK0*JU*(JU+1)*K0^2
+    EL = B0*JL*(JL+1) + (A0-B0)*K0^2 - DJ0*JL^2*(JL+1)^2 -DJK0*JL*(JL+1)*K0^2
     f₀ = (EU - EL) * 1e9 # in Hz
     f_pump = f₀ + f_offset
 
@@ -553,8 +553,8 @@ function ΔEr(J1, J2, K, V, M)
         DJK = 0.42441e6
     elseif V=="V3" && M==35
         B = 24542.1324e6
-        DJ = 0.055156
-        DJK = 0.47788
+        DJ = 0.055156e6
+        DJK = 0.47788e6
     elseif V=="V0" && M==34
         B = 25.5361499e9
         DJ = 0.000060233e9
@@ -619,7 +619,7 @@ end
 function JKEgenerate(n, M)
     # generate J, K, E array up to J = n
     if M == 35 # 13CH3F
-        A, B, DJ, DJK = (155.3528, 24.8626427, 5.77E-05, 0.00042441)
+        A, B, DJ, DJK = (155.3528, 24.8626427, 5.7683E-05, 0.00042441)
     elseif M == 34 # 12CH3F
         A, B, DJ, DJK = (155.3528, 25.5361499, 0.000060233, 0.000439574)
     else
