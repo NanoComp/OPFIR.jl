@@ -269,12 +269,12 @@ function Params(DefaultT=Float64;
         σ_36 = 3.21
         σ_VS = 18.9
         EG = 0
-        E3 = 1048.61
+        E3 = 1048.6107008736
         E6 = 1182.35
         E23 = 2100
         E36 = 2250
         E26 = 2400
-        A0, B0, DJ0, DJK0 = (155.3528, 25.5361499, 0.000060233, 0.000439574) # in GHz
+        A0, B0, DJ0, DJK0 = (155.3528, 25.5361499, 0.000060233, 0.0004395743) # in GHz
         A3, B3, DJ3, DJK3 = (155.3528, 25.1975092, 5.68788E-05, 0.000518083) # in GHz
     end
     g_6 = 2
@@ -295,9 +295,11 @@ function Params(DefaultT=Float64;
     g_L = 2JL + 1
     g_U = 2JU + 1
     CL, CL1, CU, CU1 = compCs(JL, JU, K0, h, T, M)
-
+    println(E3, ", ", B3, ", ", DJ3, ", ", DJK3)
     EU = E3*c/1e7 + B3*JU*(JU+1) + (A3-B3)*K0^2 - DJ3*JU^2*(JU+1)^2 -DJK3*JU*(JU+1)*K0^2 # in GHz
+    println(EU)
     EL = B0*JL*(JL+1) + (A0-B0)*K0^2 - DJ0*JL^2*(JL+1)^2 -DJK0*JL*(JL+1)*K0^2
+    println(EL)
     f₀ = (EU - EL) * 1e9 # in Hz
     f_pump = f₀ + f_offset
 
