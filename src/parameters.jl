@@ -573,7 +573,7 @@ function compCs(JL, JU, K0, h, T, M)
     CL = CL1 = CU = CU1 = 0.
     for i in 1:size(JKE, 1)
         if JKE[i, 1] == JL && JKE[i, 2] == K0
-            CL = K0==0 ? Qi[i]/QA : Qi[i]/QA * 2
+            CL = K0==0 ? Qi[i]/QA : Qi[i]/QA * 2 # * 2 because ±K0
         elseif JKE[i, 1] == JL+1 && JKE[i, 2] == K0
             CL1 = K0==0 ? Qi[i]/QA : Qi[i]/QA * 2
         end
@@ -591,6 +591,9 @@ function compCs(JL, JU, K0, h, T, M)
 end
 
 function Qcompute(JKE, h, T)
+    # Q: total partition func
+    # QA: partition func of A type, same with E type
+    # Qi: partition func of (J, K), K can be negative
     J = JKE[:,1]
     K = JKE[:,2]
     E = JKE[:,3]
@@ -599,7 +602,7 @@ function Qcompute(JKE, h, T)
     Qi = zeros(n)
     for i = 1:n
         gi = 2J[i] + 1
-        if K[i]%3 == 0
+        if K[i]%3 == 0 # A type
             gi *= 2
         end
         qi = gi * exp(-E[i]*1e9*h/(1.38064852e-23*T))

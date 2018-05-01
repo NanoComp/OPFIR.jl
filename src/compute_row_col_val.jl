@@ -12,7 +12,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         for ri in 1:p.num_layers
             for j in 1:p.n_rot
                 row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + j
-                val = -p.ka[j] - p.kro
+                val = -p.ka[j] - p.kro # SPT and V swap
                 s = put_row_col_val(rowind, colind, value, row, row, val, s)
             end
 
@@ -21,6 +21,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
                     if p.kDDmat[li, lj] > 0
                         row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + li
                         col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + lj
+                        ## D-D collision
                         s = put_row_col_val(rowind, colind, value, row, row, -p.kDDmat[li,lj], s)
                         s = put_row_col_val(rowind, colind, value, row, col, p.kDDmat[lj,li], s)
                     end
@@ -33,29 +34,29 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
     for vi in 1:p.num_freq
         for ri in 1:p.num_layers
             ### pumping L:
-            row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.JL-2)
+            row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.JL-p.K0+1)
             val = - p.pump_IR[vi, ri]
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
-            col = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 1 #V0
+            col = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 1 #V0A
             val = - p.pump_IR[vi, ri] * p.CL * p.gauss_dist[vi]
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
 
-            col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.n_rot÷2 + p.JU-2)
+            col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.n_rot÷2 + p.JU-p.K0+1)
             val = p.pump_IR[vi, ri] * p.g_L/p.g_U
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
 
-            col = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 2 #V3
+            col = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 2 #V3A
             val = p.pump_IR[vi, ri] * p.CU * p.gauss_dist[vi] * p.g_L/p.g_U
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
 
             ### pumping for U level
-            row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.n_rot÷2 + p.JU-2)
-            col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.JL-2) #
+            row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.n_rot÷2 + p.JU-p.K0+1)
+            col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.JL-p.K0+1) #
             val = p.pump_IR[vi, ri]
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
 
-            col = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 1 # V0
+            col = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 1 # V0A
             val = p.pump_IR[vi, ri] * p.CL * p.gauss_dist[vi]
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
 
@@ -63,7 +64,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             val = - p.pump_IR[vi, ri] * p.g_L/p.g_U
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
 
-            col = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 2 # V3
+            col = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 2 # V3A
             val = - p.pump_IR[vi, ri] * p.CU * p.gauss_dist[vi] * p.g_L/p.g_U
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
         end
@@ -72,25 +73,25 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
     ### stimulated emission term:
     for vi in 1:p.num_freq
         for ri in 1:p.num_layers
-            row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.JL-2) #V0, J4 level
+            row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.JL-p.K0+1) #V0, J4 level
             val = - p.WiL*(p.g_L+2)/p.g_L ## J4 -> J5 (diagonal):
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
             val = p.WiL ## J5 -> J4:
             s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
 
-            row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.JL-1) #V0, J5 level
+            row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.JL-p.K0+2) #V0, J5 level
             val = - p.WiL  # J5 -> J4 (diagonal)
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
             val = p.WiL*(p.g_L+2)/p.g_L # J4 -> J5
             s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
 
-            row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.n_rot÷2 + p.JU-3) #V3, J4
+            row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.n_rot÷2 + p.JU-p.K0) #V3, J4
             val = - p.WiU*p.g_U/(p.g_U-2) ## J4 -> J5 (diagonal)
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
             val = p.WiU ## J5 -> J4:
             s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
 
-            row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.n_rot÷2 + p.JU-2) #V3, J5
+            row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.n_rot÷2 + p.JU-p.K0+1) #V3, J5
             val = - p.WiU ## J5 -> J4
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
             val = p.WiU*p.g_U/(p.g_U-2) ## J4 -> J5
@@ -147,47 +148,37 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
     ### transitions between thermal pools ###
     ## A type:
     for ri in 1:p.num_layers
-        rot_idx = 1
+        vib_idx = 1
         # V0 A type:
-        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
-        rot_idx += 1
+        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + vib_idx
+        vib_idx += 1
 
         # V3 A type:
-        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
-        rot_idx += 1
+        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + vib_idx
+        vib_idx += 1
         #### transtion between V3 and V6 ####
         if p.model_flag==1 # || p.model_flag==2
             val = -p.k36A[ri]
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
             val = +p.k63A[ri]
             s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
-        elseif p.model_flag==2 #&& p.solstart_flag==0
-            # val = -p.k36A[ri]
-            # s = put_row_col_val(rowind, colind, value, row, row, val, s)
-            # val = +p.k63A[ri]
-            # s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
         end
 
         # V6 or V_Σ A type:
-        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
-        rot_idx += 1
+        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + vib_idx
+        vib_idx += 1
         #### transtion between V3 and V6: ####
         if p.model_flag==1
             val = -p.k63A[ri]
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
             val = +p.k36A[ri]
             s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
-        elseif p.model_flag==2 #&& p.solstart_flag==0
-            # val = -p.k63A[ri]
-            # s = put_row_col_val(rowind, colind, value, row, row, val, s)
-            # val = +p.k36A[ri]
-            # s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
         end
 
         if p.model_flag==1
             # V23 A type:
-            row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
-            rot_idx += 1
+            row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + vib_idx
+            vib_idx += 1
             #### transitions between V23 and V36 ####
             val = -p.k2336
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
@@ -195,8 +186,8 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
 
             # V36 A type:
-            row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
-            rot_idx += 1
+            row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + vib_idx
+            vib_idx += 1
             #### transition between V36 and V23, V26 ####
             val = -p.k3623 - p.k3626
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
@@ -206,8 +197,8 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
 
             # V26 A type:
-            row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
-            rot_idx += 1
+            row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + vib_idx
+            vib_idx += 1
             #### transition between V26 and V36: ####
             val = -p.k2636
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
@@ -217,45 +208,35 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
 
 ################################################################################
         # V0 E type:
-        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
-        rot_idx += 1
+        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + vib_idx
+        vib_idx += 1
 
         # V3 E type:
-        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
-        rot_idx += 1
+        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + vib_idx
+        vib_idx += 1
         #### transtion between V3 and V6 ####
         if p.model_flag==1
             val = -p.k36E[ri]
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
             val = +p.k63E[ri]
             s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
-        elseif p.model_flag==2
-            # val = -p.k36E[ri]
-            # s = put_row_col_val(rowind, colind, value, row, row, val, s)
-            # val = +p.k63E[ri]
-            # s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
         end
 
         # V6 E type:
-        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
-        rot_idx += 1
+        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + vib_idx
+        vib_idx += 1
         #### transtion between V3 and V6: ####
         if p.model_flag==1
             val = -p.k63E[ri]
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
             val = +p.k36E[ri]
             s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
-        elseif p.model_flag==2
-            # val = -p.k63E[ri]
-            # s = put_row_col_val(rowind, colind, value, row, row, val, s)
-            # val = +p.k36E[ri]
-            # s = put_row_col_val(rowind, colind, value, row, row-1, val, s)
         end
 
         if p.model_flag==1
             # V23 E type:
-            row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
-            rot_idx += 1
+            row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + vib_idx
+            vib_idx += 1
             #### transitions between V23 and V36 ####
             val = -p.k2336
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
@@ -263,8 +244,8 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
 
             # V36 E type:
-            row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
-            rot_idx += 1
+            row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + vib_idx
+            vib_idx += 1
             #### transition between V36 and V23, V26 ####
             val = -p.k3623 - p.k3626
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
@@ -274,8 +255,8 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             s = put_row_col_val(rowind, colind, value, row, row+1, val, s)
 
             # V26 E type:
-            row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + rot_idx
-            rot_idx += 1
+            row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + vib_idx
+            vib_idx += 1
             #### transition between V26 and V36: ####
             val = -p.k2636
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
@@ -397,7 +378,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
                 s = put_row_col_val(rowind, colind, value, row, row+k, val, s)
             end
         end
-    else
+    else # model_flag == 1:
         index_diffu = vcat(p.layer_unknown * Ri - p.n_vib + 1:p.layer_unknown * Ri - p.n_vib + 5,
         p.layer_unknown * Ri - 5: p.layer_unknown * Ri - 1)
         for k in index_diffu
@@ -488,13 +469,6 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         end
         # V26A and V26E at N+1 grid
         for row in [p.layer_unknown * Ri + 6, p.layer_unknown * Ri + p.n_vib÷2 + 6] # index offset, or starting index
-            # val = -p.D/p.Δr + vbar * (1-p.f_26)/4
-            # s = put_row_col_val(rowind, colind, value, row, row-p.n_vib, val, s)
-            #
-            # val = p.D/p.Δr + vbar * (1-p.f_26)/4
-            # s = put_row_col_val(rowind, colind, value, row, row, val, s)
-            #
-            # val = -vbar*p.f_26/4
             for k in [-5, -4, -3, -2, -1, 0]
                 # s = put_row_col_val(rowind, colind, value, row, row-p.n_vib+k, val, s)
                 s = put_row_col_val(rowind, colind, value, row, row+k, 1., s)
