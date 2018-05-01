@@ -392,7 +392,9 @@ function Params(DefaultT=Float64;
         n_vib = 6
     end
 
+    n_rot = 2 * (5+max(JU, JL+1)-K0+1)
     J = Jlevels(n_rot, JL, JU, K0) #3:(n_rot÷2+2)
+
     # in 1/microsec. rate_ij = rate_DD * prob. of ij collision, also kDDmat[i,j]:
     kDDmat = zeros(n_rot, n_rot)
     for i in 2:length(J)
@@ -638,7 +640,10 @@ function JKEgenerate(n, M)
 end
 
 function Jlevels(n_rot, JL, JU, K0)
-    Jmin = max(K0, min(JL-n_rot÷4, JU-n_rot÷4))
+    Jmin = K0 # max(K0, min(JL-n_rot÷4, JU-n_rot÷4))
     Jmax = n_rot÷2 + Jmin - 1
+    if Jmax < JU+2 || Jmax < JL+2
+        throw(ArgumentError("number of rotational levels need to be increased!"))
+    end
     return Jmin:Jmax
 end
