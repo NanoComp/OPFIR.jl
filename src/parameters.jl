@@ -176,7 +176,7 @@ type Params{T<:Real}
 
 end
 
-function Params(DefaultT=Float64;
+function CH3F(DefaultT=Float64;
     radius = 0.25, # in cm
     L = 15, # in cm
     T = 300,
@@ -294,7 +294,7 @@ function Params(DefaultT=Float64;
     end
     g_L = 2JL + 1
     g_U = 2JU + 1
-    CL, CL1, CU, CU1 = compCs(JL, JU, K0, h, T, M)
+    CL, CL1, CU, CU1 = compCsCH3F(JL, JU, K0, h, T, M)
     println(E3, ", ", B3, ", ", DJ3, ", ", DJK3)
     EU = E3*c/1e7 + B3*JU*(JU+1) + (A3-B3)*K0^2 - DJ3*JU^2*(JU+1)^2 -DJK3*JU*(JU+1)*K0^2 # in GHz
     println(EU)
@@ -354,9 +354,6 @@ function Params(DefaultT=Float64;
     k3626 = exp(-(E26-E36)/kBT) * k2636
 
     beta13 = 1.20 * sqrt(power)/radius
-
-    totalNL0 = CL * ntotal * f_G_0/2
-    totalNU0 = CU * ntotal * f_3_0/2
 
     ###################################################
     #### solver/discretization parameters
@@ -430,10 +427,10 @@ function Params(DefaultT=Float64;
     fp_lasing = f_NT_normalized(f_dist_dir_lasing, Δ_fP, f_dir_lasing, df*f_dir_lasing/f₀) # not used
     fp_ref_lasing = f_NT_normalized(f_dist_ref_lasing, Δ_fP, f_ref_lasing, df*f_ref_lasing/f₀) # not used
 
-    f_dirgain_dist = linspace(f_dir_lasing-40e6, f_dir_lasing+40e6, 500)
-    f_refgain_dist = linspace(f_ref_lasing-40e6, f_ref_lasing+40e6, 500)
-    dirgain = zeros(size(f_dirgain_dist))
-    refgain = zeros(size(f_refgain_dist))
+    f_dirgain_dist = linspace(f_dir_lasing-40e6, f_dir_lasing+40e6, 500) # not used
+    f_refgain_dist = linspace(f_ref_lasing-40e6, f_ref_lasing+40e6, 500) # not used
+    dirgain = zeros(size(f_dirgain_dist)) # not used
+    refgain = zeros(size(f_refgain_dist)) # not used
 
     Δ_f_RabiF = zeros(num_layers)
     Δ_f_RabiB = zeros(num_layers)
@@ -447,6 +444,8 @@ function Params(DefaultT=Float64;
     averagePB = power * ones(num_layers)
 
     # alpha_0 in m^-1
+    totalNL0 = CL * ntotal * f_G_0/2
+    totalNU0 = CU * ntotal * f_3_0/2
     alpha_0 = exp(-log(2)*((f_pump-f₀)/Δ_f₀D)^2)*sqrt(log(2)/pi)/Δ_f₀D *
               8*pi^3/3/h/c * (totalNL0 - totalNU0) *
               1e-36 * (0.2756^2*16.0/45) * f_pump * 1e-13
@@ -569,7 +568,7 @@ function derv_bessel(ν,x)
     return 0.5.*(besselj(ν-1,x)-besselj(ν+1,x))
 end
 
-function compCs(JL, JU, K0, h, T, M)
+function compCsCH3F(JL, JU, K0, h, T, M)
     JKE = JKEgenerate(100, M) # K from -J to J
     Qi, Q, QA = Qcompute(JKE, h, T)
     CL = CL1 = CU = CU1 = 0.
