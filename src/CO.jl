@@ -101,7 +101,7 @@ function CO(DefaultT=Float64;
     CL, CL1, CU, CU1 = compCsCO(JL, JU, h, T, M)
 
     EU = E3*c/1e7 + B*JU*(JU+1) - DJ*JU^2*(JU+1)^2 # in GHz
-    EL = B*JL*(JL+1) - DJ0*JL^2*(JL+1)^2
+    EL = B*JL*(JL+1) - DJ*JL^2*(JL+1)^2
     f₀ = (EU - EL) * 1e9 # in Hz
     f_pump = f₀ + f_offset
 
@@ -176,7 +176,7 @@ function CO(DefaultT=Float64;
         kDD*Q_selectn_lh(J[i], 0)/(1e3)
     end
     # K-swap rates -> goes to thermal pool, in 1/microsec
-    ka = 0.0
+    ka = [0.0]
 
     layer_unknown = n_rot*num_freq
 
