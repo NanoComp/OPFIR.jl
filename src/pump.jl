@@ -27,6 +27,8 @@ function comppumprate!(p, alphab)
     pavgforw = (1-exp(-alphaforw*p.L/100))/(alphaforw*p.L/100) * p.power / (1-triploss)
     pavgback = (1-exp(-alphaback*p.L/100))/(alphaback*p.L/100) * p.power / (1-triploss) * exp(-alphaforw*p.L/100) * R1
 
+    println(pavgforw, ", ", pavgback)
+
     for ri in 1:p.num_layers
         p.Δ_f_RabiF[ri] = 0.38*sqrt(pavgforw)/p.radius*1e6
         p.Δ_f_RabiB[ri] = 0.38*sqrt(pavgback)/p.radius*1e6
@@ -71,11 +73,11 @@ end
 function dipolemom(p)
     matele = 0.
     if p.pumpbranch == "R"
-        matele = 0.2756^2*((p.JL+1)^2-p.K0^2)/(p.JL+1)/(2p.JL+1)
+        matele = 0.01156806*((p.JL+1)^2-p.K0^2)/(p.JL+1)/(2p.JL+1)
     elseif p.pumpbranch == "Q"
-        matele = 0.2756^2*p.K0^2/(p.JL+1)/p.JL
+        matele = 0.01156806*p.K0^2/(p.JL+1)/p.JL
     else
-        matele = 0.2756^2*(p.JL^2-p.K0^2)/p.JL/(2p.JL+1)
+        matele = 0.01156806*(p.JL^2-p.K0^2)/p.JL/(2p.JL+1)
     end
     return matele
 end

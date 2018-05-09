@@ -10,7 +10,7 @@ function func(p; sol_start=Array[])
         if length(sol_start)>0
             sol_0 = sol_start
         else
-            sol_0 = zeros(p.num_layers * p.layer_unknown + p.n_vib)
+            sol_0 = zeros(p.num_layers * p.layer_unknown + p.layer_unknown)
         end
     else
         tmp_power = p.power

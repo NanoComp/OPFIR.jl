@@ -23,7 +23,7 @@ function Nu_NT_dist_layer(p, sol, layer)
 end
 function Nu_T_dist_layer(p, sol, layer)
     index_p = ind_p_U(p, layer)
-    return p.CU * (p.ntotal * p.f_3_0/2 + sol[index_p]) .* p.gauss_dist
+    return p.CU * (p.ntotal * p.f_3_0) .* p.gauss_dist
 end
 
 function Nu_total_dist_layer(p, sol, layer)
@@ -42,7 +42,7 @@ function Nu_1_NT_dist_layer(p, sol, layer)
 end
 function Nu_1_T_dist_layer(p, sol, layer)
     index_p = ind_p_U(p, layer)
-    return p.CU1 * (p.ntotal * p.f_3_0/2 + sol[index_p]) .* p.gauss_dist
+    return p.CU1 * (p.ntotal * p.f_3_0) .* p.gauss_dist
 end
 
 function Nu_1_total_dist_layer(p, sol, layer)
@@ -61,7 +61,7 @@ function Nl_NT_dist_layer(p, sol, layer)
 end
 function Nl_T_dist_layer(p, sol, layer)
     index_p = ind_p_L(p, layer)
-    return p.CL * (p.ntotal * p.f_G_0/2 + sol[index_p]) .* p.gauss_dist
+    return p.CL * (p.ntotal * p.f_G_0) .* p.gauss_dist
 end
 
 function Nl_total_dist_layer(p, sol, layer)
@@ -80,7 +80,7 @@ function Nl_1_NT_dist_layer(p, sol, layer)
 end
 function Nl_1_T_dist_layer(p, sol, layer)
     index_p = ind_p_L(p, layer)
-    return p.CL1 * (p.ntotal * p.f_G_0/2 + sol[index_p]) .* p.gauss_dist
+    return p.CL1 * (p.ntotal * p.f_G_0) .* p.gauss_dist
 end
 
 function Nl_1_total_dist_layer(p, sol, layer)

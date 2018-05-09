@@ -143,8 +143,9 @@ function CO(DefaultT=Float64;
     r_ext = linspace(0,radius/100,num_layers+1)
     r_int = 0.5*(r_ext[1:end-1] + r_ext[2:end]) # in m
 
-    f_range = 5*Δ_f₀D
-    num_freq = round(Int64,max(50,2*f_range/(Δ_fP/4)))
+    f_range = 2*Δ_f₀D
+    num_freq = round(Int64,max(50,f_range/(Δ_fP/4)))
+    num_freq = 1
     df = 2.0 * f_range / num_freq
     f_dist_end = linspace(-f_range, f_range, num_freq + 1) + f₀
     f_dist_ctr = f_dist_end[1:end-1] + df/2
@@ -158,11 +159,12 @@ function CO(DefaultT=Float64;
     norm_dist = Normal(f₀, Δ_f₀D / sqrt(2*log(2)))
     pdf1 = pdf(norm_dist, f_dist_ctr)
     gauss_dist = pdf1 / sum(pdf1)
+    # gauss_dist = pdf1 * df
 
     ## n_rot
     n_vib = 0
 
-    n_rot = 2 * (5+max(JU, JL+1))
+    # n_rot = 2 * (5+max(JU, JL+1))
     J = 0:(n_rot÷2-1)
 
     # in 1/microsec. rate_ij = rate_DD * prob. of ij collision, also kDDmat[i,j]:
@@ -256,8 +258,16 @@ function CO(DefaultT=Float64;
 end
 
 function compCsCO(JL, JU, h, T, M)
+    cL = compCCO(JL, h, T, M)
+    cL1 = compCCO(JL+1, h, T, M)
+    cU = compCCO(JU, h, T, M)
+    cU1 = compCCO(JU-1, h, T, M)
+    return (cL, cL1, cU, cU1)
+end
+
+function compCCO(JL, h, T, M)
     Js = 0:1:100 # K from -J to J
-    Q = ql = ql1 = qu = qu1 = 0.0
+    Q = ql = 0.0
     (B, DJ) = (57.635968, 0.1835058E-6) # in GHz
     for J in Js
         Ej = B*J*(J+1) - DJ*J^2*(J+1)^2
@@ -265,14 +275,7 @@ function compCsCO(JL, JU, h, T, M)
         Q += qj
         if J == JL
             ql = qj
-        elseif J == JL+1
-            ql1 = qj
-        elseif J == JU
-            qu = qj
-        elseif J == JU-1
-            qu1 = qj
         end
     end
-
-    return (ql/Q, ql1/Q, qu/Q, qu1/Q)
+    return ql/Q
 end
