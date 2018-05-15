@@ -59,7 +59,7 @@ function CO(DefaultT=Float64;
     # mode_num: 1: TE01 / 2: TE12 / 3: TE02 / 4: TE22 / 5: TE11 / 6: TE21 / 7: TM01 / 8: TM11
     #zeros of Bessel functions:
     p_library = [3.83, 5.33, 7.02, 6.71, 1.84, 3.05, 2.4, 3.83] # deprecated
-    K0 = 3
+    K0 = 0
     model_flag = 1
     σ_SPT = 0
     σ_36 = 0
@@ -266,6 +266,7 @@ function compCsCO(JL, JU, h, T, M)
 end
 
 function compCCO(JL, h, T, M)
+    # compute fraction of JL in that vibrational level
     Js = 0:1:100 # K from -J to J
     Q = ql = 0.0
     (B, DJ) = (57.635968, 0.1835058E-6) # in GHz
