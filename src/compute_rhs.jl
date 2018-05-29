@@ -13,16 +13,14 @@ function compute_rhs(rhs, p, sol)
     end
 
     flux = posflux(p, sol)
-    println(flux)
-    flux = 2e25
     for vi in 1:p.num_freq
         for j in 1:p.n_rot
             row = p.layer_unknown*p.num_layers + (vi-1)*p.n_rot + j
-            rhs[row] += p.v_avg * (sol[row] + sol[row-p.layer_unknown])/2
-            # for jprime in 1:p.n_rot
-            #     rowprime = p.layer_unknown*p.num_layers + (vi-1)*p.n_rot + jprime
-            #     rhs[row] += - rotpopfracl(j, p) * p.v_avg * (sol[rowprime] + sol[rowprime-p.layer_unknown])/2
-            # end
+            rhs[row] += p.v_avg/p.norm_time * (sol[row] + sol[row-p.layer_unknown])/2
+            for jprime in 1:p.n_rot
+                rowprime = p.layer_unknown*p.num_layers + (vi-1)*p.n_rot + jprime
+                rhs[row] += - rotpopfracl(j, p) * p.v_avg/p.norm_time * (sol[rowprime] + sol[rowprime-p.layer_unknown])/2
+            end
             # println(rhs[row])
             #
             # if p.velocity[vi] >= 0

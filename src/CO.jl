@@ -80,7 +80,7 @@ function CO(DefaultT=Float64;
     #### molecule setup
     ###################################################
     σ_GKC = 44
-    σ_DD = 3.15*sqrt(T*M)/3.15 * 3.2
+    σ_DD = sqrt(T*M)/3.15 * 3.2
     EG = 0
     E3 = 2143.0
     (B, DJ) = (57.635968, 0.1835058E-6) # in GHz
