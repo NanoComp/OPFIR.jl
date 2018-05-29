@@ -556,7 +556,7 @@ end
 
 function Q_selectn_lh(J)
     K = 3
-    return ((J+1)^2-K^2)/((J+1)*(2*J+1))
+    return ((J+1)^2-K^2)/((J+1)*(2*J+1))*0.96
 end
 
 function lorentz_dist(ν, Δ_f_NT, f_pump)

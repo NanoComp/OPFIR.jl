@@ -269,7 +269,7 @@ end
 
 
 function cavityloss(p, llevel, cavitymode) # in m^-1
-    Rback = 1.
+    Rback = 1. # in THz frequency, R back is 1.0
     Rfront = (1-efftrans(cavitymode)) * Rback
     alpha = 2 * ohmicloss(p, llevel, cavitymode) - log(Rfront*Rback)/(2p.L/100)
     return alpha
@@ -427,7 +427,7 @@ function efftrans(cavitymode)
         P0 = (t^2-n^2) * besselj(n, t)^2
         t = 0.2*t
         Prad = t^2*(besselj(n-1, t)^2 - besselj(n-2, t)*besselj(n, t)) - 2*n*besselj(n,t)^2
-        # return Prad/P0
+        return Prad/P0
         return maxT(n, zerobessel(cavitymode))
     elseif contains(cavitymode, "TM")
         P0 = t^2 * derv_bessel(n, t)^2
