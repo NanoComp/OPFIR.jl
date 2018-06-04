@@ -249,6 +249,7 @@ x0 = zerobessel(cavitymode)
 m = parse(Int, cavitymode[3])
 
 resitivityCu = 1/4e7 # copper resistivity at room temperature;
+resitivityCu = 2.0e-8 # copper resistivity at room temperature;
 conductivityCu = 1/resitivityCu # copper conductivity at room temperature;
 mu = 4*pi*1e-7 # magnetic permeability in copper
 
