@@ -549,14 +549,35 @@ function Params(DefaultT=Float64;
     )
 end
 
-function Q_selectn_hl(J)
+function Q_selectn_hl(J) #J->J-1
     K = 3
     return (J^2-K^2)/(J*(2*J+1))
 end
 
-function Q_selectn_lh(J)
+function Q_selectn_lh(J) #J->J+1
     K = 3
-    return ((J+1)^2-K^2)/((J+1)*(2*J+1))*0.96
+    return ((J+1)^2-K^2)/((J+1)*(2*J+1))*exp(-ΔEr(J, J+1, 3, "V0", 35) * 1.6e-13)
+end
+
+function ΔEr(J1, J2, K, V, M) # in Hz
+    if V=="V0" && M==35
+        B = 24862.6427e6
+        DJ = 0.057683e6
+        DJK = 0.42441e6
+    elseif V=="V3" && M==35
+        B = 24542.1324e6
+        DJ = 0.055156e6
+        DJK = 0.47788e6
+    elseif V=="V0" && M==34
+        B = 25.5361499e9
+        DJ = 0.000060233e9
+        DJK = 0.000439574e9
+    elseif V=="V3" && M==34
+        B = 25.1975092e9
+        DJ = 5.68788E4
+        DJK = 0.000518083e9
+    end
+    return (B-DJK*K^2)*(J2*(J2+1)-J1*(J1+1)) - DJ*(-J1^2*(J1+1)^2+J2^2*(J2+1)^2)
 end
 
 function lorentz_dist(ν, Δ_f_NT, f_pump)
