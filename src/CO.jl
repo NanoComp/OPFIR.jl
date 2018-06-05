@@ -105,8 +105,8 @@ function CO(DefaultT=Float64;
     f₀ = (EU - EL) * 1e9 # in Hz
     f_pump = f₀ + f_offset
 
-    f_dir_lasing = 2B*JU - 4DJ*JU^3
-    f_ref_lasing = 2B*(JL+1) - 4DJ*(JL+1)^3
+    f_dir_lasing = (2B*JU - 4DJ*JU^3) * 1e9
+    f_ref_lasing = (2B*(JL+1) - 4DJ*(JL+1)^3) * 1e9
 
     ###################################################
     #### derived molecular parameters
@@ -174,8 +174,9 @@ function CO(DefaultT=Float64;
         kDD*Q_selectn_hl(J[i], 0)/(1e3)
     end
     for i in 1:length(J)-1
+        dE = (2B*(J[i]+1) - 4DJ*(J[i]+1)^3) * 1e9 # in Hz
         kDDmat[i, i+1] = kDDmat[i+n_rot÷2, i+n_rot÷2+1] =
-        kDD*Q_selectn_lh(J[i], 0)/(1e3)
+        kDD*Q_selectn_lh(J[i], 0)/(1e3) * exp(-dE * h/1.38e-23/T)
     end
     # K-swap rates -> goes to thermal pool, in 1/microsec
     ka = [0.0]
@@ -279,4 +280,26 @@ function compCCO(JL, h, T, M)
         end
     end
     return ql/Q
+end
+
+
+function ΔErCO(J1, J2, V)
+    if V=="V0" && M==35
+        B = 24862.6427e6
+        DJ = 0.057683e6
+        DJK = 0.42441e6
+    elseif V=="V3" && M==35
+        B = 24542.1324e6
+        DJ = 0.055156e6
+        DJK = 0.47788e6
+    elseif V=="V0" && M==34
+        B = 25.5361499e9
+        DJ = 0.000060233e9
+        DJK = 0.000439574e9
+    elseif V=="V3" && M==34
+        B = 25.1975092e9
+        DJ = 5.68788E4
+        DJK = 0.000518083e9
+    end
+    return (B-DJK*K^2)*(J2*(J2+1)-J1*(J1+1)) - DJ*(-J1^2*(J1+1)^2+J2^2*(J2+1)^2)
 end
