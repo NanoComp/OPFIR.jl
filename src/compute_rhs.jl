@@ -12,44 +12,19 @@ function compute_rhs(rhs, p, sol)
         end
     end
 
-    flux = posflux(p, sol)
+    # flux = posflux(p, sol)
+    vbar = p.v_avg/2/sqrt(2)
     for vi in 1:p.num_freq
         for j in 1:p.n_rot
             row = p.layer_unknown*p.num_layers + (vi-1)*p.n_rot + j
-            rhs[row] += p.v_avg/p.norm_time * (sol[row] + sol[row-p.layer_unknown])/2
+            rhs[row] += vbar/p.norm_time * (sol[row] + sol[row-p.layer_unknown])/2 * 1/2
             for jprime in 1:p.n_rot
                 rowprime = p.layer_unknown*p.num_layers + (vi-1)*p.n_rot + jprime
-                rhs[row] += - rotpopfracl(j, p) * p.v_avg/p.norm_time * (sol[rowprime] + sol[rowprime-p.layer_unknown])/2
+                rhs[row] += - p.rotpopfr[j] * vbar/p.norm_time * (sol[rowprime] + sol[rowprime-p.layer_unknown])/2 * 1/2
             end
-            # println(rhs[row])
-            #
-            # if p.velocity[vi] >= 0
-            #     # rhs[row] += p.velocity[vi] * (sol[row] + sol[row-p.layer_unknown])/2
-            #     rhs[row] += p.v_avg * (sol[row] + sol[row-p.layer_unknown])/2 * (-1+rotpopfracl(j, p))
-            # else
-            #     rhs[row] += -rotpopfracl(j, p) * rotpopfracv(vi, p) * flux
-            # end
         end
     end
 
-end
-
-
-function rotpopfracl(j, p)
-    ctot = cj = 0.0
-    for k in 0:p.n_rot-1
-        ck = compCCO(k, p.h, p.T, p.M)
-        if k <= p.n_rot ÷ 2
-            ck *= p.f_G_0
-        else
-            ck *= p.f_3_0
-        end
-        ctot += ck
-        if k==j
-            cj = ck
-        end
-    end
-    return cj/ctot
 end
 
 function rotpopfracv(vi, p)

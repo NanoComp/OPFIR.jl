@@ -9,14 +9,13 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
     update_alpha_from_N!(p, sol_0)
     update_Param_from_alpha!(p, sol_0)
     # println("absorption: ", p.alpha_r[1])
-
     compute_rhs(rhs, p, sol_0)
     compute_row_col_val(rowind, colind, value, p, sol_0)
     # println("finished computing row, col, value!")
     matrix = sparse(rowind, colind, value)
     mat_rhs_modify(matrix, rhs, p)
-
     # println("start to compute the solution!")
+
     sol_1 = matrix \ rhs
     # println(matrix[p.layer_unknown-p.n_vib+1, :], ", rhs:", rhs[p.layer_unknown-p.n_vib+1])
 

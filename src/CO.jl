@@ -181,6 +181,9 @@ function CO(DefaultT=Float64;
     # K-swap rates -> goes to thermal pool, in 1/microsec
     ka = [0.0]
 
+    ## rotational population fraction to all
+    rotpopfr = rotpopfracl(h, T, M, n_rot, f_G_0, f_3_0, J)
+
     layer_unknown = n_rot*num_freq
 
     ###################################################
@@ -224,7 +227,7 @@ function CO(DefaultT=Float64;
     # kwall = WallRate(radius, pressure, r_int, ntotal, M, T, NA, v_avg, σ_GKC) + 1e-10
     kwall = zeros(num_layers)
 
-    return Params{DefaultT}(radius, pump_radius, L, L_eff, h, c, ev, kB, T, T_vA, T_vE, kBT, M, norm_time,
+    return ParamsCO{DefaultT}(radius, pump_radius, L, L_eff, h, c, ev, kB, T, T_vA, T_vE, kBT, M, norm_time,
     σ_GKC, σ_DD, σ_SPT, σ_36, σ_VS,
     v_avg, kvs, #kvsplit,
     EG, E3, E6, E23, E36, E26, Q,
@@ -254,7 +257,8 @@ function CO(DefaultT=Float64;
     err_tv,
     beta13,
     WiU, WiL,
-    optcavity
+    optcavity,
+    rotpopfr
     )
 end
 
@@ -268,7 +272,7 @@ end
 
 function compCCO(JL, h, T, M)
     # compute fraction of JL in that vibrational level
-    Js = 0:1:100 # K from -J to J
+    Js = 0:1:100
     Q = ql = 0.0
     (B, DJ) = (57.635968, 0.1835058E-6) # in GHz
     for J in Js
@@ -302,4 +306,21 @@ function ΔErCO(J1, J2, V)
         DJK = 0.000518083e9
     end
     return (B-DJK*K^2)*(J2*(J2+1)-J1*(J1+1)) - DJ*(-J1^2*(J1+1)^2+J2^2*(J2+1)^2)
+end
+
+
+function rotpopfracl(h, T, M, n_rot, f_G_0, f_3_0, J)
+    ctot = 0.0
+    cj = zeros(n_rot)
+    Js = vcat(J, J)
+    for k in 1:n_rot
+        cj[k] = compCCO(Js[k], h, T, M)
+        if k <= n_rot ÷ 2
+            cj[k] *= f_G_0
+        else
+            cj[k] *= f_3_0
+        end
+        ctot += cj[k]
+    end
+    return cj/ctot
 end
