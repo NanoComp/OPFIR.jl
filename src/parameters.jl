@@ -200,7 +200,7 @@ function Params(DefaultT=Float64;
     ## model/solver setup
     ####################################
     num_layers = 10,
-    model_flag = 1,
+    model_flag = 2,
     solstart_flag = 0,
     optcavity = false,
     D_factor = 1.0,
@@ -295,11 +295,11 @@ function Params(DefaultT=Float64;
     g_L = 2JL + 1
     g_U = 2JU + 1
     CL, CL1, CU, CU1 = compCs(JL, JU, K0, h, T, M)
-    println(E3, ", ", B3, ", ", DJ3, ", ", DJK3)
+    # println(E3, ", ", B3, ", ", DJ3, ", ", DJK3)
     EU = E3*c/1e7 + B3*JU*(JU+1) + (A3-B3)*K0^2 - DJ3*JU^2*(JU+1)^2 -DJK3*JU*(JU+1)*K0^2 # in GHz
-    println(EU)
+    # println(EU)
     EL = B0*JL*(JL+1) + (A0-B0)*K0^2 - DJ0*JL^2*(JL+1)^2 -DJK0*JL*(JL+1)*K0^2
-    println(EL)
+    # println(EL)
     f₀ = (EU - EL) * 1e9 # in Hz
     f_pump = f₀ + f_offset
 
