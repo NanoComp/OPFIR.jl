@@ -403,7 +403,7 @@ function Params(DefaultT=Float64;
     end
     for i in 1:length(J)-1
         kDDmat[i, i+1] = kDDmat[i+n_rot÷2, i+n_rot÷2+1] =
-        kDD*Q_selectn_lh(J[i], K0)/(1e3)
+        kDD*Q_selectn_lh(J[i], K0, M)/(1e3)
     end
     # K-swap rates -> goes to thermal pool, in 1/microsec
     ka = 19.8*pressure*σ_SPT/sqrt(T*M)/(1e3) * ones(n_rot)
@@ -497,8 +497,8 @@ function Q_selectn_hl(J, K)
     return (J^2-K^2)/(J*(2*J+1))
 end
 
-function Q_selectn_lh(J, K)
-    return ((J+1)^2-K^2)/((J+1)*(2*J+1))
+function Q_selectn_lh(J, K, M)
+    return ((J+1)^2-K^2)/((J+1)*(2*J+1)) * exp(-ΔEr(J, J+1, K, "V0", M) * 1.6e-13)
 end
 
 function lorentz_dist(ν, Δ_f_NT, f_pump)
@@ -544,7 +544,7 @@ function Qv(kB, T)
     return Q
 end
 
-function ΔEr(J1, J2, K, V, M)
+function ΔEr(J1, J2, K, V, M) # in Hz
     if V=="V0" && M==35
         B = 24862.6427e6
         DJ = 0.057683e6
