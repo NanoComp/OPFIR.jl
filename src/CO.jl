@@ -145,7 +145,7 @@ function CO(DefaultT=Float64;
 
     f_range = 2*Δ_f₀D
     num_freq = round(Int64,max(50,f_range/(Δ_fP/4)))
-    num_freq = 1
+    num_freq = 20
     df = 2.0 * f_range / num_freq
     f_dist_end = linspace(-f_range, f_range, num_freq + 1) + f₀
     f_dist_ctr = f_dist_end[1:end-1] + df/2
