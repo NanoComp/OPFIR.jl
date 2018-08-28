@@ -59,7 +59,7 @@ function N2O(DefaultT=Float64;
     #zeros of Bessel functions:
     p_library = [3.83, 5.33, 7.02, 6.71, 1.84, 3.05, 2.4, 3.83] # deprecated
     K0 = 0
-    model_flag = 1
+    model_flag = 2 # default to be 2 for N2O; 1 for CO;
     σ_SPT = 0
     σ_36 = 0
     σ_VS = 0
@@ -226,7 +226,7 @@ function N2O(DefaultT=Float64;
     # alpha_0 in m^-1
     totalNL0 = CL * ntotal * f_G_0
     totalNU0 = CU * ntotal * f_3_0
-    
+
     alpha_0 = exp(-log(2)*((f_pump-f₀)/Δ_f₀D)^2)*sqrt(log(2)/pi)/Δ_f₀D *
               8*pi^3/3/h/c * (totalNL0 - totalNU0) *
               1e-36 * (0.2457^2*max(JL, JU)/(2JL+1)) * f_pump * 1e-13

@@ -18,14 +18,14 @@ function fraction_V3(p, T)
 end
 
 function Qv_0(p, T)
-    data = viblevels()
+    data = viblevelsN2O()
     Q = 1.0
     for i in 1:size(data, 1)
         Q += data[i,2] * exp(-data[i, 1]/(p.kB*T*8065.73))
     end
     return Q
 end
-# 
+#
 # function solve_Tv(Q_v, p)
 #     Qv_diff(T) = Qv_0(p, T) - Q_v
 #     function Qv(x, fvec)
@@ -37,8 +37,8 @@ end
 
 function updateTv(p, sol)
     for j in 1:p.num_layers
-        N0A = (sol[p.layer_unknown*j-5] + p.ntotal*p.f_G_0/2)
-        N3A = (sol[p.layer_unknown*j-4] + p.ntotal*p.f_3_0/2)
+        N0A = (sol[p.layer_unknown*j-2] + p.ntotal*p.f_G_0)
+        N3A = (sol[p.layer_unknown*j-1] + p.ntotal*p.f_3_0)
         # for vi in 1:p.num_freq
         #   index_b = p.layer_unknown*(j-1) + 1 + (vi-1)*p.n_rot
         #   index_e = index_b + p.n_rot÷2 - 1
@@ -48,16 +48,16 @@ function updateTv(p, sol)
         #   N3A += sum(sol[index_b:index_e])
         # end
         p.T_vA[j] = Tv(p, N0A, N3A)
-
-        N0E = (sol[p.layer_unknown*j-2] + p.ntotal*p.f_G_0/2)
-        N3E = (sol[p.layer_unknown*j-1] + p.ntotal*p.f_3_0/2)
-        p.T_vE[j] = Tv(p, N0E, N3E)
+        #
+        # N0E = (sol[p.layer_unknown*j-2] + p.ntotal*p.f_G_0/2)
+        # N3E = (sol[p.layer_unknown*j-1] + p.ntotal*p.f_3_0/2)
+        # p.T_vE[j] = Tv(p, N0E, N3E)
 
         if p.err_tv == true
           println("Tv error is detected! Return current values")
           println("current absorption coefficient: ", p.alpha_r)
           println("problem comes from layer: ", j)
-          println("N0A=", N0A, ", N3A=", N3A, ", N0E=", N0E, ", N3E=", N3E)
+          println("N0=", N0A, ", N3=", N3A)
         #   exit()
           return 0
         end
@@ -83,11 +83,11 @@ function updateks(p)
         p.k63A[j] = p.k36A[j] * p.f_3A[j]/p.f_6A[j]
     end
 
-    for j in 1:p.num_layers
-        p.f_GE[j] = fraction_Vg(p, p.T_vE[j])
-        p.f_3E[j] = fraction_V3(p, p.T_vE[j])
-        p.f_6E[j] = 1 - p.f_GE[j] - p.f_3E[j]
-        p.k36E[j] = 1000.0
-        p.k63E[j] = p.k36E[j] * p.f_3E[j]/p.f_6E[j]
-    end
+    # for j in 1:p.num_layers
+    #     p.f_GE[j] = fraction_Vg(p, p.T_vE[j])
+    #     p.f_3E[j] = fraction_V3(p, p.T_vE[j])
+    #     p.f_6E[j] = 1 - p.f_GE[j] - p.f_3E[j]
+    #     p.k36E[j] = 1000.0
+    #     p.k63E[j] = p.k36E[j] * p.f_3E[j]/p.f_6E[j]
+    # end
 end

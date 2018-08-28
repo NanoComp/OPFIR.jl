@@ -71,11 +71,11 @@ end
 function dipolemom(p)
     matele = 0.
     if p.pumpbranch == "R"
-        matele = 0.2756^2*((p.JL+1)^2-p.K0^2)/(p.JL+1)/(2p.JL+1)
+        matele = 0.060373*((p.JL+1)^2-p.K0^2)/(p.JL+1)/(2p.JL+1)
     elseif p.pumpbranch == "Q"
-        matele = 0.2756^2*p.K0^2/(p.JL+1)/p.JL
+        matele = 0.060373*p.K0^2/(p.JL+1)/p.JL
     else
-        matele = 0.2756^2*(p.JL^2-p.K0^2)/p.JL/(2p.JL+1)
+        matele = 0.060373*(p.JL^2-p.K0^2)/p.JL/(2p.JL+1)
     end
     return matele
 end
