@@ -182,7 +182,7 @@ function N2O(DefaultT=Float64;
 
     ## rotational population fraction to all
 
-    layer_unknown = n_rot*num_freq + n_vib
+    layer_unknown = n_rot*num_freq + 1
 
     ###################################################
     #### physical terms initialization

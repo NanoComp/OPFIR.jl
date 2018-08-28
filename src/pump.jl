@@ -28,8 +28,8 @@ function comppumprate!(p, alphab)
     pavgback = (1-exp(-alphaback*p.L/100))/(alphaback*p.L/100) * p.power / (1-triploss) * exp(-alphaforw*p.L/100) * R1
 
     for ri in 1:p.num_layers
-        p.Δ_f_RabiF[ri] = 0.38*sqrt(pavgforw)/p.radius*1e6
-        p.Δ_f_RabiB[ri] = 0.38*sqrt(pavgback)/p.radius*1e6
+        p.Δ_f_RabiF[ri] = 0.38*sqrt(pavgforw)/p.radius*1e6 * 0.0
+        p.Δ_f_RabiB[ri] = 0.38*sqrt(pavgback)/p.radius*1e6 * 0.0
         p.Δ_f_NTF[ri] = p.Δ_fP + p.Δ_f_RabiF[ri]
         p.Δ_f_NTB[ri] = p.Δ_fP + p.Δ_f_RabiB[ri]
         fV = p.Δ_f_NTF[ri]
