@@ -3,7 +3,7 @@ using Distributions
 using Cubature
 using NLsolve
 
-for f in ("parameters.jl", "main.jl",
+for f in ("parameters.jl", "parametersN2O.jl", "N2O.jl", "main.jl",
           "anderson_accel.jl", "fixedpoint.jl",
           "compute_rhs.jl", "compute_row_col_val.jl",
           "gain.jl", "pump.jl", "Tv_model.jl", "check.jl",

@@ -493,13 +493,6 @@ function Params(DefaultT=Float64;
     )
 end
 
-function Q_selectn_hl(J, K)
-    return (J^2-K^2)/(J*(2*J+1))
-end
-
-function Q_selectn_lh(J, K, M)
-    return ((J+1)^2-K^2)/((J+1)*(2*J+1)) * exp(-ΔEr(J, J+1, K, "V0", M) * 1.6e-13)
-end
 
 function lorentz_dist(ν, Δ_f_NT, f_pump)
     return  1/π .* Δ_f_NT ./ ((ν - f_pump).^2 + Δ_f_NT^2)
@@ -535,14 +528,7 @@ function emission_broaden(ν, vi, p, df)
   return spectrum
 end
 
-function Qv(kB, T)
-    data = viblevels()
-    Q = 1.0
-    for i in 1:size(data, 1)
-        Q += data[i,2] * exp(-data[i, 1]/(kB*T*8065.73))
-    end
-    return Q
-end
+
 
 function ΔEr(J1, J2, K, V, M) # in Hz
     if V=="V0" && M==35
