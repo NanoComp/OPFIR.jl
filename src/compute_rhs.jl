@@ -8,9 +8,16 @@ function compute_rhs(rhs, p, sol)
 
             row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.n_rot÷2 + p.JU-p.K0+1)
             rhs[row] = - p.pump_IR[vi, ri] * p.gauss_dist[vi] * p.ntotal *
-                       (p.CL * p.f_G_0/2 - p.CU * p.f_3_0 * p.g_L/p.g_U)
+                       (p.CL * p.f_G_0 - p.CU * p.f_3_0 * p.g_L/p.g_U)
         end
+
+        row = ri*p.layer_unknown
+        for vi in 1:p.num_freq
+            # rhs[row] = - p.ntotal * p.f_6_0 + p.k36A[ri]/p.k63A[ri] * p.ntotal * p.f_3_0
+        end
+
     end
+
 end
 
 

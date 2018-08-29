@@ -173,5 +173,6 @@ type ParamsN2O{T<:Real}
     WiL::T
 
     optcavity::Bool
-
+    
+    rotpopfr::AbstractVector
 end

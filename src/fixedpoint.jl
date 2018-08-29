@@ -4,7 +4,7 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
     rowind = ones(Int64, max_ele)
     colind = ones(Int64, max_ele)
     value = zeros(max_ele)
-    rhs = zeros(p.num_layers*p.layer_unknown + p.n_vib)
+    rhs = zeros((p.num_layers+1)*p.layer_unknown)
 
     update_alpha_from_N!(p, sol_0)
     update_Param_from_alpha!(p, sol_0)
@@ -42,7 +42,8 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
     else
         println("L = ", p.L, "cm")
     end
-
+    println(size(matrix))
+    println("length of sol1: ", length(sol_1))
     println("norm of sol diff = ", norm(sol_1 - sol_0) / norm(sol_1))
     flush(STDOUT)
 

@@ -32,35 +32,19 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             val = - p.pump_IR[vi, ri]
             s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
-            # col = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 1 #V0A
-            # val = - p.pump_IR[vi, ri] * p.CL * p.gauss_dist[vi]
-            # s = put_row_col_val(rowind, colind, value, row, col, val, s)
-
             col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.n_rot÷2 + p.JU-p.K0+1)
             val = p.pump_IR[vi, ri] * p.g_L/p.g_U
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
-
-            # col = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 2 #V3A
-            # val = p.pump_IR[vi, ri] * p.CU * p.gauss_dist[vi] * p.g_L/p.g_U
-            # s = put_row_col_val(rowind, colind, value, row, col, val, s)
 
             ### pumping for U level
             row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.n_rot÷2 + p.JU-p.K0+1)
             col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + (p.JL-p.K0+1) #
             val = p.pump_IR[vi, ri]
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
-            #
-            # col = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 1 # V0A
-            # val = p.pump_IR[vi, ri] * p.CL * p.gauss_dist[vi]
-            # s = put_row_col_val(rowind, colind, value, row, col, val, s)
 
             col = row
             val = - p.pump_IR[vi, ri] * p.g_L/p.g_U
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
-            #
-            # col = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 2 # V3A
-            # val = - p.pump_IR[vi, ri] * p.CU * p.gauss_dist[vi] * p.g_L/p.g_U
-            # s = put_row_col_val(rowind, colind, value, row, col, val, s)
         end
     end
 
@@ -126,72 +110,68 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
 
     ################ question: BC for the wall? #######
     Ri = p.num_layers
-    # Robin BC:
-    vbar = p.v_avg / sqrt(2) / p.norm_time/2
-    # rotatinal levels
-    for row in vcat(p.layer_unknown*Ri+1:p.layer_unknown*(Ri+1)-1] # index offset, or starting index
-        val = -p.D/p.Δr + vbar * (1-p.f)/4
-        s = put_row_col_val(rowind, colind, value, row, row-p.layer_unknown, val, s)
-
-        val = p.D/p.Δr + vbar * (1-p.f_G_0)/4
-        s = put_row_col_val(rowind, colind, value, row, row, val, s)
-
-        val = -vbar*p.f_G_0/4
-        for k in [1, 2]
-            s = put_row_col_val(rowind, colind, value, row, row-p.n_vib+k, val, s)
-            s = put_row_col_val(rowind, colind, value, row, row+k, val, s)
-        end
-    end
-
-    # V3A and V3E at N+1 grid
-    for row in [p.layer_unknown * Ri + 2, p.layer_unknown * Ri + p.n_vib÷2 + 2] # index offset, or starting index
-        val = -p.D/p.Δr + vbar * (1-p.f_3_0)/4
-        s = put_row_col_val(rowind, colind, value, row, row-p.n_vib, val, s)
-
-        val = p.D/p.Δr + vbar * (1-p.f_3_0)/4
-        s = put_row_col_val(rowind, colind, value, row, row, val, s)
-
-        val = -vbar*p.f_3_0/4
-        for k in [-1, 1]
-            s = put_row_col_val(rowind, colind, value, row, row-p.n_vib+k, val, s)
-            s = put_row_col_val(rowind, colind, value, row, row+k, val, s)
-        end
-    end
-    # VΣA and VΣE at N+1 grid
-    for row in [p.layer_unknown * Ri + 3, p.layer_unknown * Ri + p.n_vib÷2 + 3] # index offset, or starting index
-        val = -p.D/p.Δr + vbar * (1-p.f_6_0)/4
-        s = put_row_col_val(rowind, colind, value, row, row-p.n_vib, val, s)
-
-        val = p.D/p.Δr + vbar * (1-p.f_6_0)/4
-        s = put_row_col_val(rowind, colind, value, row, row, val, s)
-
-        val = -vbar*p.f_6_0/4
-        for k in [-1, -2]
-            s = put_row_col_val(rowind, colind, value, row, row-p.n_vib+k, val, s)
-            s = put_row_col_val(rowind, colind, value, row, row+k, val, s)
-        end
-    end
-
-
-    if p.model_flag==2
-        ### for case gamma -> infinity
-        for ri in 1:p.num_layers
-            # V3A and V3E:
-            rowA = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 2
-            for row in vcat(rowA, rowA + p.n_vib÷2)
-                s = put_row_col_val(rowind, colind, value, row, row-1, 1., s)
-                s = put_row_col_val(rowind, colind, value, row, row,   1., s)
-                s = put_row_col_val(rowind, colind, value, row, row+1, 1., s)
+    # Robin BC for rotational levels:
+    vbar = p.v_avg/2/sqrt(2)/p.norm_time
+    for vi in 1:p.num_freq
+        for j in 1:p.n_rot
+            row = p.layer_unknown*Ri + (vi-1)*p.n_rot + j
+            s = put_row_col_val(rowind, colind, value, row, row, -p.D/p.Δr - vbar/4, s)
+            s = put_row_col_val(rowind, colind, value, row, row-p.layer_unknown, p.D/p.Δr - vbar/4, s)
+            for lprime in 1:p.n_rot
+                col = p.layer_unknown*Ri + (vi-1)*p.n_rot + lprime
+                s = put_row_col_val(rowind, colind, value, row, col, vbar/4 * p.rotpopfr[j], s)
+                s = put_row_col_val(rowind, colind, value, row, col-p.layer_unknown, vbar/4 * p.rotpopfr[j], s)
             end
-            # VΣA and VΣE
-            rowA = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 3
-            rowE = rowA + p.n_vib÷2
-            for row in vcat(rowA, rowE)
-                s = put_row_col_val(rowind, colind, value, row, row, 1., s)
-            end
-            s = put_row_col_val(rowind, colind, value, rowA, rowA-1, -p.k36A[ri]/p.k63A[ri], s)
-            s = put_row_col_val(rowind, colind, value, rowE, rowE-1, -p.k36E[ri]/p.k63E[ri], s)
+            col = p.layer_unknown*(Ri+1)
+            s = put_row_col_val(rowind, colind, value, row, col, vbar/4 * p.rotpopfr[j], s)
+            s = put_row_col_val(rowind, colind, value, row, col-p.layer_unknown, vbar/4 * p.rotpopfr[j], s)
         end
     end
 
+    # for vib Sigma level
+    # row = p.layer_unknown*(Ri+1)
+    # s = put_row_col_val(rowind, colind, value, row, row, -p.D/p.Δr, s)
+    # s = put_row_col_val(rowind, colind, value, row, row-p.layer_unknown, p.D/p.Δr, s)
+
+    for ri in 1:p.num_layers
+        # V Sigma
+        row = ri*p.layer_unknown
+        s = put_row_col_val(rowind, colind, value, row, row, 1., s)
+        for vi in 1:p.num_freq
+            for l in 1:p.n_rot÷2
+                col = p.layer_unknown*(ri-1) + (vi-1)*p.n_rot + p.n_rot÷2 + l
+                s = put_row_col_val(rowind, colind, value, row, col, -p.k36A[ri]/p.k63A[ri], s)
+            end
+        end
+        # for vi in 1:p.num_freq
+        #     for l in 1:p.n_rot
+        #         col = p.layer_unknown*(ri-1) + (vi-1)*p.n_rot + l
+        #         s = put_row_col_val(rowind, colind, value, row, col, -1.0, s)
+        #     end
+        # end
+    end
+
+    row = (p.num_layers+1) * p.layer_unknown
+    for j in 1:p.num_layers*p.layer_unknown
+        s = put_row_col_val(rowind, colind, value, row, j, 1.0, s)
+    end
+
+end
+
+function totN0r(p, sol, ri)
+    tot = 0.
+    for vi in 1:p.num_freq
+        rowoffset = p.layer_unknown*(ri-1) + (vi-1)*p.n_rot
+        tot += sum(sol[rowoffset+1:rowoffset+p.n_rot÷2])
+    end
+    return tot + p.ntotal*p.f_G_0
+end
+
+function totN3r(p, sol, ri)
+    tot = 0.
+    for vi in 1:p.num_freq
+        rowoffset = p.layer_unknown*(ri-1) + (vi-1)*p.n_rot + p.n_rot÷2
+        tot += sum(sol[rowoffset+1:rowoffset+p.n_rot÷2])
+    end
+    return tot + p.ntotal*p.f_3_0
 end

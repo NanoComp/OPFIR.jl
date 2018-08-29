@@ -146,7 +146,9 @@ function N2O(DefaultT=Float64;
     r_int = 0.5*(r_ext[1:end-1] + r_ext[2:end]) # in m
 
     f_range = 5Δ_f₀D
+    f_range = 10Δ_fP
     num_freq = round(Int64,max(50,2f_range/(Δ_fP/4)))
+    # num_freq = 50
     df = 2.0 * f_range / num_freq
     f_dist_end = linspace(-f_range, f_range, num_freq + 1) + f₀
     f_dist_ctr = f_dist_end[1:end-1] + df/2
@@ -163,7 +165,7 @@ function N2O(DefaultT=Float64;
 
     n_vib = 3
 
-    n_rot = 2 * (5+max(JU, JL+1)-K0+1)
+    n_rot = 2 * (15+max(JU, JL+1)-K0+1)
     J = Jlevels(n_rot, JL, JU, K0) #for CH3F, J = 3:(n_rot÷2+2)
 
     # in 1/microsec. rate_ij = rate_DD * prob. of ij collision, also kDDmat[i,j]:
@@ -181,6 +183,7 @@ function N2O(DefaultT=Float64;
     ka = [0.0]
 
     ## rotational population fraction to all
+    rotpopfr = rotpopfracl(h, T, M, n_rot, f_G_0, f_3_0, J)
 
     layer_unknown = n_rot*num_freq + 1
 
@@ -269,7 +272,8 @@ function N2O(DefaultT=Float64;
     err_tv,
     beta13,
     WiU, WiL,
-    optcavity
+    optcavity,
+    rotpopfr
     )
 end
 
@@ -315,4 +319,20 @@ function Qv(kB, T)
         Q += data[i,2] * exp(-data[i, 1]/(kB*T*8065.73))
     end
     return Q
+end
+
+function rotpopfracl(h, T, M, n_rot, f_G_0, f_3_0, J)
+    ctot = 0.0
+    cj = zeros(n_rot)
+    Js = vcat(J, J)
+    for k in 1:n_rot
+        cj[k] = compCN2O(Js[k], h, T, M)
+        if k <= n_rot ÷ 2
+            cj[k] *= f_G_0
+        else
+            cj[k] *= f_3_0
+        end
+        ctot += cj[k]
+    end
+    return cj/ctot * (f_G_0+f_3_0)
 end

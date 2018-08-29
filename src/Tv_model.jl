@@ -37,8 +37,8 @@ end
 
 function updateTv(p, sol)
     for j in 1:p.num_layers
-        N0A = (sol[p.layer_unknown*j-2] + p.ntotal*p.f_G_0)
-        N3A = (sol[p.layer_unknown*j-1] + p.ntotal*p.f_3_0)
+        N0 = totN0r(p, sol, j)
+        N3 = totN3r(p, sol, j)
         # for vi in 1:p.num_freq
         #   index_b = p.layer_unknown*(j-1) + 1 + (vi-1)*p.n_rot
         #   index_e = index_b + p.n_rot÷2 - 1
@@ -47,7 +47,7 @@ function updateTv(p, sol)
         #   index_e += p.n_rot÷2
         #   N3A += sum(sol[index_b:index_e])
         # end
-        p.T_vA[j] = Tv(p, N0A, N3A)
+        p.T_vA[j] = Tv(p, N0, N3)
         #
         # N0E = (sol[p.layer_unknown*j-2] + p.ntotal*p.f_G_0/2)
         # N3E = (sol[p.layer_unknown*j-1] + p.ntotal*p.f_3_0/2)
@@ -57,7 +57,7 @@ function updateTv(p, sol)
           println("Tv error is detected! Return current values")
           println("current absorption coefficient: ", p.alpha_r)
           println("problem comes from layer: ", j)
-          println("N0=", N0A, ", N3=", N3A)
+          println("N0=", N0, ", N3=", N3)
         #   exit()
           return 0
         end
