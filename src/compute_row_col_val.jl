@@ -137,23 +137,24 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         # V Sigma
         row = ri*p.layer_unknown
         s = put_row_col_val(rowind, colind, value, row, row, 1., s)
-        for vi in 1:p.num_freq
-            for l in 1:p.n_rot÷2
-                col = p.layer_unknown*(ri-1) + (vi-1)*p.n_rot + p.n_rot÷2 + l
-                s = put_row_col_val(rowind, colind, value, row, col, -p.k36A[ri]/p.k63A[ri], s)
-            end
-        end
         # for vi in 1:p.num_freq
-        #     for l in 1:p.n_rot
-        #         col = p.layer_unknown*(ri-1) + (vi-1)*p.n_rot + l
-        #         s = put_row_col_val(rowind, colind, value, row, col, -1.0, s)
+        #     for l in 1:p.n_rot÷2
+        #         col = p.layer_unknown*(ri-1) + (vi-1)*p.n_rot + p.n_rot÷2 + l
+        #         s = put_row_col_val(rowind, colind, value, row, col, -p.k36A[ri]/p.k63A[ri], s)
         #     end
         # end
+        for vi in 1:p.num_freq
+            for l in 1:p.n_rot
+                col = p.layer_unknown*(ri-1) + (vi-1)*p.n_rot + l
+                s = put_row_col_val(rowind, colind, value, row, col, -1.0, s)
+            end
+        end
     end
 
     row = (p.num_layers+1) * p.layer_unknown
     for j in 1:p.num_layers*p.layer_unknown
-        s = put_row_col_val(rowind, colind, value, row, j, 1.0, s)
+        ri = (j-1)÷p.layer_unknown + 1
+        s = put_row_col_val(rowind, colind, value, row, j, p.r_int[ri], s)
     end
 
 end
