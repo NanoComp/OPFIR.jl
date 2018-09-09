@@ -56,7 +56,7 @@ end
 
 function outputpower(p, level, cavitymode)
     p.WiU = p.WiL = 0.
-    wi = vcat(0.0, 0.1, 0.2)
+    wi = vcat(0.0, 0.01)
     nonth_popinv = zeros(length(wi))
     (p0, sol0) = func(p)
     if level == 'U'
@@ -291,9 +291,9 @@ end
 function compfraction(p, sol)
     N0A = N3A = NΣA = 0.
     for j in 1:p.num_layers
-        N0A += ((sol[p.layer_unknown*j-5] + p.ntotal*p.f_G_0/2)) * p.r_int[j]
-        N3A += ((sol[p.layer_unknown*j-4] + p.ntotal*p.f_3_0/2)) * p.r_int[j]
-        NΣA += ((sol[p.layer_unknown*j-3] + p.ntotal*p.f_6_0/2)) * p.r_int[j]
+        N0A += ((sol[p.layer_unknown*j-5] + p.ntotal*p.f_G_0)) * p.r_int[j]
+        N3A += ((sol[p.layer_unknown*j-4] + p.ntotal*p.f_3_0)) * p.r_int[j]
+        NΣA += ((sol[p.layer_unknown*j-3] + p.ntotal*p.f_6_0)) * p.r_int[j]
     end
     f0 = N0A/sum(N0A+N3A+NΣA)
     f3 = N3A/sum(N0A+N3A+NΣA)

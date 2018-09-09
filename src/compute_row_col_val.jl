@@ -7,13 +7,15 @@ end
 
 function compute_row_col_val(rowind, colind, value, p, sol_0)
     s = 1
+    A = 1000
+    B = 1000
     # rotational levels in V0 and V3
     for vi in 1:p.num_freq
         for ri in 1:p.num_layers
             for li in 1:p.n_rot
+                row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + li
                 for lj in 1:p.n_rot
                     if p.kDDmat[li, lj] > 0
-                        row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + li
                         col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + lj
                         ## D-D collision
                         s = put_row_col_val(rowind, colind, value, row, row, -p.kDDmat[li,lj], s)
@@ -96,7 +98,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
         end
     end
-    # first layer, Neuemann BC
+    # first layer, Neumann BC, rotational levels
     index_diffu = vcat(1:p.layer_unknown-1)
     for k in index_diffu
         row = k
@@ -133,6 +135,26 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
     # s = put_row_col_val(rowind, colind, value, row, row, -p.D/p.Δr, s)
     # s = put_row_col_val(rowind, colind, value, row, row-p.layer_unknown, p.D/p.Δr, s)
 
+
+    ########################## rot-vib transition terms for rot levels ##########################
+
+    for ri in 1:p.num_layers
+        for vi in 1:p.num_freq
+            for li in 1:p.n_rot # V0
+                row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + li
+                col = ri*p.layer_unknown
+                if li > p.n_rot÷2 # in V3
+                    s = put_row_col_val(rowind, colind, value, row, row, -A, s)
+                    s = put_row_col_val(rowind, colind, value, row, col, A*p.f_3A[ri]/p.f_6A[ri]*p.cj[li]*p.gauss_dist[vi], s)
+                else # in V0
+                    s = put_row_col_val(rowind, colind, value, row, row, -B*p.f_6A[ri]/p.f_GA[ri], s)
+                    s = put_row_col_val(rowind, colind, value, row, row, B*p.cj[li]*p.gauss_dist[vi], s)
+                end
+            end
+        end
+    end
+
+    ###################### vib V sigma ##################################
     for ri in 1:p.num_layers
         # V Sigma
         row = ri*p.layer_unknown
@@ -143,10 +165,11 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         #         s = put_row_col_val(rowind, colind, value, row, col, -p.k36A[ri]/p.k63A[ri], s)
         #     end
         # end
+
         for vi in 1:p.num_freq
             for l in 1:p.n_rot
                 col = p.layer_unknown*(ri-1) + (vi-1)*p.n_rot + l
-                s = put_row_col_val(rowind, colind, value, row, col, -1.0, s)
+                s = put_row_col_val(rowind, colind, value, row, col, 1.0, s)
             end
         end
     end

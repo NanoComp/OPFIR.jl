@@ -181,9 +181,14 @@ function N2O(DefaultT=Float64;
     end
     # K-swap rates -> goes to thermal pool, in 1/microsec
     ka = [0.0]
-
     ## rotational population fraction to all
     rotpopfr = rotpopfracl(h, T, M, n_rot, f_G_0, f_3_0, J)
+    ck = zeros(n_rot)
+    for k in 1:n_rot÷2
+        ck[k] = compCN2O(J[k], h, T, M)
+    end
+    ck = ck/sum(ck)
+    cj = vcat(ck, ck)
 
     layer_unknown = n_rot*num_freq + 1
 
@@ -273,7 +278,7 @@ function N2O(DefaultT=Float64;
     beta13,
     WiU, WiL,
     optcavity,
-    rotpopfr
+    rotpopfr, cj
     )
 end
 
