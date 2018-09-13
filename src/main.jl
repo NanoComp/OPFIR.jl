@@ -56,7 +56,7 @@ end
 
 function outputpower(p, level, cavitymode)
     p.WiU = p.WiL = 0.
-    wi = vcat(0.0, 0.01)
+    wi = vcat(0.0, 0.1, 0.2)
     nonth_popinv = zeros(length(wi))
     (p0, sol0) = func(p)
     if level == 'U'

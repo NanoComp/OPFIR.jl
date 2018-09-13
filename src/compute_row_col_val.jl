@@ -8,7 +8,7 @@ end
 function compute_row_col_val(rowind, colind, value, p, sol_0)
     s = 1
     A = 1000
-    B = 1000
+    B = 0.
     # rotational levels in V0 and V3
     for vi in 1:p.num_freq
         for ri in 1:p.num_layers
@@ -119,22 +119,28 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             row = p.layer_unknown*Ri + (vi-1)*p.n_rot + j
             s = put_row_col_val(rowind, colind, value, row, row, -p.D/p.Δr - vbar/4, s)
             s = put_row_col_val(rowind, colind, value, row, row-p.layer_unknown, p.D/p.Δr - vbar/4, s)
-            for lprime in 1:p.n_rot
+            for lprime in 1:p.n_rot # rot level with the same velocity
                 col = p.layer_unknown*Ri + (vi-1)*p.n_rot + lprime
                 s = put_row_col_val(rowind, colind, value, row, col, vbar/4 * p.rotpopfr[j], s)
                 s = put_row_col_val(rowind, colind, value, row, col-p.layer_unknown, vbar/4 * p.rotpopfr[j], s)
             end
+            # flux back from V Sigma into level j and vel vi
             col = p.layer_unknown*(Ri+1)
-            s = put_row_col_val(rowind, colind, value, row, col, vbar/4 * p.rotpopfr[j], s)
-            s = put_row_col_val(rowind, colind, value, row, col-p.layer_unknown, vbar/4 * p.rotpopfr[j], s)
+            s = put_row_col_val(rowind, colind, value, row, col, vbar/4 * p.rotpopfr[j]*p.gauss_dist[vi], s)
+            s = put_row_col_val(rowind, colind, value, row, col-p.layer_unknown, vbar/4 * p.rotpopfr[j]*p.gauss_dist[vi], s)
         end
     end
 
     # for vib Sigma level
-    # row = p.layer_unknown*(Ri+1)
-    # s = put_row_col_val(rowind, colind, value, row, row, -p.D/p.Δr, s)
-    # s = put_row_col_val(rowind, colind, value, row, row-p.layer_unknown, p.D/p.Δr, s)
-
+    row = p.layer_unknown*(Ri+1)
+    s = put_row_col_val(rowind, colind, value, row, row, -p.D/p.Δr - vbar/4, s)
+    s = put_row_col_val(rowind, colind, value, row, row-p.layer_unknown, p.D/p.Δr - vbar/4, s)
+    # flux back from all rot levels:
+    for j in 1:p.layer_unknown
+        col = p.layer_unknown*Ri + j
+        s = put_row_col_val(rowind, colind, value, row, col, vbar/4 * p.f_6_0, s)
+        s = put_row_col_val(rowind, colind, value, row, col-p.layer_unknown, vbar/4 * p.f_6_0, s)
+    end
 
     ########################## rot-vib transition terms for rot levels ##########################
 
@@ -174,11 +180,11 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         end
     end
 
-    row = (p.num_layers+1) * p.layer_unknown
-    for j in 1:p.num_layers*p.layer_unknown
-        ri = (j-1)÷p.layer_unknown + 1
-        s = put_row_col_val(rowind, colind, value, row, j, p.r_int[ri], s)
-    end
+    # row = (p.num_layers+1) * p.layer_unknown
+    # for j in 1:p.num_layers*p.layer_unknown
+    #     ri = (j-1)÷p.layer_unknown + 1
+    #     s = put_row_col_val(rowind, colind, value, row, j, p.r_int[ri], s)
+    # end
 
 end
 

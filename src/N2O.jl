@@ -145,8 +145,8 @@ function N2O(DefaultT=Float64;
     r_ext = linspace(0,radius/100,num_layers+1)
     r_int = 0.5*(r_ext[1:end-1] + r_ext[2:end]) # in m
 
-    f_range = 5Δ_f₀D
-    f_range = 10Δ_fP
+    f_range = Δ_f₀D
+    # f_range = 10Δ_fP
     num_freq = round(Int64,max(50,2f_range/(Δ_fP/4)))
     # num_freq = 50
     df = 2.0 * f_range / num_freq
@@ -183,7 +183,7 @@ function N2O(DefaultT=Float64;
     ka = [0.0]
     ## rotational population fraction to all
     rotpopfr = rotpopfracl(h, T, M, n_rot, f_G_0, f_3_0, J)
-    ck = zeros(n_rot)
+    ck = zeros(n_rot÷2)
     for k in 1:n_rot÷2
         ck[k] = compCN2O(J[k], h, T, M)
     end
