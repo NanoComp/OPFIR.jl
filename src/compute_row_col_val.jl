@@ -8,7 +8,7 @@ end
 function compute_row_col_val(rowind, colind, value, p, sol_0)
     s = 1
     A = 1000
-    B = 0.
+    B = 1000.
     # rotational levels in V0 and V3
     for vi in 1:p.num_freq
         for ri in 1:p.num_layers

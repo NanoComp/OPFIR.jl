@@ -47,6 +47,11 @@ end
 function update_alpha_from_N!(p, sol) # in m^-1
     tmp_factor = 8*π^3/3/p.h/p.c * 1e-36 * dipolemom(p) * p.f_pump * 1e-13 / p.df
 
+    tmpbool = false
+    if p.alpha_r[1] == 0.0 # if this is the first time to update alpha
+        tmpbool = true
+    end
+
     for ri in 1:p.num_layers
         Nl_dist = Nl_total_dist_layer(p, sol, ri)
         Nu_dist = Nu_total_dist_layer(p, sol, ri)
@@ -54,6 +59,9 @@ function update_alpha_from_N!(p, sol) # in m^-1
         p.alpha_r[ri] = tmp_factor * sum((Nl_dist - p.g_L/p.g_U*Nu_dist).*abs_ability)
     end
     alpha = sum(p.alpha_r.*p.r_int)/sum(p.r_int)
+    if tmpbool # if this is the first time to update alpha
+        p.alpha_0 = alpha
+    end
     p.alpha_r = ones(p.num_layers) * alpha
     # println("alpha=", alpha)
 end

@@ -238,7 +238,8 @@ function N2O(DefaultT=Float64;
     alpha_0 = exp(-log(2)*((f_pump-f₀)/Δ_f₀D)^2)*sqrt(log(2)/pi)/Δ_f₀D *
               8*pi^3/3/h/c * (totalNL0 - totalNU0) *
               1e-36 * (0.2457^2*max(JL, JU)/(2JL+1)) * f_pump * 1e-13
-    alpha_r = alpha_0 * ones(num_layers)
+
+    alpha_r = zeros(num_layers)
     pump_IR = zeros(num_freq, num_layers)
     # in unit m^-3 microsec^-1
     pump_0 = 9.4e13 * power/(radius^2)/Δ_f₀D * (0.2457^2*max(JL, JU)/(2JL+1)) *
