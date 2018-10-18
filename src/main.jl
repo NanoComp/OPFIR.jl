@@ -313,7 +313,7 @@ function outpowermode(p, sol, llevel, cavitymode, taus)
     println(alpha, ", ", efftrans(cavitymode))
     ΔN = totinv(p, sol, llevel)
     Φ0 = (ΔN*σν/alpha-1)/taus/σν
-    Φ = nlsolve((x,fvec) -> begin
+    Φ = nlsolve((fvec, x) -> begin
                 fvec[1] = gaincoefmode(x[1], p, sol, llevel, cavitymode, taus, σν) - alpha
             end, [Φ0], iterations=100)
     if Φ.iterations > 99
