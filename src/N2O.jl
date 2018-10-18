@@ -145,7 +145,7 @@ function N2O(DefaultT=Float64;
     r_ext = linspace(0,radius/100,num_layers+1)
     r_int = 0.5*(r_ext[1:end-1] + r_ext[2:end]) # in m
 
-    f_range = Δ_f₀D
+    f_range = 3*Δ_f₀D
     # f_range = 10Δ_fP
     num_freq = round(Int64,max(50,2f_range/(Δ_fP/4)))
     # num_freq = 50

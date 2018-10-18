@@ -1,4 +1,4 @@
-using PyPlot
+# using PyPlot
 
 function plotting(p, sol)
   layers = [1, p.num_layers÷2, p.num_layers]
