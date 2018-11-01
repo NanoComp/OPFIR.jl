@@ -240,7 +240,7 @@ end
 
 
 function cavityloss(p, llevel, cavitymode) # in m^-1
-    Rback = 1.
+    Rback = 1.0
     Rfront = (1-efftrans(cavitymode)) * Rback
     alpha = 2 * ohmicloss(p, llevel, cavitymode) - log(Rfront*Rback)/(2p.L/100)
     return alpha

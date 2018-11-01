@@ -145,7 +145,7 @@ function N2O(DefaultT=Float64;
     r_ext = linspace(0,radius/100,num_layers+1)
     r_int = 0.5*(r_ext[1:end-1] + r_ext[2:end]) # in m
 
-    f_range = 3*Δ_f₀D
+    f_range = 2*Δ_f₀D
     # f_range = 10Δ_fP
     num_freq = round(Int64,max(50,2f_range/(Δ_fP/4)))
     # num_freq = 50
@@ -165,8 +165,7 @@ function N2O(DefaultT=Float64;
 
     n_vib = 3
 
-    n_rot = 2 * (15+max(JU, JL+1)-K0+1)
-    J = Jlevels(n_rot, JL, JU, K0) #for CH3F, J = 3:(n_rot÷2+2)
+    J, n_rot = JlevelsN2O(JL, JU, K0)
 
     # in 1/microsec. rate_ij = rate_DD * prob. of ij collision, also kDDmat[i,j]:
     kDDmat = zeros(n_rot, n_rot)
@@ -341,4 +340,15 @@ function rotpopfracl(h, T, M, n_rot, f_G_0, f_3_0, J)
         ctot += cj[k]
     end
     return cj/ctot * (f_G_0+f_3_0)
+end
+
+
+function JlevelsN2O(JL, JU, K0)
+    N = 12
+    Jmin = max(K0, JL-N)
+    Jmax = Jmin + 2N
+    if Jmax < JU+2 || Jmax < JL+2
+        throw(ArgumentError("number of rotational levels need to be increased!"))
+    end
+    return Jmin:Jmax, (Jmax-Jmin+1)*2
 end

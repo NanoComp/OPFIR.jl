@@ -18,9 +18,10 @@ function AveragePower2_FB(alphaf, alphab, L, power)
 end
 
 function comppumprate!(p, alphab)
+    
     # numtrips = ceil(Int, log(0.01)/log(exp(-p.alpha_r[1]*p.L/100)*exp(-alphab[1]*p.L/100) * 0.95^2*0.96))
     R1 = 0.95
-    R2 = 0.95 * 0.96
+    R2 = R1 * 0.96
     triploss = exp(-p.alpha_r[1]*p.L/100)*exp(-alphab[1]*p.L/100) * R1*R2
     alphaforw = p.alpha_r[1]
     alphaback = alphab[1]
