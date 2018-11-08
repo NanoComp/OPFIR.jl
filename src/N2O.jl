@@ -145,10 +145,10 @@ function N2O(DefaultT=Float64;
     r_ext = linspace(0,radius/100,num_layers+1)
     r_int = 0.5*(r_ext[1:end-1] + r_ext[2:end]) # in m
 
-    f_range = 2*Δ_f₀D
-    # f_range = 10Δ_fP
+    # f_range = 2*Δ_f₀D
+    f_range = 60Δ_fP
     num_freq = round(Int64,max(50,2f_range/(Δ_fP/4)))
-    # num_freq = 50
+
     df = 2.0 * f_range / num_freq
     f_dist_end = linspace(-f_range, f_range, num_freq + 1) + f₀
     f_dist_ctr = f_dist_end[1:end-1] + df/2
@@ -344,11 +344,11 @@ end
 
 
 function JlevelsN2O(JL, JU, K0)
-    N = 12
-    Jmin = max(K0, JL-N)
+    N = max(16, JL)
+    Jmin = 0 #max(K0, JL-N)
     Jmax = Jmin + 2N
-    if Jmax < JU+2 || Jmax < JL+2
-        throw(ArgumentError("number of rotational levels need to be increased!"))
-    end
+    # if Jmax < JU+2 || Jmax < JL+2
+    #     throw(ArgumentError("number of rotational levels need to be increased!"))
+    # end
     return Jmin:Jmax, (Jmax-Jmin+1)*2
 end
