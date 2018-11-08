@@ -1,7 +1,3 @@
-using JLD
-using ODE
-using NLsolve
-
 function func(p; sol_start=Array[])
     # initiate some of the parameters from alpha_0
     if p.solstart_flag==0
@@ -36,7 +32,7 @@ function func(p; sol_start=Array[])
         lu_mat0 = lufact(matrix_0)
     end
 
-    rel_err = Float64[]
+    rel_err = Array{Float64}(0)
     sol_0 = andersonaccel(x -> begin
             y = fixedpoint(x, p, matrix_0, lu_mat0)
             push!(rel_err, norm(y - x) / norm(y))
