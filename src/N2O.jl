@@ -178,6 +178,21 @@ function N2O(DefaultT=Float64;
         kDDmat[i, i+1] = kDDmat[i+n_rot÷2, i+n_rot÷2+1] =
         kDD*Q_selectn_lh(J[i], K0, M)/(1e3) * exp(-dE * h/1.38e-23/T)
     end
+
+    k_rottherm = zeros(n_rot÷2, n_rot÷2)
+    k_rottherm0 = 19.8 * pressure * σ_GKC/ sqrt(T*M) # in msec-1
+    for si in 1:length(J)
+        statei = J[si]
+        for sf in 1:length(J)
+            statef = J[sf]
+            cf = compCN2O(statef, h, T, M)
+            k_rottherm[si, sf] = k_rottherm0 * cf /1000 # in 1/microsec
+
+            kDDmat[si, sf] += k_rottherm[si, sf]
+            kDDmat[si+n_rot÷2, sf+n_rot÷2] += k_rottherm[si, sf]
+        end
+    end
+    
     # K-swap rates -> goes to thermal pool, in 1/microsec
     ka = [0.0]
     ## rotational population fraction to all
@@ -351,4 +366,9 @@ function JlevelsN2O(JL, JU, K0)
     #     throw(ArgumentError("number of rotational levels need to be increased!"))
     # end
     return Jmin:Jmax, (Jmax-Jmin+1)*2
+end
+
+
+function krottherm()
+
 end

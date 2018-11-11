@@ -1,5 +1,5 @@
 function fixedpoint(sol_0, p, matrix_0, lu_mat0)
-    max_ele = p.num_freq * p.num_layers * (p.n_rot*(p.n_rot+2) + p.n_vib*(p.n_rot+p.n_vib+2))
+    max_ele = p.num_freq * p.num_layers * (p.n_rot*(p.n_rot+2) + p.n_vib*(p.n_rot^2+p.n_vib+2))
 
     rowind = ones(Int64, max_ele)
     colind = ones(Int64, max_ele)

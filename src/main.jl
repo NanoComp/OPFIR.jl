@@ -306,7 +306,7 @@ function outpowermode(p, sol, llevel, cavitymode, taus)
     σν = (p.c/νTHZ)^2/8/π/p.t_spont * 1/pi/Δnu
     # println(σν)
     alpha = cavityloss(p, llevel, cavitymode)
-    println(alpha, ", ", efftrans(cavitymode))
+    # println(alpha, ", ", efftrans(cavitymode))
     ΔN = totinv(p, sol, llevel)
     Φ0 = (ΔN*σν/alpha-1)/taus/σν
     Φ = nlsolve((fvec, x) -> begin
