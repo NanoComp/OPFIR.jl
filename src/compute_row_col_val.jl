@@ -1,7 +1,10 @@
 function put_row_col_val(rowind, colind, value, row, col, val, s)
-    rowind[s] = row
-    colind[s] = col
-    value[s] = val
+    # rowind[s] = row
+    # colind[s] = col
+    # value[s] = val
+    push!(rowind, row)
+    push!(colind, col)
+    push!(value, val)
     return (s+1)
 end
 
