@@ -12,14 +12,14 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
     update_alpha_from_N!(p, sol_0)
     update_Param_from_alpha!(p, sol_0)
 
-    if p.model_flag == 2
-        status = 1
-        status = updateTv(p, sol_0)
-        if status == 0
-            return 0
-        end
-        updateks(p)
-    end
+    # if p.model_flag == 2
+    #     status = 1
+    #     status = updateTv(p, sol_0)
+    #     if status == 0
+    #         return 0
+    #     end
+    #     updateks(p)
+    # end
     compute_rhs(rhs, p, sol_0)
     compute_row_col_val(rowind, colind, value, p, sol_0)
 

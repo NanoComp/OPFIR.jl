@@ -10,6 +10,7 @@ function func(p; sol_start=Array[])
         end
     else
         tmp_power = p.power
+        tmp_Wi = [p.WiU, p.WiL]
         p_sol = load("./p_sol.jld")
         sol_0 = p_sol["sol"]
         sol_in = deepcopy(sol_0)
@@ -17,15 +18,20 @@ function func(p; sol_start=Array[])
         p = deepcopy(p_0)
         p.power = tmp_power
         p.solstart_flag = 1
+        p.WiU = tmp_Wi[1]
+        p.WiL = tmp_Wi[2]
     end
 
     OPFIRinfo(p, sol_0)
 
     if p.solstart_flag == 1
         max_ele = p.num_freq * p.num_layers * (p.n_rot*(p.n_rot+2) + p.n_vib*(p.n_rot+p.n_vib+2))
-        rowind_0 = ones(Int64, max_ele)
-        colind_0 = ones(Int64, max_ele)
-        value_0 = zeros(max_ele)
+        rowind_0 = Array{Float64}(0)
+        colind_0 = Array{Float64}(0)
+        value_0 = Array{Float64}(0)
+        # rowind_0 = ones(Int64, max_ele)
+        # colind_0 = ones(Int64, max_ele)
+        # value_0 = zeros(max_ele)
         compute_row_col_val(rowind_0, colind_0, value_0, p_0, sol_in)
         matrix_0 = sparse(rowind_0, colind_0, value_0)
         # mat_modify(matrix_0, p)
@@ -77,6 +83,9 @@ function outputpower(p, level, cavitymode)
         throw(ArgumentError("level can only be L or U!"))
     end
     taus = comptaus(vec(nonth_popinv), wi)*1e-6
+
+    Acoeff = 64*pi^4/3/6.63e-27/(3e10)^3 * p0.f_dir_lasing^3 * dipolemom(p0)*0.5 * 1e-36
+    p0.t_spont = 1/Acoeff
 
     laspower = outpowermode(p0, sol0, level, cavitymode, taus)
     # alpha = cavityloss(p0, level, cavitymode)
@@ -236,7 +245,7 @@ end
 
 
 function cavityloss(p, llevel, cavitymode) # in m^-1
-    Rback = 1.0
+    Rback = 0.99
     Rfront = (1-efftrans(cavitymode)) * Rback
     alpha = 2 * ohmicloss(p, llevel, cavitymode) - log(Rfront*Rback)/(2p.L/100)
     return alpha

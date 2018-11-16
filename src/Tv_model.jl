@@ -30,8 +30,8 @@ function updateTv(p, sol)
     for j in 1:p.num_layers
         N0 = totN0r(p, sol, j)
         N3 = totN3r(p, sol, j)
-        p.T_vA[j] = Tv(p, N0, N3)
-        # p.T_vA[j] = p.T
+        # p.T_vA[j] = Tv(p, N0, N3)
+        p.T_vA[j] = p.T
         if p.err_tv == true
           println("Tv error is detected! Return current values")
           println("current absorption coefficient: ", p.alpha_r)

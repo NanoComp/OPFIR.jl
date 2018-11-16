@@ -22,6 +22,7 @@ function comppumprate!(p, alphab)
     # numtrips = ceil(Int, log(0.01)/log(exp(-p.alpha_r[1]*p.L/100)*exp(-alphab[1]*p.L/100) * 0.95^2*0.96))
     R1 = 0.95
     R2 = R1 * 0.96
+    println(p.alpha_r[1])
     triploss = exp(-p.alpha_r[1]*p.L/100)*exp(-alphab[1]*p.L/100) * R1*R2
     alphaforw = p.alpha_r[1]
     alphaback = alphab[1]
@@ -29,8 +30,11 @@ function comppumprate!(p, alphab)
     pavgback = (1-exp(-alphaback*p.L/100))/(alphaback*p.L/100) * p.power / (1-triploss) * exp(-alphaforw*p.L/100) * R1
 
     for ri in 1:p.num_layers
-        p.Δ_f_RabiF[ri] = 0.38*sqrt(pavgforw)/p.radius*1e6 * 0.0
-        p.Δ_f_RabiB[ri] = 0.38*sqrt(pavgback)/p.radius*1e6 * 0.0
+        # p.Δ_f_RabiF[ri] = 0.38*sqrt(pavgforw)/p.radius*1e6 * 0.0
+        # p.Δ_f_RabiB[ri] = 0.38*sqrt(pavgback)/p.radius*1e6 * 0.0
+        p.Δ_f_RabiF[ri] = 0.0
+        p.Δ_f_RabiB[ri] = 0.0
+        
         p.Δ_f_NTF[ri] = p.Δ_fP + p.Δ_f_RabiF[ri]
         p.Δ_f_NTB[ri] = p.Δ_fP + p.Δ_f_RabiB[ri]
         fV = p.Δ_f_NTF[ri]

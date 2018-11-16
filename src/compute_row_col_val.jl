@@ -1,7 +1,4 @@
 function put_row_col_val(rowind, colind, value, row, col, val, s)
-    # rowind[s] = row
-    # colind[s] = col
-    # value[s] = val
     push!(rowind, row)
     push!(colind, col)
     push!(value, val)
@@ -10,8 +7,15 @@ end
 
 function compute_row_col_val(rowind, colind, value, p, sol_0)
     s = 1
-    A = 0.0
-    B = 0.
+    approach = 2
+    if approach == 2
+        c30, c33, c3Σ = krottherm(p.kB, p.T, "V3")
+        c3Σ *= (19.8 * p.pressure * p.σ_GKC/ sqrt(p.T*p.M))/1000 # in microsec-1
+        c00, c03, c0Σ = krottherm(p.kB, p.T, "V0") 
+        c0Σ *= (19.8 * p.pressure * p.σ_GKC/ sqrt(p.T*p.M))/1000 # in microsec-1
+    else
+        c3Σ = c0Σ = 0.0
+    end
     # rotational levels in V0 and V3
     for vi in 1:p.num_freq
         for ri in 1:p.num_layers
@@ -153,11 +157,11 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
                 row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + li
                 col = ri*p.layer_unknown
                 if li > p.n_rot÷2 # in V3
-                    s = put_row_col_val(rowind, colind, value, row, row, -A, s)
-                    s = put_row_col_val(rowind, colind, value, row, col, A*p.f_3A[ri]/p.f_6A[ri]*p.cj[li]*p.gauss_dist[vi], s)
+                    s = put_row_col_val(rowind, colind, value, row, row, -c3Σ, s)
+                    s = put_row_col_val(rowind, colind, value, row, col, c3Σ*p.f_3_0/p.f_6_0*p.cj[li]*p.gauss_dist[vi], s)
                 else # in V0
-                    s = put_row_col_val(rowind, colind, value, row, row, -B*p.f_6A[ri]/p.f_GA[ri], s)
-                    s = put_row_col_val(rowind, colind, value, row, row, B*p.cj[li]*p.gauss_dist[vi], s)
+                    s = put_row_col_val(rowind, colind, value, row, row, -c0Σ, s)
+                    s = put_row_col_val(rowind, colind, value, row, row, c0Σ*p.f_G_0/p.f_6_0*p.cj[li]*p.gauss_dist[vi], s)
                 end
             end
         end

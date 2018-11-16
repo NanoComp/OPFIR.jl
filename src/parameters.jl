@@ -378,7 +378,7 @@ function Params(DefaultT=Float64;
     f_dist_ctrB = f₀ - f₀ * velocity
 
     norm_dist = Normal(f₀, Δ_f₀D / sqrt(2*log(2)))
-    pdf1 = pdf(norm_dist, f_dist_ctr)
+    pdf1 = pdf.(norm_dist, f_dist_ctr)
     gauss_dist = pdf1 / sum(pdf1)
 
     # assign J levels

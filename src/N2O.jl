@@ -179,17 +179,23 @@ function N2O(DefaultT=Float64;
         kDD*Q_selectn_lh(J[i], K0, M)/(1e3) * exp(-dE * h/1.38e-23/T)
     end
 
-    k_rottherm = zeros(n_rot÷2, n_rot÷2)
+    approach = 2
     k_rottherm0 = 19.8 * pressure * σ_GKC/ sqrt(T*M) # in msec-1
-    for si in 1:length(J)
-        statei = J[si]
-        for sf in 1:length(J)
-            statef = J[sf]
-            cf = compCN2O(statef, h, T, M)
-            k_rottherm[si, sf] = k_rottherm0 * cf /1000 # in 1/microsec
+    if approach == 2
+        ks = kGKC(n_rot, J, h, kB, T, M) * k_rottherm0/1000 # in microsec-1
+        kDDmat += ks
+    elseif approach == 1
+        k_rottherm = zeros(n_rot÷2, n_rot÷2)
+        for si in 1:length(J)
+            statei = J[si]
+            for sf in 1:length(J)
+                statef = J[sf]
+                cf = compCN2O(statef, h, T, M)
+                k_rottherm[si, sf] = k_rottherm0 * cf /1000 # in 1/microsec
 
-            kDDmat[si, sf] += k_rottherm[si, sf]
-            kDDmat[si+n_rot÷2, sf+n_rot÷2] += k_rottherm[si, sf]
+                kDDmat[si, sf] += k_rottherm[si, sf]
+                kDDmat[si+n_rot÷2, sf+n_rot÷2] += k_rottherm[si, sf]
+            end
         end
     end
     
@@ -369,6 +375,52 @@ function JlevelsN2O(JL, JU, K0)
 end
 
 
-function krottherm()
+function krottherm(kB, T, Vi)
+    data = viblevelsN2O() # doesn't include ground state 0
+    if Vi == "V3"
+        E0 = data[6,1]
+    elseif Vi == "V0"
+        E0 = 0.0
+    end
+    Q = exp(-abs(E0-0)/(kB*T*8065.73))
+    for i in 1:size(data, 1)
+        Q += data[i,2] * exp(-abs(E0-data[i, 1])/(kB*T*8065.73))
+    end
 
+    if Vi == "V3"
+        c1 = exp(-abs(data[6,1])/(kB*T*8065.73))/Q
+        c2 = 1/Q
+        c3 = 1-c1-c2
+    elseif Vi == "V0"
+        c1 = 1/Q
+        c2 = exp(-abs(data[6,1])/(kB*T*8065.73))/Q
+        c3 = 1-c1-c2
+    end
+    return c1, c2, c3
+end
+
+
+function kGKC(n_rot, J, h, kB, T, M)
+    ks = zeros(n_rot, n_rot)
+    # V0 -> V0 and V3
+    c00, c03, c0Σ = krottherm(kB, T, "V0")
+    for i in 1:n_rot÷2
+        for j in 1:n_rot÷2
+            ks[i, j] = compCN2O(J[j], h, T, M) * c00
+        end
+        for j in n_rot÷2+1:n_rot
+            ks[i, j] = compCN2O(J[j-n_rot÷2], h, T, M) *c03
+        end
+    end
+    # V3 -> V0 and V3
+    c30, c33, c3Σ = krottherm(kB, T, "V3")
+    for i in n_rot÷2+1:n_rot
+        for j in 1:n_rot÷2
+            ks[i, j] = compCN2O(J[j], h, T, M) * c30
+        end
+        for j in n_rot÷2+1:n_rot
+            ks[i, j] = compCN2O(J[j-n_rot÷2], h, T, M) * c33
+        end
+    end
+    return ks
 end
