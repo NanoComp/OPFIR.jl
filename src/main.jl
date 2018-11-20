@@ -211,10 +211,10 @@ function nonthpopinv(p, sol)
     return (total_invU, total_invL)
 end
 
-function popinvth(p)
+function popinvth(p, level, cavitymode)
     ν0 = (p.f_dir_lasing+p.f_ref_lasing)/2
     lambda = p.c/ν0
-    alpha = cavityloss(p) # unit m^-1
+    alpha = cavityloss(p, level, cavitymode) # unit m^-1
     Nt = 8*pi^2 / lambda^2 * p.t_spont * alpha * sum(p.Δ_f_NTF.*p.r_int)/sum(p.r_int)
     return Nt
 end

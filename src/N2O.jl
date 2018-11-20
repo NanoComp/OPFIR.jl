@@ -78,7 +78,9 @@ function N2O(DefaultT=Float64;
     #### molecule setup
     ###################################################
     σ_GKC = 15
-    σ_DD = sqrt(T*M)/3.15 * 4.0 # ~146 A^2
+    # σ_DD = sqrt(T*M)/3.15 * 4.0 # ~146 A^2
+    σ_DD = 146
+
     EG = 0
     E3 = 2224.0
     B, DJ = [0.419, 17.6e-8]*c/1e7 # in GHz
