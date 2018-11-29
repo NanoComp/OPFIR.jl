@@ -13,7 +13,7 @@ function N2O(DefaultT=Float64;
     ####################################
     JL = 4,
     pumpbranch = "R",
-    f_offset = 30e6,
+    f_offset = 0.e6,
     n_rot = 18,
     n0 = 1.0,
     t_spont = 10,
@@ -25,7 +25,12 @@ function N2O(DefaultT=Float64;
     optcavity = false,
     D_factor = 1.0,
     WiU = 0,
-    WiL = 0
+    WiL = 0,
+    # approach = 1: approach 1 only SPT, between rot levels;
+    # approach = 2: approach 2 SPT, VV, direct from vib levels;
+    # approach = 3: vib thermal pools modeling, suggested by Henry;
+    approach = 1,
+    n_vib = 1
     )
 
     ###################################################
@@ -165,8 +170,6 @@ function N2O(DefaultT=Float64;
     pdf1 = pdf.(norm_dist, f_dist_ctr)
     gauss_dist = pdf1 / sum(pdf1)
 
-    n_vib = 3
-
     J, n_rot = JlevelsN2O(JL, JU, K0)
 
     # in 1/microsec. rate_ij = rate_DD * prob. of ij collision, also kDDmat[i,j]:
@@ -181,7 +184,6 @@ function N2O(DefaultT=Float64;
         kDD*Q_selectn_lh(J[i], K0, M)/(1e3) * exp(-dE * h/1.38e-23/T)
     end
 
-    approach = 2
     k_rottherm0 = 19.8 * pressure * σ_GKC/ sqrt(T*M) # in msec-1
     if approach == 2
         ks = kGKC(n_rot, J, h, kB, T, M) * k_rottherm0/1000 # in microsec-1
@@ -201,8 +203,8 @@ function N2O(DefaultT=Float64;
         end
     end
     
-    # K-swap rates -> goes to thermal pool, in 1/microsec
-    ka = [0.0]
+    # K-SPT
+    ka = [k_rottherm0/1000.0] # in microsec
     ## rotational population fraction to all
     rotpopfr = rotpopfracl(h, T, M, n_rot, f_G_0, f_3_0, J)
     ck = zeros(n_rot÷2)
@@ -212,7 +214,7 @@ function N2O(DefaultT=Float64;
     ck = ck/sum(ck)
     cj = vcat(ck, ck)
 
-    layer_unknown = n_rot*num_freq + 1
+    layer_unknown = n_rot*num_freq + n_vib
 
     ###################################################
     #### physical terms initialization
@@ -301,7 +303,8 @@ function N2O(DefaultT=Float64;
     beta13,
     WiU, WiL,
     optcavity,
-    rotpopfr, cj
+    rotpopfr, cj,
+    approach
     )
 end
 

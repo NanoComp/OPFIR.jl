@@ -68,7 +68,6 @@ function update_alpha_from_N!(p, sol) # in m^-1
         p.alpha_0 = alpha
     end
     p.alpha_r = ones(p.num_layers) * alpha
-    # println("alpha=", alpha)
 end
 
 function update_Param_from_alpha!(p, sol)

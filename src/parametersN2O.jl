@@ -176,4 +176,6 @@ type ParamsN2O{T<:Real}
 
     rotpopfr::AbstractVector
     cj::AbstractVector
+
+    approach::Integer
 end
