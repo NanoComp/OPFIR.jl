@@ -25,7 +25,11 @@ function N2O(DefaultT=Float64;
     optcavity = false,
     D_factor = 1.0,
     WiU = 0,
-    WiL = 0
+    WiL = 0,
+    ## approach = 1: approach 1 only SPT, no VV; 2: approach 2 SPT, VV, direct from vib levels;
+    ## 3: henry's suggestion with thermal pool
+    approach = 1,
+    n_vib = 1
     )
 
     ###################################################
@@ -165,7 +169,7 @@ function N2O(DefaultT=Float64;
     pdf1 = pdf.(norm_dist, f_dist_ctr)
     gauss_dist = pdf1 / sum(pdf1)
 
-    n_vib = 3
+    # n_vib = 10
 
     J, n_rot = JlevelsN2O(JL, JU, K0)
 
@@ -181,7 +185,6 @@ function N2O(DefaultT=Float64;
         kDD*Q_selectn_lh(J[i], K0, M)/(1e3) * exp(-dE * h/1.38e-23/T)
     end
 
-    approach = 2
     k_rottherm0 = 19.8 * pressure * σ_GKC/ sqrt(T*M) # in msec-1
     if approach == 2
         ks = kGKC(n_rot, J, h, kB, T, M) * k_rottherm0/1000 # in microsec-1
@@ -200,9 +203,9 @@ function N2O(DefaultT=Float64;
             end
         end
     end
-    
-    # K-swap rates -> goes to thermal pool, in 1/microsec
-    ka = [0.0]
+
+    # KSPT
+    ka = [k_rottherm0/1000.0] # in microsec-1
     ## rotational population fraction to all
     rotpopfr = rotpopfracl(h, T, M, n_rot, f_G_0, f_3_0, J)
     ck = zeros(n_rot÷2)
@@ -212,7 +215,7 @@ function N2O(DefaultT=Float64;
     ck = ck/sum(ck)
     cj = vcat(ck, ck)
 
-    layer_unknown = n_rot*num_freq + 1
+    layer_unknown = n_rot*num_freq + n_vib
 
     ###################################################
     #### physical terms initialization
@@ -301,7 +304,8 @@ function N2O(DefaultT=Float64;
     beta13,
     WiU, WiL,
     optcavity,
-    rotpopfr, cj
+    rotpopfr, cj,
+    approach
     )
 end
 

@@ -1,9 +1,4 @@
 function fixedpoint(sol_0, p, matrix_0, lu_mat0)
-    # max_ele = p.num_freq * p.num_layers * (p.n_rot*(p.n_rot+2) + p.n_vib*(p.n_rot^2+p.n_vib+2))
-
-    # rowind = ones(Int64, max_ele)
-    # colind = ones(Int64, max_ele)
-    # value = zeros(max_ele)
     rowind = Array{Float64}(0)
     colind = Array{Float64}(0)
     value = Array{Float64}(0)
@@ -12,14 +7,6 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
     update_alpha_from_N!(p, sol_0)
     update_Param_from_alpha!(p, sol_0)
 
-    # if p.model_flag == 2
-    #     status = 1
-    #     status = updateTv(p, sol_0)
-    #     if status == 0
-    #         return 0
-    #     end
-    #     updateks(p)
-    # end
     compute_rhs(rhs, p, sol_0)
     compute_row_col_val(rowind, colind, value, p, sol_0)
 
@@ -53,17 +40,17 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
     return sol_1
 end
 
-function mat_modify(matrix, p)
-    for ri in 1:p.num_layers
-        # V26A and V26E:
-        rowA = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 6
-        for row in vcat(rowA, rowA + p.n_vib÷2)
-            for k in 0:5
-                matrix[row, row-k] = 1.
-            end
-        end
-    end
-end
+# function mat_modify(matrix, p)
+#     for ri in 1:p.num_layers
+#         # V26A and V26E:
+#         rowA = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 6
+#         for row in vcat(rowA, rowA + p.n_vib÷2)
+#             for k in 0:5
+#                 matrix[row, row-k] = 1.
+#             end
+#         end
+#     end
+# end
 
 function mat_rhs_modify(matrix, rhs, p)
     mat_modify(matrix, p)

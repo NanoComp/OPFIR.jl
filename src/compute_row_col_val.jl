@@ -7,24 +7,24 @@ end
 
 function compute_row_col_val(rowind, colind, value, p, sol_0)
     s = 1
-    approach = 2
-    if approach == 2
+    if p.approach == 2
         c30, c33, c3Σ = krottherm(p.kB, p.T, "V3")
         c3Σ *= (19.8 * p.pressure * p.σ_GKC/ sqrt(p.T*p.M))/1000 # in microsec-1
-        c00, c03, c0Σ = krottherm(p.kB, p.T, "V0") 
+        c00, c03, c0Σ = krottherm(p.kB, p.T, "V0")
         c0Σ *= (19.8 * p.pressure * p.σ_GKC/ sqrt(p.T*p.M))/1000 # in microsec-1
     else
         c3Σ = c0Σ = 0.0
     end
-    # rotational levels in V0 and V3
+
+    # DD collision between rotational levels in V0 and V3
     for vi in 1:p.num_freq
         for ri in 1:p.num_layers
             for li in 1:p.n_rot
                 row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + li
+                ## D-D collision
                 for lj in 1:p.n_rot
                     if p.kDDmat[li, lj] > 0
                         col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + lj
-                        ## D-D collision
                         s = put_row_col_val(rowind, colind, value, row, row, -p.kDDmat[li,lj], s)
                         s = put_row_col_val(rowind, colind, value, row, col, p.kDDmat[lj,li], s)
                     end
@@ -32,7 +32,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             end
         end
     end
-    #
+
     ### pump term:
     for vi in 1:p.num_freq
         for ri in 1:p.num_layers
@@ -89,8 +89,8 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
     ########################## add the diffusion term ##########################
 
     for ri in 2:p.num_layers
-        # rotational levels
-        index_diffu = vcat(p.layer_unknown * (ri-1) + 1 : p.layer_unknown * ri - 1)
+        # diffusion of rotational levels
+        index_diffu = vcat(p.layer_unknown * (ri-1) + 1 : p.layer_unknown * ri - p.n_vib)
         for k in index_diffu
             row = k
             col = row - p.layer_unknown
@@ -105,9 +105,8 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             s = put_row_col_val(rowind, colind, value, row, col, val, s)
         end
     end
-    # first layer, Neumann BC, rotational levels
-    index_diffu = vcat(1:p.layer_unknown-1)
-    for k in index_diffu
+    # first layer, Neumann BC, rotational level
+    for k in 1:(p.layer_unknown-p.n_vib)
         row = k
         val = p.D*(-1.0/(p.Δr)^2 - 1.0/2.0/p.Δr/p.r_int[1])
         s = put_row_col_val(rowind, colind, value, row, row, val, s)

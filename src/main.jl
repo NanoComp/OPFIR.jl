@@ -25,13 +25,9 @@ function func(p; sol_start=Array[])
     OPFIRinfo(p, sol_0)
 
     if p.solstart_flag == 1
-        max_ele = p.num_freq * p.num_layers * (p.n_rot*(p.n_rot+2) + p.n_vib*(p.n_rot+p.n_vib+2))
         rowind_0 = Array{Float64}(0)
         colind_0 = Array{Float64}(0)
         value_0 = Array{Float64}(0)
-        # rowind_0 = ones(Int64, max_ele)
-        # colind_0 = ones(Int64, max_ele)
-        # value_0 = zeros(max_ele)
         compute_row_col_val(rowind_0, colind_0, value_0, p_0, sol_in)
         matrix_0 = sparse(rowind_0, colind_0, value_0)
         # mat_modify(matrix_0, p)

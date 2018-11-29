@@ -13,7 +13,7 @@ end
 
 # nonthermal/thermal/total Nu distribution (over freq/velocity) in each radial layer
 function Nu_NT_dist_layer(p, sol, layer)
-    index_offset = ind_offset(p, layer)
+    # index_offset = ind_offset(p, layer)
     Nu = zeros(p.num_freq)
     for i in 1:p.num_freq
         index_u = index_offset + (i-1) * p.n_rot + (p.n_rot÷2 + p.JU-p.K0+1)
@@ -42,7 +42,7 @@ function Nu_1_NT_dist_layer(p, sol, layer)
     return N
 end
 function Nu_1_T_dist_layer(p, sol, layer)
-    index_p = ind_p_U(p, layer)
+    # index_p = ind_p_U(p, layer)
     return p.CU1 * (p.ntotal * p.f_3_0) .* p.gauss_dist
     # return p.CU1 * (p.ntotal * p.f_3_0/2 + sol[index_p]) .* p.gauss_dist
 end
@@ -62,7 +62,7 @@ function Nl_NT_dist_layer(p, sol, layer)
     return Nl
 end
 function Nl_T_dist_layer(p, sol, layer)
-    index_p = ind_p_L(p, layer)
+    # index_p = ind_p_L(p, layer)
     return p.CL * (p.ntotal * p.f_G_0) .* p.gauss_dist
     # return p.CL * (p.ntotal * p.f_G_0/2 + sol[index_p]) .* p.gauss_dist
 end
@@ -82,7 +82,7 @@ function Nl_1_NT_dist_layer(p, sol, layer)
     return N
 end
 function Nl_1_T_dist_layer(p, sol, layer)
-    index_p = ind_p_L(p, layer)
+    # index_p = ind_p_L(p, layer)
     return p.CL1 * (p.ntotal * p.f_G_0) .* p.gauss_dist
     # return p.CL1 * (p.ntotal * p.f_G_0/2 + sol[index_p]) .* p.gauss_dist
 end
