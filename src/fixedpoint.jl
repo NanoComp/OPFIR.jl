@@ -40,7 +40,7 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
     update_alpha_from_N!(p, sol_1)
 
     if p.optcavity && p.WiU == 0. && p.WiL == 0.
-        p.L = 0.5/p.alpha_r[1]*100
+        p.L = 0.4/p.alpha_r[1]*100
         println("L = ", p.L, "cm")
     else
         println("L = ", p.L, "cm")

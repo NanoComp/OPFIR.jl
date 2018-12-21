@@ -12,7 +12,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         c3Σ *= (19.8 * p.pressure * p.σ_GKC/ sqrt(p.T*p.M))/1000 # in microsec-1
         c00, c03, c0Σ = krottherm(p.kB, p.T, "V0") 
         c0Σ *= (19.8 * p.pressure * p.σ_GKC/ sqrt(p.T*p.M))/1000 # in microsec-1
-    elseif p.approach == 1
+    elseif p.approach == 1 || p.approach == 0
         c3Σ = c0Σ = 0.0
     end
     # rotational levels in V0 and V3
