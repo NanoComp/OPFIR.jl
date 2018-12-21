@@ -11,7 +11,7 @@ function N2O(DefaultT=Float64;
     ####################################
     ## pump setup
     ####################################
-    JL = 4,
+    JL = 11,
     pumpbranch = "R",
     f_offset = 0.e6,
     n_rot = 18,
@@ -65,7 +65,7 @@ function N2O(DefaultT=Float64;
     p_library = [3.83, 5.33, 7.02, 6.71, 1.84, 3.05, 2.4, 3.83] # deprecated
     K0 = 0
     model_flag = 2 # default to be 2 for N2O; 1 for CO;
-    σ_SPT = 0
+
     σ_36 = 0
     σ_VS = 0
     E6 = 0
@@ -82,6 +82,7 @@ function N2O(DefaultT=Float64;
     ###################################################
     #### molecule setup
     ###################################################
+    σ_SPT = 15
     σ_GKC = 15
     # σ_DD = sqrt(T*M)/3.15 * 4.0 # ~146 A^2
     σ_DD = 146
@@ -125,6 +126,7 @@ function N2O(DefaultT=Float64;
 
     # diffusion coefficient in m^2/microsec. Einstein-Smoluchowski equation;
     D = 1/3 * vel * MFP * 1e-2 * D_factor
+    ## kDD in msec-1
     kDD = 19.8 * pressure * σ_DD/ sqrt(T*M)
 
     Δ_f₀D = 3.58e-7*f₀*sqrt(T/M)
@@ -134,6 +136,27 @@ function N2O(DefaultT=Float64;
     kro = 0
 
     Q = Qv(kB, T)
+    vibdata = viblevelsN2O()
+    f_vib = zeros(n_vib)
+    f_vib[1] = 1.0/Q
+    f_vib[2:end] = vibdata[1:n_vib-1,2] .* exp.(-vibdata[1:n_vib-1, 1]/kBT)/Q
+
+    frel_vib = f_vib/sum(f_vib) # sum to be 1.0; used for BC redistribution
+
+    σ_VV = σ_GKC
+    kVV = 19.8 * pressure * σ_VV/ sqrt(T*M) / 1000 # 1/microsec
+    kVVmat = zeros(n_vib, n_vib) 
+    energyV = vcat(0, vibdata[1:n_vib-1, 1])
+    gV = vcat(1, vibdata[1:n_vib-1, 2])
+    # kVVmat[i,j] denotes transition from i to j, first only consider neighboring v levels
+    for i in 2:n_vib
+        kVVmat[i, i-1] = kVV * exp(- abs(energyV[i]-energyV[i-1])/kBT)
+    end
+
+    for i in 1:n_vib-1
+        kVVmat[i, i+1] = kVVmat[i+1, i] * gV[i+1]/gV[i] * exp(- (energyV[i+1]-energyV[i])/kBT)
+    end
+
     f_G_0 = exp(EG)/Q
     f_3_0 = exp(-E3/kBT)/Q
     f_6_0 = 1- f_G_0 - f_3_0
@@ -185,27 +208,27 @@ function N2O(DefaultT=Float64;
     end
 
     k_rottherm0 = 19.8 * pressure * σ_GKC/ sqrt(T*M) # in msec-1
-    if approach == 2
-        ks = kGKC(n_rot, J, h, kB, T, M) * k_rottherm0/1000 # in microsec-1
-        kDDmat += ks
-    elseif approach == 1
-        k_rottherm = zeros(n_rot÷2, n_rot÷2)
-        for si in 1:length(J)
-            statei = J[si]
-            for sf in 1:length(J)
-                statef = J[sf]
-                cf = compCN2O(statef, h, T, M)
-                k_rottherm[si, sf] = k_rottherm0 * cf /1000 # in 1/microsec
+    # if approach == 2
+    #     ks = kGKC(n_rot, J, h, kB, T, M) * k_rottherm0/1000 # in microsec-1
+    #     kDDmat += ks
+    # elseif approach == 1
+    #     k_rottherm = zeros(n_rot÷2, n_rot÷2)
+    #     for si in 1:length(J)
+    #         statei = J[si]
+    #         for sf in 1:length(J)
+    #             statef = J[sf]
+    #             cf = compCN2O(statef, h, T, M)
+    #             k_rottherm[si, sf] = k_rottherm0 * cf /1000 # in 1/microsec
 
-                kDDmat[si, sf] += k_rottherm[si, sf]
-                kDDmat[si+n_rot÷2, sf+n_rot÷2] += k_rottherm[si, sf]
-            end
-        end
-    end
+    #             kDDmat[si, sf] += k_rottherm[si, sf]
+    #             kDDmat[si+n_rot÷2, sf+n_rot÷2] += k_rottherm[si, sf]
+    #         end
+    #     end
+    # end
     
     # K-SPT
-    ka = [k_rottherm0/1000.0] # in microsec
-    ## rotational population fraction to all
+    ka = [19.8 * pressure * σ_SPT/ sqrt(T*M)/1000.0] # in microsec-1
+    ## rotational population fraction to ntotal, used in BC, not in N2O_VV
     rotpopfr = rotpopfracl(h, T, M, n_rot, f_G_0, f_3_0, J)
     ck = zeros(n_rot÷2)
     for k in 1:n_rot÷2
@@ -228,7 +251,7 @@ function N2O(DefaultT=Float64;
     f_3E = f_3_0 * ones(num_layers) # deprecated for N2O
     f_6E = f_6_0 * ones(num_layers) # deprecated for N2O
 
-    # ks are all 0
+    # ks are all 0, deprecated for N2O
     k63A = k63 * ones(num_layers)
     k63E = k63 * ones(num_layers)
     k36A = k36 * ones(num_layers)
@@ -304,7 +327,9 @@ function N2O(DefaultT=Float64;
     WiU, WiL,
     optcavity,
     rotpopfr, cj,
-    approach
+    approach, 
+    frel_vib,
+    kVVmat
     )
 end
 

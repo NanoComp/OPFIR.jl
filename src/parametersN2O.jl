@@ -178,4 +178,7 @@ type ParamsN2O{T<:Real}
     cj::AbstractVector
 
     approach::Integer
+
+    frel_vib::AbstractVector
+    kVVmat::AbstractArray
 end
