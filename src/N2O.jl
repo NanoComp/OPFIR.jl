@@ -191,7 +191,7 @@ function N2O(DefaultT=Float64;
 
     norm_dist = Normal(f₀, Δ_f₀D / sqrt(2*log(2)))
     pdf1 = pdf.(norm_dist, f_dist_ctr)
-    gauss_dist = pdf1 / sum(pdf1)
+    gauss_dist = pdf1 * df #/ sum(pdf1)
 
     J, n_rot = JlevelsN2O(JL, JU, K0)
 

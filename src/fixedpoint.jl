@@ -7,7 +7,7 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
     rowind = Array{Float64}(0)
     colind = Array{Float64}(0)
     value = Array{Float64}(0)
-    rhs = zeros((p.num_layers+1)*p.layer_unknown)
+    rhs = zeros(p.num_layers*p.layer_unknown + p.n_vib)
 
     update_alpha_from_N!(p, sol_0)
     update_Param_from_alpha!(p, sol_0)

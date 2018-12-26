@@ -28,7 +28,7 @@ function comppumprate!(p, alphab)
     alphaback = alphab[1]
     pavgforw = (1-exp(-alphaforw*p.L/100))/(alphaforw*p.L/100) * p.power / (1-triploss)
     pavgback = (1-exp(-alphaback*p.L/100))/(alphaback*p.L/100) * p.power / (1-triploss) * exp(-alphaforw*p.L/100) * R1
-
+    println(pavgforw, ", ", pavgback)
     for ri in 1:p.num_layers
         # p.Δ_f_RabiF[ri] = 0.38*sqrt(pavgforw)/p.radius*1e6 * 0.0
         # p.Δ_f_RabiB[ri] = 0.38*sqrt(pavgback)/p.radius*1e6 * 0.0
