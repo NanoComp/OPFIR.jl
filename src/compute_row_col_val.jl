@@ -182,13 +182,12 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         s = put_row_col_val(rowind, colind, value, row, row, val, s)
 
         val = p.D*(1.0/(2*p.Δr*p.r_int[Ri]) + 1.0/(p.Δr)^2)
-        col = row + p.layer_unknown
+        col = row + p.n_vib
         s = put_row_col_val(rowind, colind, value, row, col, val, s)
     end
         
     # vib level for layer Ri+1, Robin BC:
     vbar = p.v_avg/2/sqrt(2)/p.norm_time
-
     for k in 1:p.n_vib
         row = p.layer_unknown*Ri + k
         val = p.D/p.Δr + vbar/4
@@ -205,20 +204,20 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
 
 end
 
-function totN0r(p, sol, ri)
-    tot = 0.
-    for vi in 1:p.num_freq
-        rowoffset = p.layer_unknown*(ri-1) + (vi-1)*p.n_rot
-        tot += sum(sol[rowoffset+1:rowoffset+p.n_rot÷2])
-    end
-    return tot + p.ntotal*p.f_G_0
-end
+# function totN0r(p, sol, ri)
+#     tot = 0.
+#     for vi in 1:p.num_freq
+#         rowoffset = p.layer_unknown*(ri-1) + (vi-1)*p.n_rot
+#         tot += sum(sol[rowoffset+1:rowoffset+p.n_rot÷2])
+#     end
+#     return tot + p.ntotal*p.f_G_0
+# end
 
-function totN3r(p, sol, ri)
-    tot = 0.
-    for vi in 1:p.num_freq
-        rowoffset = p.layer_unknown*(ri-1) + (vi-1)*p.n_rot + p.n_rot÷2
-        tot += sum(sol[rowoffset+1:rowoffset+p.n_rot÷2])
-    end
-    return tot + p.ntotal*p.f_3_0
-end
+# function totN3r(p, sol, ri)
+#     tot = 0.
+#     for vi in 1:p.num_freq
+#         rowoffset = p.layer_unknown*(ri-1) + (vi-1)*p.n_rot + p.n_rot÷2
+#         tot += sum(sol[rowoffset+1:rowoffset+p.n_rot÷2])
+#     end
+#     return tot + p.ntotal*p.f_3_0
+# end

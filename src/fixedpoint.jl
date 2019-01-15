@@ -12,21 +12,11 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
     update_alpha_from_N!(p, sol_0)
     update_Param_from_alpha!(p, sol_0)
 
-    # if p.model_flag == 2
-    #     status = 1
-    #     status = updateTv(p, sol_0)
-    #     if status == 0
-    #         return 0
-    #     end
-    #     updateks(p)
-    # end
     compute_rhs(rhs, p, sol_0)
     compute_row_col_val(rowind, colind, value, p, sol_0)
 
     matrix = sparse(rowind, colind, value)
-    if p.model_flag == 1
-        mat_rhs_modify(matrix, rhs, p)
-    end
+    mat_rhs_modify(matrix, rhs, p)
 
     if p.solstart_flag == 1
         matrix_B0 = matrix - matrix_0
@@ -45,8 +35,6 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
     else
         println("L = ", p.L, "cm")
     end
-    println(size(matrix))
-    println("length of sol1: ", length(sol_1))
     println("norm of sol diff = ", norm(sol_1 - sol_0) / norm(sol_1))
     flush(STDOUT)
 
@@ -55,12 +43,10 @@ end
 
 function mat_modify(matrix, p)
     for ri in 1:p.num_layers
-        # V26A and V26E:
-        rowA = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 6
-        for row in vcat(rowA, rowA + p.n_vib÷2)
-            for k in 0:5
-                matrix[row, row-k] = 1.
-            end
+        row = ri*p.layer_unknown
+        matrix[row, :] = 0
+        for k in vcat(0:p.n_vib-1)
+            matrix[row, row-k] = 0.1
         end
     end
 end

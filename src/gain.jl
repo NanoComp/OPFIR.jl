@@ -4,7 +4,7 @@ function ind_offset(p, n)
 end
 # index of the thermal pool U and L are in, i.e., V3 and V0
 function ind_p_U(p, layer)
-    return p.layer_unknown * layer - p.n_vib + 2
+    return p.layer_unknown * layer - p.n_vib + 7
 end
 
 function ind_p_L(p, layer)
@@ -22,9 +22,9 @@ function Nu_NT_dist_layer(p, sol, layer)
     return Nu
 end
 function Nu_T_dist_layer(p, sol, layer)
-    # index_p = ind_p_U(p, layer)
-    return p.CU * (p.ntotal * p.f_3_0) .* p.gauss_dist
-    # return p.CU * (p.ntotal * p.f_3_0/2 + sol[index_p]) .* p.gauss_dist
+    index_p = ind_p_U(p, layer)
+    # return p.CU * (p.ntotal * p.f_3_0) .* p.gauss_dist
+    return p.CU * (p.ntotal * p.f_3_0 + sol[index_p]) .* p.gauss_dist
 end
 
 function Nu_total_dist_layer(p, sol, layer)
@@ -42,9 +42,9 @@ function Nu_1_NT_dist_layer(p, sol, layer)
     return N
 end
 function Nu_1_T_dist_layer(p, sol, layer)
-    # index_p = ind_p_U(p, layer)
-    return p.CU1 * (p.ntotal * p.f_3_0) .* p.gauss_dist
-    # return p.CU1 * (p.ntotal * p.f_3_0/2 + sol[index_p]) .* p.gauss_dist
+    index_p = ind_p_U(p, layer)
+    # return p.CU1 * (p.ntotal * p.f_3_0) .* p.gauss_dist
+    return p.CU1 * (p.ntotal * p.f_3_0 + sol[index_p]) .* p.gauss_dist
 end
 
 function Nu_1_total_dist_layer(p, sol, layer)
@@ -62,9 +62,9 @@ function Nl_NT_dist_layer(p, sol, layer)
     return Nl
 end
 function Nl_T_dist_layer(p, sol, layer)
-    # index_p = ind_p_L(p, layer)
-    return p.CL * (p.ntotal * p.f_G_0) .* p.gauss_dist
-    # return p.CL * (p.ntotal * p.f_G_0/2 + sol[index_p]) .* p.gauss_dist
+    index_p = ind_p_L(p, layer)
+    # return p.CL * (p.ntotal * p.f_G_0) .* p.gauss_dist
+    return p.CL * (p.ntotal * p.f_G_0 + sol[index_p]) .* p.gauss_dist
 end
 
 function Nl_total_dist_layer(p, sol, layer)
@@ -82,9 +82,9 @@ function Nl_1_NT_dist_layer(p, sol, layer)
     return N
 end
 function Nl_1_T_dist_layer(p, sol, layer)
-    # index_p = ind_p_L(p, layer)
-    return p.CL1 * (p.ntotal * p.f_G_0) .* p.gauss_dist
-    # return p.CL1 * (p.ntotal * p.f_G_0/2 + sol[index_p]) .* p.gauss_dist
+    index_p = ind_p_L(p, layer)
+    # return p.CL1 * (p.ntotal * p.f_G_0) .* p.gauss_dist
+    return p.CL1 * (p.ntotal * p.f_G_0 + sol[index_p]) .* p.gauss_dist
 end
 
 function Nl_1_total_dist_layer(p, sol, layer)
