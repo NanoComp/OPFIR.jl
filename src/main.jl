@@ -40,7 +40,7 @@ function func(p; sol_start=Array[])
             y = fixedpoint(x, p, matrix_0, lu_mat0)
             push!(rel_err, norm(y - x) / norm(y))
             y
-        end, sol_0, reltol=1e-6, m=40)
+        end, sol_0, reltol=1e-6, m=10)
 
     return (p, sol_0)
 end
@@ -51,6 +51,7 @@ function OPFIRinfo(p, sol)
     p.num_freq, " velocity subclasses, ", p.n_vib, " vib levels, ", p.n_rot, " rot levels")
     println("pressure and Doppler boradening width is ", p.Δ_fP, "Hz, ", p.Δ_f₀D, "Hz",
     " and frequency width is ", p.f_range, "Hz.")
+    println("sigma DD is ", p.σ_DD, "A2, sigma SPT is ", p.σ_SPT, "A2, sigma GKC is ", p.σ_GKC, "A2")
 end
 
 function outputpower(p, level, cavitymode)

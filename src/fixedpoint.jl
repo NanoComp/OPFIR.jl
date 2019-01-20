@@ -4,6 +4,7 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
     # rowind = ones(Int64, max_ele)
     # colind = ones(Int64, max_ele)
     # value = zeros(max_ele)
+
     rowind = Array{Float64}(0)
     colind = Array{Float64}(0)
     value = Array{Float64}(0)
@@ -12,12 +13,13 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
     update_alpha_from_N!(p, sol_0)
     update_Param_from_alpha!(p, sol_0)
 
+    # tic()
     compute_rhs(rhs, p, sol_0)
     compute_row_col_val(rowind, colind, value, p, sol_0)
-
+    # toc()
     matrix = sparse(rowind, colind, value)
     mat_rhs_modify(matrix, rhs, p)
-
+    tic()
     if p.solstart_flag == 1
         matrix_B0 = matrix - matrix_0
         rhs = rhs - matrix_B0 * sol_0
@@ -28,13 +30,14 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
     # println(matrix[p.layer_unknown-p.n_vib+1, :], ", rhs:", rhs[p.layer_unknown-p.n_vib+1])
 
     update_alpha_from_N!(p, sol_1)
-
+    toc()
     if p.optcavity && p.WiU == 0. && p.WiL == 0.
         p.L = 0.4/p.alpha_r[1]*100
         println("L = ", p.L, "cm")
     else
         println("L = ", p.L, "cm")
     end
+
     println("norm of sol diff = ", norm(sol_1 - sol_0) / norm(sol_1))
     flush(STDOUT)
 
@@ -44,7 +47,7 @@ end
 function mat_modify(matrix, p)
     for ri in 1:p.num_layers
         row = ri*p.layer_unknown
-        matrix[row, :] = 0
+        # matrix[row, :] = 0
         for k in vcat(0:p.n_vib-1)
             matrix[row, row-k] = 0.1
         end

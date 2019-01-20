@@ -8,6 +8,8 @@ function N2O(DefaultT=Float64;
     ## molecule setup
     ####################################
     M = 44,
+    σ_DD = 35,
+    σ_GKC = 50,
     ####################################
     ## pump setup
     ####################################
@@ -82,11 +84,9 @@ function N2O(DefaultT=Float64;
     ###################################################
     #### molecule setup
     ###################################################
-    σ_SPT = 15
-    σ_GKC = 15
+   σ_SPT = σ_GKC
     # σ_DD = sqrt(T*M)/3.15 * 4.0 # ~146 A^2
-    σ_DD = 146
-
+    
     EG = 0
     E3 = 2224.0
     B, DJ = [0.419, 17.6e-8]*c/1e7 # in GHz
@@ -176,7 +176,11 @@ function N2O(DefaultT=Float64;
     r_int = 0.5*(r_ext[1:end-1] + r_ext[2:end]) # in m
 
     # f_range = 2*Δ_f₀D
-    f_range = 80Δ_fP
+    f_range = 400*Δ_fP
+    nfP = max(120, 45*150/pressure)
+    nfP = min(700, nfP)
+    f_range =  nfP * Δ_fP
+    
     num_freq = round(Int64,max(50,2f_range/(Δ_fP/4)))
 
     df = 2.0 * f_range / num_freq
@@ -399,6 +403,7 @@ function JlevelsN2O(JL, JU, K0)
     N = max(16, JL)
     Jmin = 0 #max(K0, JL-N)
     Jmax = Jmin + 2N
+    Jmax = JL + 8
     # if Jmax < JU+2 || Jmax < JL+2
     #     throw(ArgumentError("number of rotational levels need to be increased!"))
     # end
