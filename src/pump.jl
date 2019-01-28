@@ -17,6 +17,17 @@ function AveragePower2_FB(alphaf, alphab, L, power)
     return powerF, powerB
 end
 
+function avgpower(p, sol)
+    alphab = sum(alphaback(p, sol).*p.r_int)/sum(p.r_int)
+    R1 = 0.95
+    R2 = R1 * 0.96
+    triploss = exp(-p.alpha_r[1]*p.L/100)*exp(-alphab[1]*p.L/100) * R1*R2
+    alphaforw = p.alpha_r[1]
+    pavgforw = (1-exp(-alphaforw*p.L/100))/(alphaforw*p.L/100) * p.power / (1-triploss)
+    pavgback = (1-exp(-alphab*p.L/100))/(alphab*p.L/100) * p.power / (1-triploss) * exp(-alphaforw*p.L/100) * R1
+    return pavgforw, pavgback
+end
+
 function comppumprate!(p, alphab)
     
     # numtrips = ceil(Int, log(0.01)/log(exp(-p.alpha_r[1]*p.L/100)*exp(-alphab[1]*p.L/100) * 0.95^2*0.96))
