@@ -59,19 +59,19 @@ function outputpower(p, level, cavitymode)
     wi = vcat(0.0, 0.1, 0.2)
     nonth_popinv = zeros(length(wi))
     (p0, sol0) = func(p)
-    if level == 'U'
+    if level in ['U', "U"]
         (nonth_popinv[1], a) = nonthpopinv(p0, sol0)
     else
         (a, nonth_popinv[1]) = nonthpopinv(p0, sol0)
     end
 
-    if level == 'U'
+    if level in ['U', "U"]
         for j in 1:length(wi)-1
             p.WiU = wi[j+1]
             (p, sol) = func(p)
             (nonth_popinv[j+1], a) = nonthpopinv(p, sol)
         end
-    elseif level == 'L'
+    elseif level in ['L', "L"]
         for j in 1:length(wi)-1
             p.WiL = wi[j+1]
             (p, sol) = func(p)
@@ -159,11 +159,11 @@ end
 
 function totinv(p, sol, llevel)
     popinv = zeros(p.num_layers)
-    if llevel == 'U'
+    if llevel in ['U', "U"]
         for k = 1:p.num_layers
             popinv[k] = sum(inv_U_dist_layer(p, sol, k))
         end
-    elseif llevel == 'L'
+    elseif llevel in ['L', "L"]
         for k = 1:p.num_layers
             popinv[k] = sum(inv_L_dist_layer(p, sol, k))
         end
@@ -227,7 +227,7 @@ conductivityCu = 1/resitivityCu # copper conductivity at room temperature;
 mu = 4*pi*1e-7 # magnetic permeability in copper
 
 eta = 377 # impedance of air in ohms
-f0 = (llevel=='U' ? p.f_dir_lasing : p.f_ref_lasing)
+f0 = (llevel in ['U', "U"] ? p.f_dir_lasing : p.f_ref_lasing)
 lambda = p.c/f0 # wavelength in m
 k0 = 2*pi/lambda # wavevector
 Rs = sqrt(pi*f0*mu/conductivityCu) # in ohms
@@ -245,24 +245,27 @@ end
 function cavityloss(p, llevel, cavitymode) # in m^-1
     Rback = 0.99
     Rfront = (1-efftrans(cavitymode)) * Rback
-    alpha = 2 * ohmicloss(p, llevel, cavitymode) - log(Rfront*Rback)/(2p.L/100)
-    return alpha
+    αohmic = ohmicloss(p, llevel, cavitymode)
+    αtrans = - log(Rfront*Rback)/(2p.L/100)
+    println("ohmic loss: " * string(αohmic) * " m-1")
+    println("transmission/reflection loss: " * string(αtrans) * " m-1")
+    return αohmic + αtrans
 end
 
 
 function gaincoeffcient(f, Φ, p, sol, taus, level)
     γ = 0.0
     for vi in 1:p.num_freq
-        if level == 'L'
+        if level in ['L', "L"]
             f0 = p.f_dist_ref_lasing[vi]
-        elseif level == 'U'
+        elseif level in ['U', "U"]
             f0 = p.f_dist_dir_lasing[vi]
         else
             throw(ArgumentError("level can only be L or U!"))
         end
             # popinv: spatial averged pop inversion for U
         popinv = 0.
-        if level == 'L'
+        if level in ['L', "L"]
             for i = 1:p.num_layers
                 popinv += (OPFIR.inv_L_dist_layer(p, sol, i)[vi]*p.r_int[i])/sum(p.r_int)
             end
@@ -308,7 +311,7 @@ end
 #################################################################################
 ## compute the output power with mode overlapping ##
 function outpowermode(p, sol, llevel, cavitymode, taus)
-    νTHZ = llevel=='U' ? p.f_dir_lasing : p.f_ref_lasing
+    νTHZ = llevel in ['U', "U"] ? p.f_dir_lasing : p.f_ref_lasing
     Δnu = p.Δ_fP
     σν = (p.c/νTHZ)^2/8/π/p.t_spont * 1/pi/Δnu
     # println(σν)
@@ -330,8 +333,8 @@ end
 function gaincoefmode(Φ, p, sol, llevel, cavitymode, taus, σν)
     pop_inv = zeros(p.num_layers)
     for ri = 1:p.num_layers
-        pop_inv[ri] = llevel=='U' ? sum(inv_U_dist_layer(p, sol, ri)) :
-                      llevel=='L' ? sum(inv_L_dist_layer(p, sol, ri)) :
+        pop_inv[ri] = llevel in ['U', "U"] ? sum(inv_U_dist_layer(p, sol, ri)) :
+                      llevel in ['L', "L"] ? sum(inv_L_dist_layer(p, sol, ri)) :
                       throw(ArgumentError("Lasing level error!"))
     end
     ## normalize electric field
