@@ -350,7 +350,7 @@ end
 
 function compCN2O(JL, h, T, M)
     # compute fraction of JL in that vibrational level
-    Js = 0:1:100
+    Js = 0:1:1000
     Q = ql = 0.0
     B, DJ = [0.419, 17.6e-8]*2.99792458e8/1e7 # in GHz
     for J in Js
