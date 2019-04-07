@@ -155,7 +155,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         for j in 1:p.n_rot
             row = p.layer_unknown*Ri + (vi-1)*p.n_rot + j
             s = put_row_col_val(rowind, colind, value, row, row, -p.D/p.Δr, s)
-            s = put_row_col_val(rowind, colind, value, row, row-p.layer_unknown, p.D/p.Δr, s)
+            # s = put_row_col_val(rowind, colind, value, row, row-p.layer_unknown, p.D/p.Δr, s)
         end
     end
 

@@ -145,7 +145,7 @@ function CO(DefaultT=Float64;
 
     f_range = 2*Δ_f₀D
     num_freq = round(Int64,max(50,f_range/(Δ_fP/4)))
-    num_freq = 20
+    # num_freq = 20
     df = 2.0 * f_range / num_freq
     f_dist_end = linspace(-f_range, f_range, num_freq + 1) + f₀
     f_dist_ctr = f_dist_end[1:end-1] + df/2
@@ -157,7 +157,7 @@ function CO(DefaultT=Float64;
     f_dist_ctrB = f₀ - f₀ * velocity
 
     norm_dist = Normal(f₀, Δ_f₀D / sqrt(2*log(2)))
-    pdf1 = pdf(norm_dist, f_dist_ctr)
+    pdf1 = pdf.(norm_dist, f_dist_ctr)
     gauss_dist = pdf1 / sum(pdf1)
     # gauss_dist = pdf1 * df
 

@@ -1,7 +1,7 @@
 module OPFIR
 using Distributions
 using Cubature
-using NLsolve
+using NLsolve, MUMPS
 
 for f in ("parameters.jl", "parametersCO.jl", "CO.jl", "main.jl",
           "anderson_accel.jl", "fixedpoint.jl",

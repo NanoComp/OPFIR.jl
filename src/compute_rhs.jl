@@ -22,6 +22,7 @@ function compute_rhs(rhs, p, sol)
                 rowprime = p.layer_unknown*p.num_layers + (vi-1)*p.n_rot + jprime
                 rhs[row] += - p.rotpopfr[j] * vbar/p.norm_time * (sol[rowprime] + sol[rowprime-p.layer_unknown])/2 * 1/2
             end
+            rhs[row] += -p.D/p.Δr * sol[row-p.layer_unknown]
         end
     end
 

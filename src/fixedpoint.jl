@@ -19,8 +19,8 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
     # mat_rhs_modify(rowind, colind, value, rhs, p)
     # println("start to compute the solution!")
 
-    sol_1 = matrix \ rhs
-
+    # sol_1 = matrix \ rhs
+    sol_1 = solveMUMPS(matrix, rhs)
     # println(matrix[p.layer_unknown-p.n_vib+1, :], ", rhs:", rhs[p.layer_unknown-p.n_vib+1])
 
     update_alpha_from_N!(p, sol_1)
@@ -39,15 +39,16 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
 end
 
 function mat_rhs_modify(matrix, rhs, p)
-    for ri in 1:p.num_layers
-        for vi in 1:p.num_freq
-            row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + 1
-            matrix[row,:] = 0.0
-            rhs[row] = 0.0
-            for col in row+1 : row+p.n_rot
-                matrix[row, col] = 1.0
-            end
-        end
+    for ri in 1:p.num_layers+1
+        row = (ri-1)*p.layer_unknown + 1
+        # for vi in 1:p.num_freq
+        #     row = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot + 1
+        matrix[row,:] = 0.0
+        rhs[row] = 0.0
+        # for col in row : row+p.layer_unknown-1
+        matrix[row, row : row+p.layer_unknown-1] = 0.1
+        # end
+        # end
     end
 end
 
