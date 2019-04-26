@@ -243,7 +243,7 @@ end
 
 
 function cavityloss(p, llevel, cavitymode; lossfactor=1.0) # in m^-1
-    Rback = 0.99
+    Rback = 1.
     Rfront = (1-efftrans(cavitymode)) * Rback
     αohmic = ohmicloss(p, llevel, cavitymode)
     αtrans = - log(Rfront*Rback)/(2p.L/100)
@@ -254,37 +254,32 @@ end
 
 
 function gaincoeffcient(f, Φ, p, sol, taus, level)
-    γ = 0.0
-    for vi in 1:p.num_freq
+    γ = zeros(p.num_freq)
+    for i in 1:p.num_layers
         if level in ['L', "L"]
-            f0 = p.f_dist_ref_lasing[vi]
+            f0s = p.f_dist_ref_lasing
         elseif level in ['U', "U"]
-            f0 = p.f_dist_dir_lasing[vi]
+            f0s = p.f_dist_dir_lasing
         else
             throw(ArgumentError("level can only be L or U!"))
         end
-            # popinv: spatial averged pop inversion for U
-        popinv = 0.
+        # popinvs: population inversion for diff velocity subclasses, weighted over radial position
         if level in ['L', "L"]
-            for i = 1:p.num_layers
-                popinv += (OPFIR.inv_L_dist_layer(p, sol, i)[vi]*p.r_int[i])/sum(p.r_int)
-            end
+            popinvs = (OPFIR.inv_L_dist_layer(p, sol, i) * p.r_int[i])/sum(p.r_int)
         else
-            for i = 1:p.num_layers
-                popinv += (OPFIR.inv_U_dist_layer(p, sol, i)[vi]*p.r_int[i])/sum(p.r_int)
-            end
+            popinvs = (OPFIR.inv_U_dist_layer(p, sol, i) * p.r_int[i])/sum(p.r_int)
         end
         Δnu = p.Δ_fP
         λ = p.c/f
-        sigma_f = λ^2/8/π/p.t_spont * 1/pi * Δnu/((f-f0)^2 + Δnu^2)
+        sigma_fs = λ^2/8/π/p.t_spont * 1/pi * Δnu./((f-f0s).^2 + Δnu^2)
         if Φ == 0
-            γ += popinv * sigma_f
+            γ += popinvs .* sigma_fs
         else
-            Φs = 1/taus/sigma_f
-            γ += popinv * sigma_f / (1+Φ/Φs)
+            Φs = 1/taus./sigma_f
+            γ += popinvs .* sigma_f ./ (1+Φ./Φs)
         end
     end
-    return γ
+    return sum(γ)
 end
 
 function comptaus(nonth_popinv, wi_list)
@@ -312,15 +307,16 @@ end
 ## compute the output power with mode overlapping ##
 function outpowermode(p, sol, llevel, cavitymode, taus; lossfactor = 1.)
     νTHZ = llevel in ['U', "U"] ? p.f_dir_lasing : p.f_ref_lasing
-    Δnu = p.Δ_fP
+    Δnu = p.Δ_fP + p.Δ_f₀D / p.f₀ * p.f_dir_lasing
     σν = (p.c/νTHZ)^2/8/π/p.t_spont * 1/pi/Δnu
     # println(σν)
     alpha = cavityloss(p, llevel, cavitymode, lossfactor=lossfactor)
     # println(alpha, ", ", efftrans(cavitymode))
     ΔN = totinv(p, sol, llevel)
     Φ0 = (ΔN*σν/alpha-1)/taus/σν
+    f = νTHZ
     Φ = nlsolve((fvec, x) -> begin
-                fvec[1] = gaincoefmode(x[1], p, sol, llevel, cavitymode, taus, σν) - alpha
+                fvec[1] = gaincoefmode(x[1], f, p, sol, llevel, cavitymode, taus) - alpha
             end, [Φ0], iterations=100)
     if Φ.iterations > 99
         return -1., Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(cavitymode)
@@ -330,13 +326,7 @@ function outpowermode(p, sol, llevel, cavitymode, taus; lossfactor = 1.)
     end
 end
 
-function gaincoefmode(Φ, p, sol, llevel, cavitymode, taus, σν)
-    pop_inv = zeros(p.num_layers)
-    for ri = 1:p.num_layers
-        pop_inv[ri] = llevel in ['U', "U"] ? sum(inv_U_dist_layer(p, sol, ri)) :
-                      llevel in ['L', "L"] ? sum(inv_L_dist_layer(p, sol, ri)) :
-                      throw(ArgumentError("Lasing level error!"))
-    end
+function gaincoefmode(Φ, f, p, sol, llevel, cavitymode, taus)
     ## normalize electric field
     E_sq = 0.
     denom = 0.
@@ -373,6 +363,21 @@ function gaincoefmode(Φ, p, sol, llevel, cavitymode, taus, σν)
     ϕ_list = linspace(0, 2*pi, 150)
     for ri = 1:p.num_layers
         r = p.r_int[ri]
+
+        popinvs = (llevel in ['L', "L"]) ? inv_L_dist_layer(p, sol, ri) : inv_U_dist_layer(p, sol, ri)
+        f0s = (llevel in ['L', "L"]) ? p.f_dist_ref_lasing : p.f_dist_dir_lasing
+        Δnu = p.Δ_fP + p.Δ_f₀D / p.f₀ * p.f_dir_lasing
+        λ = p.c/f
+        σνs = λ^2/8/π/p.t_spont * 1/pi * Δnu./((f-f0s).^2 + Δnu^2)
+        
+        if cavitymode == "TE01"
+            Eϕ = derv_bessel(0, kρ*r)
+            E_sq = Eϕ*conj(Eϕ) * beta
+            numerator += sum(popinvs.*σνs./(1+Φ*E_sq*taus.*σνs) *E_sq*r) * length(ϕ_list)
+            denom += E_sq*r * length(ϕ_list)
+            continue
+        end
+
         for ϕ in ϕ_list
             if contains(cavitymode, "TM") ## TM modes
                 Ez = besselj(m, kρ*r) * cos(m*ϕ)
@@ -388,13 +393,12 @@ function gaincoefmode(Φ, p, sol, llevel, cavitymode, taus, σν)
             E_sq = Ez*conj(Ez) + Er*conj(Er) + Eϕ*conj(Eϕ)
             E_sq = E_sq * beta
 
-            numerator += pop_inv[ri]*σν*E_sq*r/(1+Φ*E_sq*taus*σν)
+            numerator += sum(popinvs.*σνs./(1+Φ*E_sq*taus.*σνs) *E_sq*r)
             denom += E_sq*r
         end
     end
     return numerator/denom
 end
-
 
 function efftrans(cavitymode)
     n = parse(Int, cavitymode[3])
