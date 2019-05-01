@@ -82,9 +82,6 @@ function outputpower(p, level, cavitymode)
     end
     taus = comptaus(vec(nonth_popinv), wi)*1e-6
 
-    Acoeff = 64*pi^4/3/6.63e-27/(3e10)^3 * p0.f_dir_lasing^3 * dipolemom(p0)*0.5 * 1e-36
-    p0.t_spont = 1/Acoeff
-
     laspower = outpowermode(p0, sol0, level, cavitymode, taus)
     # alpha = cavityloss(p0, level, cavitymode)
     # ΔN = totinv(p0, sol0, level)
@@ -307,7 +304,7 @@ end
 ## compute the output power with mode overlapping ##
 function outpowermode(p, sol, llevel, cavitymode, taus; lossfactor = 1.)
     νTHZ = llevel in ['U', "U"] ? p.f_dir_lasing : p.f_ref_lasing
-    Δnu = p.Δ_fP + p.Δ_f₀D / p.f₀ * p.f_dir_lasing
+    Δnu = p.Δ_fP
     σν = (p.c/νTHZ)^2/8/π/p.t_spont * 1/pi/Δnu
     # println(σν)
     alpha = cavityloss(p, llevel, cavitymode, lossfactor=lossfactor)
@@ -366,7 +363,7 @@ function gaincoefmode(Φ, f, p, sol, llevel, cavitymode, taus)
 
         popinvs = (llevel in ['L', "L"]) ? inv_L_dist_layer(p, sol, ri) : inv_U_dist_layer(p, sol, ri)
         f0s = (llevel in ['L', "L"]) ? p.f_dist_ref_lasing : p.f_dist_dir_lasing
-        Δnu = p.Δ_fP + p.Δ_f₀D / p.f₀ * p.f_dir_lasing
+        Δnu = p.Δ_fP
         λ = p.c/f
         σνs = λ^2/8/π/p.t_spont * 1/pi * Δnu./((f-f0s).^2 + Δnu^2)
         

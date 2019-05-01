@@ -19,7 +19,6 @@ function N2O(DefaultT=Float64;
     f_offset = 0.e6,
     n_rot = 18,
     n0 = 1.0,
-    t_spont = 10,
     ####################################
     ## model/solver setup
     ####################################
@@ -33,7 +32,9 @@ function N2O(DefaultT=Float64;
     # approach = 2: approach 2 SPT, VV, direct from vib levels;
     # approach = 3: vib thermal pools modeling, suggested by Henry;
     approach = 1,
-    n_vib = 1
+    n_vib = 1,
+    pbfactor = 1.0, # pressure broadening factor
+    qclbroadening = 0. # qcl broadening width, in Hz
     )
 
     ###################################################
@@ -131,7 +132,7 @@ function N2O(DefaultT=Float64;
     kDD = 19.8 * pressure * σ_DD/ sqrt(T*M)
 
     Δ_f₀D = 3.58e-7*f₀*sqrt(T/M)
-    Δ_fP = 4.0e6*(pressure/1e3)
+    Δ_fP = 4.0e6*(pressure/1e3) * pbfactor + qclbroadening
 
     ntotal = 9.66e24 * pressure * 1e-3 / T # with unit m^-3
     kro = 0
@@ -177,12 +178,16 @@ function N2O(DefaultT=Float64;
     r_int = 0.5*(r_ext[1:end-1] + r_ext[2:end]) # in m
 
     # f_range = 2*Δ_f₀D
-    f_range = 400*Δ_fP
-    nfP = max(120, 45*150/pressure)
-    nfP = min(700, nfP)
+    # f_range = 400*Δ_fP
+    nfP = max(120, 45*150/pressure) # for 45mTorr, 150Δ_fP is enough
+    nfP = min(700, nfP) # if pressure is too small, fix as 350Δ_fP
+    if pressure <= 30
+        nfP = nfP ÷ 2
+    end
     f_range =  nfP * Δ_fP
-    
-    num_freq = round(Int64,max(50,2f_range/(Δ_fP/4)))
+    f_range = min(f_range, 2Δ_f₀D) # if f_range obtained from Δ_fP is too large, use 2Δ_f₀D as half width
+
+    num_freq = round(Int64,max(50,2f_range/(Δ_fP/4))) # resolution is Δ_fP/4
 
     df = 2.0 * f_range / num_freq
     f_dist_end = linspace(-f_range, f_range, num_freq + 1) + f₀
@@ -300,6 +305,10 @@ function N2O(DefaultT=Float64;
 
     # kwall = WallRate(radius, pressure, r_int, ntotal, M, T, NA, v_avg, σ_GKC) + 1e-10
     kwall = zeros(num_layers)
+
+    mu = 0.17 # N2O dipole moment, Debye
+    EinsteinA = 64*pi^4/3/6.63e-27/(3e10)^3 * f_dir_lasing^3 * mu^2 * JU/(JU+1) * 1e-36
+    t_spont = 1/EinsteinA
 
     return ParamsN2O{DefaultT}(radius, pump_radius, L, L_eff, h, c, ev, kB, T, T_vA, T_vE, kBT, M, norm_time,
     σ_GKC, σ_DD, σ_SPT, σ_36, σ_VS,
