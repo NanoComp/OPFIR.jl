@@ -244,8 +244,8 @@ function cavityloss(p, llevel, cavitymode; lossfactor=1.0) # in m^-1
     Rfront = (1-efftrans(cavitymode)) * Rback
     αohmic = ohmicloss(p, llevel, cavitymode)
     αtrans = - log(Rfront*Rback)/(2p.L/100)
-    println("ohmic loss: " * string(αohmic) * " m-1")
-    println("transmission/reflection loss: " * string(αtrans) * " m-1")
+    # println("ohmic loss: " * string(αohmic) * " m-1")
+    # println("transmission/reflection loss: " * string(αtrans) * " m-1")
     return (αohmic + αtrans) * lossfactor
 end
 
@@ -366,7 +366,7 @@ function gaincoefmode(Φ, f, p, sol, llevel, cavitymode, taus)
         Δnu = p.Δ_fP
         λ = p.c/f
         σνs = λ^2/8/π/p.t_spont * 1/pi * Δnu./((f-f0s).^2 + Δnu^2)
-        
+
         if cavitymode == "TE01"
             Eϕ = derv_bessel(0, kρ*r)
             E_sq = Eϕ*conj(Eϕ) * beta

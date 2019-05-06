@@ -26,7 +26,8 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
         sol_1 = lu_mat0 \ rhs
     else
         # sol_1 = matrix \ rhs
-        sol_1 = solveMUMPS(matrix, rhs)
+        # sol_1 = solveMUMPS(matrix, rhs)
+        sol_1 = MUMPS.solve(SparseMatrixCSC{Float64,Int32}(matrix), rhs)
     end
     # println(matrix[p.layer_unknown-p.n_vib+1, :], ", rhs:", rhs[p.layer_unknown-p.n_vib+1])
 
