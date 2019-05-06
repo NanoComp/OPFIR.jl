@@ -1,4 +1,4 @@
-function func(p; sol_start=Array[])
+function func(p; sol_start=Array[], mumps_solver=0)
     # initiate some of the parameters from alpha_0
     if p.solstart_flag==0
         matrix_0 = 0
@@ -37,7 +37,7 @@ function func(p; sol_start=Array[])
 
     rel_err = Array{Float64}(0)
     sol_0 = andersonaccel(x -> begin
-            y = fixedpoint(x, p, matrix_0, lu_mat0)
+            y = fixedpoint(x, p, matrix_0, lu_mat0, mumps_solver=mumps_solver)
             push!(rel_err, norm(y - x) / norm(y))
             y
         end, sol_0, reltol=1e-6, m=10)
@@ -54,11 +54,11 @@ function OPFIRinfo(p, sol)
     println("sigma DD is ", p.σ_DD, "A2, sigma SPT is ", p.σ_SPT, "A2, sigma GKC is ", p.σ_GKC, "A2")
 end
 
-function outputpower(p, level, cavitymode)
+function outputpower(p, level, cavitymode; mumps_solver=0)
     p.WiU = p.WiL = 0.
     wi = vcat(0.0, 0.1, 0.2)
     nonth_popinv = zeros(length(wi))
-    (p0, sol0) = func(p)
+    (p0, sol0) = func(p, mumps_solver=mumps_solver)
     if level in ['U', "U"]
         (nonth_popinv[1], a) = nonthpopinv(p0, sol0)
     else
@@ -68,13 +68,13 @@ function outputpower(p, level, cavitymode)
     if level in ['U', "U"]
         for j in 1:length(wi)-1
             p.WiU = wi[j+1]
-            (p, sol) = func(p)
+            (p, sol) = func(p, mumps_solver=mumps_solver)
             (nonth_popinv[j+1], a) = nonthpopinv(p, sol)
         end
     elseif level in ['L', "L"]
         for j in 1:length(wi)-1
             p.WiL = wi[j+1]
-            (p, sol) = func(p)
+            (p, sol) = func(p, mumps_solver=mumps_solver)
             (a, nonth_popinv[j+1]) = nonthpopinv(p, sol)
         end
     else

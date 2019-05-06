@@ -1,4 +1,6 @@
-function fixedpoint(sol_0, p, matrix_0, lu_mat0)
+using MUMPS
+
+function fixedpoint(sol_0, p, matrix_0, lu_mat0; mumps_solver=0)
     # max_ele = p.num_freq * p.num_layers * (p.n_rot*(p.n_rot+2) + p.n_vib*(p.n_rot^2+p.n_vib+2))
 
     # rowind = ones(Int64, max_ele)
@@ -25,9 +27,13 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
         rhs = rhs - matrix_B0 * sol_0
         sol_1 = lu_mat0 \ rhs
     else
-        # sol_1 = matrix \ rhs
-        # sol_1 = solveMUMPS(matrix, rhs)
-        sol_1 = MUMPS.solve(SparseMatrixCSC{Float64,Int32}(matrix), rhs)
+        if mumps_solver == 0
+            sol_1 = matrix \ rhs
+        elseif mumps_solver == 1
+            sol_1 = solveMUMPS(matrix, rhs)
+        elseif mumps_solver == 2
+            sol_1 = MUMPS.solve(SparseMatrixCSC{Float64,Int32}(matrix), rhs)
+        end
     end
     # println(matrix[p.layer_unknown-p.n_vib+1, :], ", rhs:", rhs[p.layer_unknown-p.n_vib+1])
 
