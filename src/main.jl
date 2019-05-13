@@ -54,7 +54,7 @@ function OPFIRinfo(p, sol)
     println("sigma DD is ", p.σ_DD, "A2, sigma SPT is ", p.σ_SPT, "A2, sigma GKC is ", p.σ_GKC, "A2")
 end
 
-function outputpower(p, level, cavitymode; mumps_solver=0)
+function outputpower(p, level, cavitymode; mumps_solver=0, lossfactor=1.0)
     p.WiU = p.WiL = 0.
     wi = vcat(0.0, 0.1, 0.2)
     nonth_popinv = zeros(length(wi))
@@ -82,7 +82,7 @@ function outputpower(p, level, cavitymode; mumps_solver=0)
     end
     taus = comptaus(vec(nonth_popinv), wi)*1e-6
 
-    laspower = outpowermode(p0, sol0, level, cavitymode, taus)
+    laspower = outpowermode(p0, sol0, level, cavitymode, taus, lossfactor=lossfactor)
     # alpha = cavityloss(p0, level, cavitymode)
     # ΔN = totinv(p0, sol0, level)
     # νTHZ = level=='U' ? p0.f_dir_lasing : p0.f_ref_lasing
@@ -304,8 +304,11 @@ end
 ## compute the output power with mode overlapping ##
 function outpowermode(p, sol, llevel, cavitymode, taus; lossfactor = 1.)
     νTHZ = llevel in ['U', "U"] ? p.f_dir_lasing : p.f_ref_lasing
-    Δnu = p.Δ_fP
-    σν = (p.c/νTHZ)^2/8/π/p.t_spont * 1/pi/Δnu
+    dν = 0.e6
+    νTHZ += dν
+    Δnu = 4.0e6*(p.pressure/1e3) # + 28e3 * 3 #p.Δ_fP - 5.e6
+    # Δnu *= 2
+    σν = (p.c/νTHZ)^2/8/π/p.t_spont * 1/pi*Δnu/(Δnu^2 + dν^2)
     # println(σν)
     alpha = cavityloss(p, llevel, cavitymode, lossfactor=lossfactor)
     # println(alpha, ", ", efftrans(cavitymode))
@@ -363,8 +366,16 @@ function gaincoefmode(Φ, f, p, sol, llevel, cavitymode, taus)
 
         popinvs = (llevel in ['L', "L"]) ? inv_L_dist_layer(p, sol, ri) : inv_U_dist_layer(p, sol, ri)
         f0s = (llevel in ['L', "L"]) ? p.f_dist_ref_lasing : p.f_dist_dir_lasing
-        Δnu = p.Δ_fP
+        Δnu =  4.0e6*(p.pressure/1e3) #28e3 * 2 #10e6/(p.f₀/p.f_dir_lasing) #4.0e6*(p.pressure/1e3) # + 28e3 * 3
+        # Δnu *= 2
         λ = p.c/f
+        σνs = λ^2/8/π/p.t_spont * 1/(f0s[2]-f0s[1]) * ones(p.num_freq)
+        for i in 1:length(σνs)
+            if abs(f-f0s[i])>(f0s[2]-f0s[1])/2 # out of
+                σνs[i] = 0
+            end
+        end
+        #
         σνs = λ^2/8/π/p.t_spont * 1/pi * Δnu./((f-f0s).^2 + Δnu^2)
 
         if cavitymode == "TE01"

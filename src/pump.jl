@@ -29,7 +29,7 @@ function avgpower(p, sol)
 end
 
 function comppumprate!(p, alphab)
-    
+
     # numtrips = ceil(Int, log(0.01)/log(exp(-p.alpha_r[1]*p.L/100)*exp(-alphab[1]*p.L/100) * 0.95^2*0.96))
     R1 = 0.95
     R2 = R1 * 0.96
@@ -45,7 +45,7 @@ function comppumprate!(p, alphab)
         # p.Δ_f_RabiB[ri] = 0.38*sqrt(pavgback)/p.radius*1e6 * 0.0
         p.Δ_f_RabiF[ri] = 0.0
         p.Δ_f_RabiB[ri] = 0.0
-        
+
         p.Δ_f_NTF[ri] = p.Δ_fP + p.Δ_f_RabiF[ri]
         p.Δ_f_NTB[ri] = p.Δ_fP + p.Δ_f_RabiB[ri]
         fV = p.Δ_f_NTF[ri]

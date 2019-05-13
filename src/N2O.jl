@@ -88,11 +88,11 @@ function N2O(DefaultT=Float64;
     ###################################################
 #    σ_SPT = σ_GKC
     # σ_DD = sqrt(T*M)/3.15 * 4.0 # ~146 A^2
-    
+
     EG = 0
     E3 = 2224.0
     B, DJ = [0.419, 17.6e-8]*c/1e7 # in GHz
-    
+
     ###################################################
     #### pump setup
     ###################################################
@@ -147,7 +147,7 @@ function N2O(DefaultT=Float64;
 
     σ_VV = σ_GKC
     kVV = 19.8 * pressure * σ_VV/ sqrt(T*M) / 1000 # 1/microsec
-    kVVmat = zeros(n_vib, n_vib) 
+    kVVmat = zeros(n_vib, n_vib)
     energyV = vcat(0, vibdata[1:n_vib-1, 1])
     gV = vcat(1, vibdata[1:n_vib-1, 2])
     # kVVmat[i,j] denotes transition from i to j, first only consider neighboring v levels
@@ -188,6 +188,7 @@ function N2O(DefaultT=Float64;
     f_range = min(f_range, 2Δ_f₀D) # if f_range obtained from Δ_fP is too large, use 2Δ_f₀D as half width
 
     num_freq = round(Int64,max(50,2f_range/(Δ_fP/4))) # resolution is Δ_fP/4
+    num_freq = 100
 
     df = 2.0 * f_range / num_freq
     f_dist_end = linspace(-f_range, f_range, num_freq + 1) + f₀
@@ -236,7 +237,7 @@ function N2O(DefaultT=Float64;
     #         end
     #     end
     # end
-    
+
     # K-SPT
     ka = [19.8 * pressure * σ_SPT/ sqrt(T*M)/1000.0] # in microsec-1
     ## rotational population fraction to ntotal, used in BC, not in N2O_VV
@@ -342,7 +343,7 @@ function N2O(DefaultT=Float64;
     WiU, WiL,
     optcavity,
     rotpopfr, cj,
-    approach, 
+    approach,
     frel_vib,
     kVVmat
     )
