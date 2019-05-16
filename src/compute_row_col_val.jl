@@ -104,7 +104,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             s = put_row_col_val(p, rowind, colind, value, row, row-1, val, s)
         end
     end
-    
+
     ### transitions between Np
     for ri in 1:p.num_layers
         for pi in 1:p.n_vib
@@ -167,7 +167,12 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         val = p.D*(1.0/(p.Δr)^2 + 1.0/2/p.Δr/p.r_int[1])
         s = put_row_col_val(p, rowind, colind, value, row, col, val, s)
     end
+
     # BC for the wall: Neumann BC for rotational levels
+    vbar = p.v_avg/2/sqrt(2)/p.norm_time
+    beta = (p.D/p.Δr-vbar/4) / (p.D/p.Δr+vbar/4)
+    # beta = 1.
+
     Ri = p.num_layers
     index_diffu = p.layer_unknown * (Ri-1) + 1 : p.layer_unknown * Ri - p.n_vib
     for k in index_diffu
@@ -176,7 +181,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         val = p.D*(-1.0/(2*p.Δr*p.r_int[end]) + 1.0/(p.Δr)^2)
         s = put_row_col_val(p, rowind, colind, value, row, col, val, s)
 
-        val = p.D*(-2.0/(p.Δr)^2) + p.D*(1.0/(2*p.Δr*p.r_int[end]) + 1.0/(p.Δr)^2)
+        val = p.D*(-2.0/(p.Δr)^2) + p.D*(1.0/(2*p.Δr*p.r_int[end]) + 1.0/(p.Δr)^2) * beta
         s = put_row_col_val(p, rowind, colind, value, row, row, val, s)
     end
 
@@ -195,9 +200,9 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         col = row + p.n_vib
         s = put_row_col_val(p, rowind, colind, value, row, col, val, s)
     end
-        
+
     # vib level for layer Ri+1, Robin BC:
-    vbar = p.v_avg/2/sqrt(2)/p.norm_time
+    # vbar = p.v_avg/2/sqrt(2)/p.norm_time
     for k in 1:p.n_vib
         row = p.layer_unknown*Ri + k
         val = p.D/p.Δr + vbar/4

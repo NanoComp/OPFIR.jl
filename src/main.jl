@@ -302,7 +302,7 @@ end
 
 #################################################################################
 ## compute the output power with mode overlapping ##
-function outpowermode(p, sol, llevel, cavitymode, taus; lossfactor = 1., Δnu = 4.0e6*(p.pressure/1e3))
+function outpowermode(p, sol, llevel, cavitymode, taus; lossfactor = 1., Δnu = 4.0e6*(p.pressure/1e3), avg = false)
     νTHZ = llevel in ['U', "U"] ? p.f_dir_lasing : p.f_ref_lasing
     dν = 0.e6
     νTHZ += dν
@@ -316,14 +316,18 @@ function outpowermode(p, sol, llevel, cavitymode, taus; lossfactor = 1., Δnu = 
     ΔN = totinv(p, sol, llevel)
     Φ0 = (ΔN*σν/alpha-1)/taus/σν
     f = νTHZ
-    Φ = nlsolve((fvec, x) -> begin
-                fvec[1] = gaincoefmode(x[1], f, p, sol, llevel, cavitymode, taus, Δnu=Δnu) - alpha
-            end, [Φ0], iterations=100)
-    if Φ.iterations > 99
+    if avg
         return -1., Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(cavitymode)
     else
-        return Φ.zero[1] * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(cavitymode),
-        Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(cavitymode)
+        Φ = nlsolve((fvec, x) -> begin
+                    fvec[1] = gaincoefmode(x[1], f, p, sol, llevel, cavitymode, taus, Δnu=Δnu) - alpha
+                end, [Φ0], iterations=100)
+        if Φ.iterations > 99
+            return -1., Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(cavitymode)
+        else
+            return Φ.zero[1] * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(cavitymode),
+            Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(cavitymode)
+        end
     end
 end
 
