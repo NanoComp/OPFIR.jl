@@ -306,8 +306,9 @@ function outpowermode(p, sol, llevel, cavitymode, taus; lossfactor = 1., Δnu = 
     νTHZ = llevel in ['U', "U"] ? p.f_dir_lasing : p.f_ref_lasing
     dν = 0.e6
     νTHZ += dν
-    println(Δnu)
-    # Δnu = 4.0e6*(p.pressure/1e3) # + 28e3 * 3 #p.Δ_fP - 5.e6
+    # println(Δnu)
+
+    Δnu += p.Δ_f₀D/(p.f₀/p.f_dir_lasing)
     # Δnu *= 2
     σν = (p.c/νTHZ)^2/8/π/p.t_spont * 1/pi*Δnu/(Δnu^2 + dν^2)
     # println(σν)
@@ -320,7 +321,7 @@ function outpowermode(p, sol, llevel, cavitymode, taus; lossfactor = 1., Δnu = 
         return -1., Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(cavitymode)
     else
         Φ = nlsolve((fvec, x) -> begin
-                    fvec[1] = gaincoefmode(x[1], f, p, sol, llevel, cavitymode, taus, Δnu=Δnu) - alpha
+                    fvec[1] = gaincoefmode(x[1], f, p, sol, llevel, cavitymode, taus, Δnu=Δnu-p.Δ_f₀D/(p.f₀/p.f_dir_lasing)) - alpha
                 end, [Φ0], iterations=100)
         if Φ.iterations > 99
             return -1., Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(cavitymode)
@@ -370,6 +371,7 @@ function gaincoefmode(Φ, f, p, sol, llevel, cavitymode, taus; Δnu = 4.0e6*(p.p
         r = p.r_int[ri]
 
         popinvs = (llevel in ['L', "L"]) ? inv_L_dist_layer(p, sol, ri) : inv_U_dist_layer(p, sol, ri)
+        popinvs = sum(popinvs) * p.gauss_dist
         f0s = (llevel in ['L', "L"]) ? p.f_dist_ref_lasing : p.f_dist_dir_lasing
         # Δnu =  4.0e6*(p.pressure/1e3) #28e3 * 2 #10e6/(p.f₀/p.f_dir_lasing) #4.0e6*(p.pressure/1e3) # + 28e3 * 3
         # Δnu *= 2
