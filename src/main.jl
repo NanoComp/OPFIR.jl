@@ -302,26 +302,24 @@ end
 
 #################################################################################
 ## compute the output power with mode overlapping ##
-function outpowermode(p, sol, llevel, cavitymode, taus; lossfactor = 1., Δnu = 4.0e6*(p.pressure/1e3), avg = false)
+function outpowermode(p, sol, llevel, cavitymode, taus; lossfactor = 1., Δnu = 4e6*(p.pressure/1e3), avg = true)
     νTHZ = llevel in ['U', "U"] ? p.f_dir_lasing : p.f_ref_lasing
     dν = 0.e6
     νTHZ += dν
     # println(Δnu)
-
-    Δnu += p.Δ_f₀D/(p.f₀/p.f_dir_lasing)
-    # Δnu *= 2
+    ΔnuD = p.Δ_f₀D*p.f_dir_lasing/p.f₀
+    ΔnuP = Δnu
+    Δnu = sqrt(ΔnuD^2 + ΔnuP^2)
     σν = (p.c/νTHZ)^2/8/π/p.t_spont * 1/pi*Δnu/(Δnu^2 + dν^2)
-    # println(σν)
     alpha = cavityloss(p, llevel, cavitymode, lossfactor=lossfactor)
-    # println(alpha, ", ", efftrans(cavitymode))
     ΔN = totinv(p, sol, llevel)
     Φ0 = (ΔN*σν/alpha-1)/taus/σν
     f = νTHZ
     if avg
-        return -1., Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(cavitymode)
+        return Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(cavitymode)
     else
         Φ = nlsolve((fvec, x) -> begin
-                    fvec[1] = gaincoefmode(x[1], f, p, sol, llevel, cavitymode, taus, Δnu=Δnu-p.Δ_f₀D/(p.f₀/p.f_dir_lasing)) - alpha
+                    fvec[1] = gaincoefmode(x[1], f, p, sol, llevel, cavitymode, taus, Δnu=ΔnuP) - alpha
                 end, [Φ0], iterations=100)
         if Φ.iterations > 99
             return -1., Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(cavitymode)
@@ -332,7 +330,7 @@ function outpowermode(p, sol, llevel, cavitymode, taus; lossfactor = 1., Δnu = 
     end
 end
 
-function gaincoefmode(Φ, f, p, sol, llevel, cavitymode, taus; Δnu = 4.0e6*(p.pressure/1e3))
+function gaincoefmode(Φ, f, p, sol, llevel, cavitymode, taus; Δnu = 4e6*(p.pressure/1e3))
     ## normalize electric field
     E_sq = 0.
     denom = 0.
@@ -371,18 +369,9 @@ function gaincoefmode(Φ, f, p, sol, llevel, cavitymode, taus; Δnu = 4.0e6*(p.p
         r = p.r_int[ri]
 
         popinvs = (llevel in ['L', "L"]) ? inv_L_dist_layer(p, sol, ri) : inv_U_dist_layer(p, sol, ri)
-        popinvs = sum(popinvs) * p.gauss_dist
+        # popinvs = sum(popinvs) * p.gauss_dist
         f0s = (llevel in ['L', "L"]) ? p.f_dist_ref_lasing : p.f_dist_dir_lasing
-        # Δnu =  4.0e6*(p.pressure/1e3) #28e3 * 2 #10e6/(p.f₀/p.f_dir_lasing) #4.0e6*(p.pressure/1e3) # + 28e3 * 3
-        # Δnu *= 2
         λ = p.c/f
-        σνs = λ^2/8/π/p.t_spont * 1/(f0s[2]-f0s[1]) * ones(p.num_freq)
-        for i in 1:length(σνs)
-            if abs(f-f0s[i])>(f0s[2]-f0s[1])/2 # out of
-                σνs[i] = 0
-            end
-        end
-        #
         σνs = λ^2/8/π/p.t_spont * 1/pi * Δnu./((f-f0s).^2 + Δnu^2)
 
         if cavitymode == "TE01"
