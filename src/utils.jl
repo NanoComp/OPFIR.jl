@@ -1,4 +1,4 @@
-using DataFrames, Polynomials, PyPlot
+using DataFrames, Polynomials
 
 function readpsol(dirlabel, DD::Float64, GKC::Float64, SPT::Float64, J::Int64, pressure::Int64, power::Float64, nlayer::Int64)
     """readpsol(dirlabel, DD::Float64, GKC::Float64, SPT::Float64, J::Int64, pressure::Int64, power::Float64, nlayer::Int64)
