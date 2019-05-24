@@ -212,7 +212,7 @@ function contourplot(df, J; plotth=false)
         plotth && plot(vcat(20:5:85,88), vcat(45,51,59,66,77,92,108,120,141,154,177,202,223,251,260)/300*0.26, "ko")
         xlabel("pressure")
         ylabel("pump power")
-        title("DD: "*string(dfi[:DD][1])*" "*L" \AA^2, SPT: " * string(dfi[:SPT][1]) *L"\AA^2,  loss factor: " *
+        title("DD: "*string(dfi[:DD][1])*" "*" A2, SPT: " * string(dfi[:SPT][1]) *"A2,  loss factor: " *
         string(dfi[:lossfactor][1]))
         xlim(pressures[1], pressures[end])
         ylim(0.01,0.24)
