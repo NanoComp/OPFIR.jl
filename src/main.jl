@@ -309,7 +309,8 @@ function outpowermode(p, sol, llevel, cavitymode, taus; lossfactor = 1., Δnu = 
     # println(Δnu)
     ΔnuD = p.Δ_f₀D*p.f_dir_lasing/p.f₀
     ΔnuP = Δnu
-    Δnu = sqrt(ΔnuD^2 + ΔnuP^2)
+    # Δnu = sqrt(ΔnuD^2 + ΔnuP^2)
+    Δnu = ΔnuD + ΔnuP
     σν = (p.c/νTHZ)^2/8/π/p.t_spont * 1/pi*Δnu/(Δnu^2 + dν^2)
     alpha = cavityloss(p, llevel, cavitymode, lossfactor=lossfactor)
     ΔN = totinv(p, sol, llevel)
