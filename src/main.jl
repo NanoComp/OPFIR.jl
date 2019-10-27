@@ -1,3 +1,4 @@
+
 function func(p; sol_start=Array[], mumps_solver=0)
     # initiate some of the parameters from alpha_0
     if p.solstart_flag==0
@@ -35,7 +36,7 @@ function func(p; sol_start=Array[], mumps_solver=0)
         lu_mat0 = lufact(matrix_0)
     end
 
-    rel_err = Array{Float64}(0)
+    rel_err = Array{Float64}(undef, 0)
     sol_0 = andersonaccel(x -> begin
             y = fixedpoint(x, p, matrix_0, lu_mat0, mumps_solver=mumps_solver)
             push!(rel_err, norm(y - x) / norm(y))
@@ -281,10 +282,13 @@ end
 
 function comptaus(nonth_popinv, wi_list)
     tmp = (nonth_popinv) / nonth_popinv[1]
-    a, b = linreg(wi_list*1.0, 1./tmp - 1)
+    a, b = mylinreg(wi_list*1.0, 1 ./ tmp - 1)
     return b
 end
 
+function mylinreg(x, y)
+    return hcat(fill!(similar(x), 1), x) \ y
+end
 
 function compfraction(p, sol)
     N0A = N3A = NΣA = 0.

@@ -1,4 +1,4 @@
-type ParamsN2O{T<:Real}
+mutable struct ParamsN2O{T<:Real}
     radius::T   # radius in cm
     pump_radius::T
     L::T        # length in cm
@@ -8,8 +8,8 @@ type ParamsN2O{T<:Real}
     ev::T       # in J
     kB::T       # in eV/K
     T::T        # in K
-    T_vA::AbstractVector
-    T_vE::AbstractVector
+    T_vA::AbstractVector{T}
+    T_vE::AbstractVector{T}
     kBT::T      # in cm^-1
     M::T        # molecular mass in AMU
     norm_time::T# normalization to micro second
@@ -34,12 +34,12 @@ type ParamsN2O{T<:Real}
     f_G_0::T
     f_3_0::T
     f_6_0::T
-    f_GA::AbstractVector
-    f_3A::AbstractVector
-    f_6A::AbstractVector
-    f_GE::AbstractVector
-    f_3E::AbstractVector
-    f_6E::AbstractVector
+    f_GA::AbstractVector{T}
+    f_3A::AbstractVector{T}
+    f_6A::AbstractVector{T}
+    f_GE::AbstractVector{T}
+    f_3E::AbstractVector{T}
+    f_6E::AbstractVector{T}
 
     f_23::T
     f_36::T
@@ -77,7 +77,7 @@ type ParamsN2O{T<:Real}
     # mode_num: 1: TE01 / 2: TE12 / 3: TE02 / 4: TE22 / 5: TE11 / 6: TE21 / 7: TM01 / 8: TM11
     mode_num::Integer
     # zero point of the Bessel function:
-    p_library::AbstractVector
+    p_library::AbstractVector{T}
     n0::T #refractive index
     t_spont::T
     Δν_THz::T
@@ -85,19 +85,19 @@ type ParamsN2O{T<:Real}
     ### parameters that are not system properties, that are related to pressure and power etc :
     pressure::T     # in unit mTorr
     power::T        # in unit W
-    powerF::AbstractVector
-    powerB::AbstractVector
-    averagePF::AbstractVector
-    averagePB::AbstractVector
+    powerF::AbstractVector{T}
+    powerB::AbstractVector{T}
+    averagePF::AbstractVector{T}
+    averagePB::AbstractVector{T}
 
     num_layers::Integer
 
     ntotal::T # in unit m^-3
 
-    k63A::AbstractVector
-    k36A::AbstractVector
-    k63E::AbstractVector
-    k36E::AbstractVector
+    k63A::AbstractVector{T}
+    k36A::AbstractVector{T}
+    k63E::AbstractVector{T}
+    k36E::AbstractVector{T}
 
     k3623::T
     k2336::T
@@ -106,42 +106,42 @@ type ParamsN2O{T<:Real}
     kro::T
 
     Δ_fP::T
-    Δ_f_RabiF::AbstractVector
-    Δ_f_RabiB::AbstractVector
-    Δ_f_NTF::AbstractVector
-    Δ_f_NTB::AbstractVector
+    Δ_f_RabiF::AbstractVector{T}
+    Δ_f_RabiB::AbstractVector{T}
+    Δ_f_NTF::AbstractVector{T}
+    Δ_f_NTB::AbstractVector{T}
 
     num_freq::Integer
     layer_unknown::Integer
     df::T
-    f_dist_end::AbstractVector
-    f_dist_ctr::AbstractVector
-    f_dist_ctrB::AbstractVector
+    f_dist_end::AbstractVector{T}
+    f_dist_ctr::AbstractVector{T}
+    f_dist_ctrB::AbstractVector{T}
 
-    velocity::AbstractVector
-    f_dist_dir_lasing::AbstractVector
-    f_dist_ref_lasing::AbstractVector
+    velocity::AbstractVector{T}
+    f_dist_dir_lasing::AbstractVector{T}
+    f_dist_ref_lasing::AbstractVector{T}
 
-    gauss_dist::AbstractVector
-    SHBF::AbstractArray
-    SHBB::AbstractArray
-    fp_lasing::AbstractVector
-    fp_ref_lasing::AbstractVector
+    gauss_dist::AbstractVector{T}
+    SHBF::AbstractArray{T,2}
+    SHBB::AbstractArray{T,2}
+    fp_lasing::AbstractVector{T}
+    fp_ref_lasing::AbstractVector{T}
 
     alpha_0::T
-    alpha_r::AbstractVector
+    alpha_r::AbstractVector{T}
     pump_0::T
-    pump_IR::AbstractArray
+    pump_IR::AbstractArray{T,2}
 
     Δr::T
-    r_int::AbstractVector
+    r_int::AbstractVector{T}
 
-    kwall::AbstractVector
+    kwall::AbstractVector{T}
     MFP::T
     D::T
 
-    kDDmat::AbstractArray
-    ka::AbstractVector
+    kDDmat::AbstractArray{T,2}
+    ka::AbstractVector{T}
 
     niter::Integer
     lin_solver::AbstractString
@@ -155,14 +155,14 @@ type ParamsN2O{T<:Real}
 
     D_factor::T
 
-    f_dirgain_dist::AbstractVector
-    f_refgain_dist::AbstractVector
-    dirgain::AbstractVector
-    refgain::AbstractVector
+    f_dirgain_dist::AbstractVector{T}
+    f_refgain_dist::AbstractVector{T}
+    dirgain::AbstractVector{T}
+    refgain::AbstractVector{T}
 
     script::Integer
 
-    evol_t::AbstractVector
+    evol_t::AbstractVector{T}
 
     err_tv::Bool
 
@@ -174,11 +174,11 @@ type ParamsN2O{T<:Real}
 
     optcavity::Bool
 
-    rotpopfr::AbstractVector
-    cj::AbstractVector
+    rotpopfr::AbstractVector{T}
+    cj::AbstractVector{T}
 
     approach::Integer
 
-    frel_vib::AbstractVector
-    kVVmat::AbstractArray
+    frel_vib::AbstractVector{T}
+    kVVmat::AbstractArray{T,2}
 end

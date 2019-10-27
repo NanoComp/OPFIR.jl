@@ -1,4 +1,4 @@
-type Params{T<:Real}
+mutable struct Params{T<:Real}
     radius::T   # radius in cm
     pump_radius::T
     L::T        # length in cm
@@ -505,7 +505,7 @@ function f_NT_ampl(ν, Δ_f_NT, f_pump)
 end
 
 function f_NT_normalized(ν, Δ_f_NT, f_pump, df)
-    SHB = 1/π * df * Δ_f_NT ./ ((ν - f_pump).^2 + Δ_f_NT^2)
+    SHB = 1/π * df * Δ_f_NT ./ ((ν .- f_pump).^2 .+ Δ_f_NT^2)
     # SHB = SHB/sum(SHB)
     return SHB
 end

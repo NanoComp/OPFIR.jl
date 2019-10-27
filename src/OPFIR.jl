@@ -5,6 +5,7 @@ using Cubature
 using NLsolve
 using JLD
 using ODE
+using SparseArrays, LinearAlgebra, StatsBase, SpecialFunctions
 
 for f in ("parameters.jl", "parametersN2O.jl", "N2O.jl", "main.jl",
           "anderson_accel.jl", "fixedpoint.jl",
