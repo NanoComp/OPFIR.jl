@@ -17,7 +17,6 @@ end
 function compute_row_col_val(rowind, colind, value, p, sol_0)
     s = 1
     # rotational levels in V0 and V3
-    tic()
     for vi in 1:p.num_freq
         for ri in 1:p.num_layers
             for li in 1:p.n_rot
@@ -35,7 +34,6 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             end
         end
     end
-    toc()
     ### pump term:
     for vi in 1:p.num_freq
         for ri in 1:p.num_layers
@@ -141,7 +139,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
     end
     ### diffusion for rot/vib levels
     for ri in 2:p.num_layers-1
-        index_diffu = vcat(1:p.layer_unknown) + p.layer_unknown * (ri-1)
+        index_diffu = vcat(1:p.layer_unknown) .+ p.layer_unknown * (ri-1)
         for k in index_diffu
             row = k
             col = row - p.layer_unknown

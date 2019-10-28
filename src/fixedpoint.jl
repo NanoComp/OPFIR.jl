@@ -7,9 +7,9 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0; mumps_solver=0)
     # colind = ones(Int64, max_ele)
     # value = zeros(max_ele)
 
-    rowind = Array{Float64}(0)
-    colind = Array{Float64}(0)
-    value = Array{Float64}(0)
+    rowind = Array{Float64}(undef, 0)
+    colind = Array{Float64}(undef, 0)
+    value = Array{Float64}(undef, 0)
     rhs = zeros(p.num_layers*p.layer_unknown + p.n_vib)
 
     update_alpha_from_N!(p, sol_0)
@@ -21,7 +21,6 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0; mumps_solver=0)
     # toc()
     matrix = sparse(rowind, colind, value)
     mat_rhs_modify(matrix, rhs, p)
-    tic()
     if p.solstart_flag == 1
         matrix_B0 = matrix - matrix_0
         rhs = rhs - matrix_B0 * sol_0
@@ -38,7 +37,6 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0; mumps_solver=0)
     # println(matrix[p.layer_unknown-p.n_vib+1, :], ", rhs:", rhs[p.layer_unknown-p.n_vib+1])
 
     update_alpha_from_N!(p, sol_1)
-    toc()
     if p.optcavity && p.WiU == 0. && p.WiL == 0.
         p.L = 0.4/p.alpha_r[1]*100
         println("L = ", p.L, "cm")
@@ -46,8 +44,8 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0; mumps_solver=0)
         println("L = ", p.L, "cm")
     end
 
-    println("norm of sol diff = ", norm(sol_1 - sol_0) / norm(sol_1))
-    flush(STDOUT)
+    println("norm of sol diff = ", LinearAlgebra.norm(sol_1 - sol_0) / LinearAlgebra.norm(sol_1))
+    flush(stdout)
 
     return sol_1
 end

@@ -42,7 +42,7 @@ function andersonaccel!(g!, x::Union{AbstractVector{R},AbstractVector{Complex{R}
                 y[i] = xnew - x[i]
                 x[i] = xnew
             end
-            if norm(y) <= reltol*norm(x) + abstol
+            if LinearAlgebra.norm(y) <= reltol*LinearAlgebra.norm(x) + abstol
                 return x
             end
         end
@@ -88,9 +88,9 @@ function andersonaccel!(g!, x::Union{AbstractVector{R},AbstractVector{Complex{R}
         # use this once Julia issue #13728 is fixed:
         # Qₖ = view(Q, 1:n, 1:mₖ-1)
         # QR = qrfact!(copy!(Qₖ, Fₖ), Val{true})
-        QR = m == mₖ ? qrfact!(copyto!(Q, Fₖ), Val{true}) : qrfact(Fₖ, Val{true})
-        LinearAlgebra.A_ldiv_B!(QR, γ) # overwrites γₖ in-place with Fₖ \ f
-
+        QR = m == mₖ ? qr!(copyto!(Q, Fₖ), Val(true)) : qr(Fₖ, Val(true))
+        # LinearAlgebra.A_ldiv_B!(QR, γ) # overwrites γₖ in-place with Fₖ \ f
+        LinearAlgebra.ldiv!(QR, γ)
         # We replace columns of F and X with the new
         # data in-place.  Rather than always appending
         # the new data in the last column, we cycle
@@ -129,7 +129,7 @@ number of itertions (`maxiters`).
 """
 andersonaccel(g, x::AbstractVector{T}; kws...) where T <: Number =
     andersonaccel!((y,x) -> copyto!(y, g(x)),
-                   copyto!(Array{typeof(float(one(T)))}(length(x)), x);
+                   copyto!(Array{typeof(float(one(T)))}(undef,length(x)), x);
                    kws...)
 
 andersonaccel(g, x::T; kws...) where T <: Number = andersonaccel(x -> g(x[1]), [x]; kws...)[1]

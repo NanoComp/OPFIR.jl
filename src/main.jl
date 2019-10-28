@@ -39,7 +39,7 @@ function func(p; sol_start=Array[], mumps_solver=0)
     rel_err = Array{Float64}(undef, 0)
     sol_0 = andersonaccel(x -> begin
             y = fixedpoint(x, p, matrix_0, lu_mat0, mumps_solver=mumps_solver)
-            push!(rel_err, norm(y - x) / norm(y))
+            push!(rel_err, LinearAlgebra.norm(y - x) / LinearAlgebra.norm(y))
             y
         end, sol_0, reltol=1e-6, m=10)
 
@@ -230,7 +230,7 @@ lambda = p.c/f0 # wavelength in m
 k0 = 2*pi/lambda # wavevector
 Rs = sqrt(pi*f0*mu/conductivityCu) # in ohms
 
-if contains(cavitymode, "TE")
+if occursin("TE", cavitymode)
     lossval = Rs/(radius_m*eta*sqrt(1-(x0/k0/radius_m)^2))*
             ((x0/k0/radius_m)^2+m^2/(x0^2-m^2)) #; % in 1/m
 elseif contains(cavitymode, "TM")
@@ -412,7 +412,7 @@ function efftrans(cavitymode)
     n = parse(Int, cavitymode[3])
     # println(n)
     t = zerobessel(cavitymode)
-    if contains(cavitymode, "TE")
+    if occursin("TE", cavitymode)
         P0 = (t^2-n^2) * besselj(n, t)^2
         t = 0.2*t
         Prad = t^2*(besselj(n-1, t)^2 - besselj(n-2, t)*besselj(n, t)) - 2*n*besselj(n,t)^2
