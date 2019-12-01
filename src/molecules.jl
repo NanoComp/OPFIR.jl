@@ -1,0 +1,505 @@
+type ParamsCO{T<:Real}
+    radius::T   # radius in cm
+    pump_radius::T
+    L::T        # length in cm
+    L_eff::T    # effective length in cm
+    h::T        # Planck constant
+    c::T        # speed of light in m/s
+    ev::T       # in J
+    kB::T       # in eV/K
+    T::T        # in K
+    T_vA::AbstractVector
+    T_vE::AbstractVector
+    kBT::T      # in cm^-1
+    M::T        # molecular mass in AMU
+    norm_time::T# normalization to micro second
+
+    σ_GKC::T    # in Angstrom^2, gas kinetic collision cross section
+    σ_DD::T     # dipole - dipole
+    σ_SPT::T
+    σ_36::T     # v3->v6 cross section
+    σ_VS::T     # V swap cross section
+
+    v_avg::T    # in m/sec, average relative velocity between molecules
+    kvs::T      # in m^3/microsec
+    # kvsplit::T
+
+    EG::T
+    E3::T
+    E6::T
+    E23::T
+    E36::T
+    E26::T
+    Q::T
+    f_G_0::T
+    f_3_0::T
+    f_6_0::T
+    f_GA::AbstractVector
+    f_3A::AbstractVector
+    f_6A::AbstractVector
+    f_GE::AbstractVector
+    f_3E::AbstractVector
+    f_6E::AbstractVector
+
+    f_23::T
+    f_36::T
+    f_26::T
+
+    JL::Integer #pump: JL in V0 ->JU in V3
+    JU::Integer
+    K0::Integer
+
+    pumpbranch::AbstractString #'R' or 'P' or 'Q'
+
+    CL::T
+    CL1::T
+    CU::T
+    CU1::T
+
+    g_L::T
+    g_U::T
+
+    NA::T
+
+    f₀::T
+    f_offset::T
+    f_pump::T
+    f_dir_lasing::T
+    f_ref_lasing::T
+    Δ_f₀D::T
+    f_range::T
+
+    n_rot::Integer
+    n_vib::Integer
+
+    mu0::T
+    eps0::T
+    # mode_num: 1: TE01 / 2: TE12 / 3: TE02 / 4: TE22 / 5: TE11 / 6: TE21 / 7: TM01 / 8: TM11
+    mode_num::Integer
+    # zero point of the Bessel function:
+    p_library::AbstractVector
+    n0::T #refractive index
+    t_spont::T
+    Δν_THz::T
+
+    ### parameters that are not system properties, that are related to pressure and power etc :
+    pressure::T     # in unit mTorr
+    power::T        # in unit W
+    powerF::AbstractVector
+    powerB::AbstractVector
+    averagePF::AbstractVector
+    averagePB::AbstractVector
+
+    num_layers::Integer
+
+    ntotal::T # in unit m^-3
+
+    k63A::AbstractVector
+    k36A::AbstractVector
+    k63E::AbstractVector
+    k36E::AbstractVector
+
+    k3623::T
+    k2336::T
+    k2636::T
+    k3626::T
+    kro::T
+
+    Δ_fP::T
+    Δ_f_RabiF::AbstractVector
+    Δ_f_RabiB::AbstractVector
+    Δ_f_NTF::AbstractVector
+    Δ_f_NTB::AbstractVector
+
+    num_freq::Integer
+    layer_unknown::Integer
+    df::T
+    f_dist_end::AbstractVector
+    f_dist_ctr::AbstractVector
+    f_dist_ctrB::AbstractVector
+
+    velocity::AbstractVector
+    f_dist_dir_lasing::AbstractVector
+    f_dist_ref_lasing::AbstractVector
+
+    gauss_dist::AbstractVector
+    SHBF::AbstractArray
+    SHBB::AbstractArray
+    fp_lasing::AbstractVector
+    fp_ref_lasing::AbstractVector
+
+    alpha_0::T
+    alpha_r::AbstractVector
+    pump_0::T
+    pump_IR::AbstractArray
+
+    Δr::T
+    r_int::AbstractVector
+
+    kwall::AbstractVector
+    MFP::T
+    D::T
+
+    kDDmat::AbstractArray
+    ka::AbstractVector
+
+    niter::Integer
+    lin_solver::AbstractString
+    model_flag::Integer
+    solstart_flag::Integer
+
+    backward::Integer
+    ACStark::Integer
+    effectiveL::Integer
+    MultRef::Integer
+
+    D_factor::T
+
+    f_dirgain_dist::AbstractVector
+    f_refgain_dist::AbstractVector
+    dirgain::AbstractVector
+    refgain::AbstractVector
+
+    script::Integer
+
+    evol_t::AbstractVector
+
+    err_tv::Bool
+
+    beta13::T
+
+    # Wi::T
+    WiU::T
+    WiL::T
+
+    optcavity::Bool
+
+    rotpopfr::AbstractVector
+end
+
+
+function CO(DefaultT=Float64;
+    radius = 0.25, # in cm
+    L = 15, # in cm
+    T = 300,
+    pressure = 100.0,
+    power = 10.0,
+    ####################################
+    ## molecule setup
+    ####################################
+    M = 28,
+    ####################################
+    ## pump setup
+    ####################################
+    JL = 4,
+    pumpbranch = "R",
+    f_offset = 30e6,
+    n_rot = 18,
+    n0 = 1.0,
+    t_spont = 10,
+    ####################################
+    ## model/solver setup
+    ####################################
+    num_layers = 10,
+    solstart_flag = 0,
+    optcavity = false,
+    D_factor = 1.0,
+    WiU = 0,
+    WiL = 0
+    )
+
+    ###################################################
+    #### physical constants
+    ###################################################
+    h = 6.626068e-34
+    c = 2.99792458e8
+    ev = 1.60217646e-19
+    kB = 8.617342e-5 # in ev/K
+    mu0 = 4e-7*pi
+    eps0 = 8.85e-12
+    NA = 6.0221413e23
+    kBT = kB*T*8065.73 # in cm^-1
+
+    #### unit constants
+    norm_time = 1e6
+
+    ###################################################
+    #### model configuration
+    ###################################################
+    niter = 10 # deprecated
+    lin_solver = "Default" # deprecated
+    backward = 1 # not used
+    ACStark = 1 # not used
+    effectiveL = 0 # deprecated
+    script = 0 # deprecated
+    MultRef = 1 # deprecated
+    Δν_THz = 25e6 # deprecated
+    mode_num = 1 # deprecated
+    # mode_num: 1: TE01 / 2: TE12 / 3: TE02 / 4: TE22 / 5: TE11 / 6: TE21 / 7: TM01 / 8: TM11
+    #zeros of Bessel functions:
+    p_library = [3.83, 5.33, 7.02, 6.71, 1.84, 3.05, 2.4, 3.83] # deprecated
+    K0 = 0
+    model_flag = 1
+    σ_SPT = 0
+    σ_36 = 0
+    σ_VS = 0
+    E6 = 4260
+    E23 = 6350
+    E36 = 8415
+    E26 = 0
+
+
+    evol_t = 0:.1:1
+    err_tv = false
+
+    pump_radius = radius # deprecated
+    L_eff = L
+
+    ###################################################
+    #### molecule setup
+    ###################################################
+    σ_GKC = 44
+    σ_DD = sqrt(T*M)/3.15 * 3.2
+    EG = 0
+    E3 = 2143.0
+    (B, DJ) = (57.635968, 0.1835058E-6) # in GHz
+
+    ###################################################
+    #### pump setup
+    ###################################################
+
+    if pumpbranch == "R"
+        JU = JL+1
+    elseif pumpbranch == "P"
+        JU = JL-1
+    else
+        throw(ArgumentError("pump branch can only be P or R!"))
+    end
+    g_L = 2JL + 1
+    g_U = 2JU + 1
+    CL, CL1, CU, CU1 = compCsCO(JL, JU, h, T, M)
+
+    EU = E3*c/1e7 + B*JU*(JU+1) - DJ*JU^2*(JU+1)^2 # in GHz
+    EL = B*JL*(JL+1) - DJ*JL^2*(JL+1)^2
+    f₀ = (EU - EL) * 1e9 # in Hz
+    f_pump = f₀ + f_offset
+
+    f_dir_lasing = (2B*JU - 4DJ*JU^3) * 1e9
+    f_ref_lasing = (2B*(JL+1) - 4DJ*(JL+1)^3) * 1e9
+
+    ###################################################
+    #### derived molecular parameters
+    ###################################################
+    v_avg = 205*sqrt(T/M)
+    vel = v_avg/sqrt(2)/norm_time # avg absolute vel in m/microsec
+    kvs = 0
+    MFP = 0.732*T/pressure/σ_GKC # in cm
+    # diffusion coefficient in m^2/microsec. Einstein-Smoluchowski equation;
+    D = 1/3 * vel * MFP * 1e-2 * D_factor
+    kDD = 19.8 * pressure * σ_DD/ sqrt(T*M)
+
+    Δ_f₀D = 3.58e-7*f₀*sqrt(T/M)
+    Δ_fP = 3.2e6*(pressure/1e3)
+
+    ntotal = 9.66e24 * pressure * 1e-3 / T # with unit m^-3
+    kro = 0
+
+    Q = exp(EG) + exp(-E3/kBT)
+    f_G_0 = exp(EG)/Q
+    f_3_0 = exp(-E3/kBT)/Q
+
+    f_6_0 = f_23 = f_36 = f_26 = 0.0
+
+    k63 = k36 = 0.0
+    k3623 = k2336 = k2636 = k3626 = 0.0
+
+    beta13 = 1.20 * sqrt(power)/radius
+
+    ###################################################
+    #### solver/discretization parameters
+    ###################################################
+    Δr = radius/100 / num_layers # in m
+    r_ext = linspace(0,radius/100,num_layers+1)
+    r_int = 0.5*(r_ext[1:end-1] + r_ext[2:end]) # in m
+
+    f_range = 2*Δ_f₀D
+    num_freq = round(Int64,max(50,f_range/(Δ_fP/4)))
+    num_freq = 20
+    df = 2.0 * f_range / num_freq
+    f_dist_end = linspace(-f_range, f_range, num_freq + 1) + f₀
+    f_dist_ctr = f_dist_end[1:end-1] + df/2
+
+    velocity = (f_dist_ctr - f₀)/f₀ # in unit c
+    f_dist_dir_lasing = velocity * f_dir_lasing + f_dir_lasing
+    f_dist_ref_lasing = velocity * f_ref_lasing + f_ref_lasing
+
+    f_dist_ctrB = f₀ - f₀ * velocity
+
+    norm_dist = Normal(f₀, Δ_f₀D / sqrt(2*log(2)))
+    pdf1 = pdf.(norm_dist, f_dist_ctr)
+    gauss_dist = pdf1 / sum(pdf1)
+    # gauss_dist = pdf1 * df
+
+    ## n_rot
+    n_vib = 0
+
+    # n_rot = 2 * (5+max(JU, JL+1))
+    J = 0:(n_rot÷2-1)
+
+    # in 1/microsec. rate_ij = rate_DD * prob. of ij collision, also kDDmat[i,j]:
+    kDDmat = zeros(n_rot, n_rot)
+    for i in 2:length(J)
+        kDDmat[i, i-1] = kDDmat[i+n_rot÷2, i+n_rot÷2-1] =
+        kDD*Q_selectn_hl(J[i], 0)/(1e3)
+    end
+    for i in 1:length(J)-1
+        dE = (2B*(J[i]+1) - 4DJ*(J[i]+1)^3) * 1e9 # in Hz
+        kDDmat[i, i+1] = kDDmat[i+n_rot÷2, i+n_rot÷2+1] =
+        kDD*Q_selectn_lh(J[i], 0, 0)/(1e3) * exp(-dE * h/1.38e-23/T)
+    end
+    # K-swap rates -> goes to thermal pool, in 1/microsec
+    ka = [0.0]
+
+    ## rotational population fraction to all
+    rotpopfr = rotpopfracl(h, T, M, n_rot, f_G_0, f_3_0, J)
+
+    layer_unknown = n_rot*num_freq
+
+    ###################################################
+    #### physical terms initialization
+    ###################################################
+    T_vA = T_vE = [0]
+    f_GA = f_3A = f_6A = f_GE = f_3E = f_6E = [0]
+    k63A = k63E = k36A = k36E = [0]
+
+    fp_lasing = f_NT_normalized(f_dist_dir_lasing, Δ_fP, f_dir_lasing, df*f_dir_lasing/f₀) # not used
+    fp_ref_lasing = f_NT_normalized(f_dist_ref_lasing, Δ_fP, f_ref_lasing, df*f_ref_lasing/f₀) # not used
+
+    f_dirgain_dist = linspace(f_dir_lasing-40e6, f_dir_lasing+40e6, 500) # not used
+    f_refgain_dist = linspace(f_ref_lasing-40e6, f_ref_lasing+40e6, 500) # not used
+    dirgain = zeros(size(f_dirgain_dist)) # not used
+    refgain = zeros(size(f_refgain_dist)) # not used
+
+    Δ_f_RabiF = zeros(num_layers)
+    Δ_f_RabiB = zeros(num_layers)
+    Δ_f_NTF = ones(num_layers) * Δ_fP
+    Δ_f_NTB = ones(num_layers) * Δ_fP
+    SHBF = zeros(num_freq, num_layers)
+    SHBB = zeros(num_freq, num_layers)
+    powerF = zeros(num_layers)
+    powerB = zeros(num_layers)
+    averagePF = power * ones(num_layers)
+    averagePB = power * ones(num_layers)
+
+    # alpha_0 in m^-1
+    totalNL0 = CL * ntotal * f_G_0
+    totalNU0 = CU * ntotal * f_3_0
+    alpha_0 = exp(-log(2)*((f_pump-f₀)/Δ_f₀D)^2)*sqrt(log(2)/pi)/Δ_f₀D *
+              8*pi^3/3/h/c * (totalNL0 - totalNU0) *
+              1e-36 * (0.01156806*max(JL, JU)/(2JL+1)) * f_pump * 1e-13
+    alpha_r = alpha_0 * ones(num_layers)
+    pump_IR = zeros(num_freq, num_layers)
+    # in unit m^-3 microsec^-1
+    pump_0 = 9.4e13 * power/(radius^2)/Δ_f₀D * (0.01156806*max(JL, JU)/(2JL+1)) *
+                exp(-log(2)*((f_pump-f₀)/Δ_f₀D)^2)/norm_time
+
+    # kwall = WallRate(radius, pressure, r_int, ntotal, M, T, NA, v_avg, σ_GKC) + 1e-10
+    kwall = zeros(num_layers)
+
+    return ParamsCO{DefaultT}(radius, pump_radius, L, L_eff, h, c, ev, kB, T, T_vA, T_vE, kBT, M, norm_time,
+    σ_GKC, σ_DD, σ_SPT, σ_36, σ_VS,
+    v_avg, kvs, #kvsplit,
+    EG, E3, E6, E23, E36, E26, Q,
+    f_G_0, f_3_0, f_6_0, f_GA, f_3A, f_6A, f_GE, f_3E, f_6E, f_23, f_36, f_26,
+    JL, JU, K0, pumpbranch, CL, CL1, CU, CU1, g_L, g_U, NA,
+    f₀, f_offset, f_pump, f_dir_lasing, f_ref_lasing, Δ_f₀D, f_range,
+    n_rot, n_vib,
+    mu0, eps0,
+    mode_num, p_library, n0, t_spont, Δν_THz,
+    pressure, power, powerF, powerB, averagePF, averagePB,
+    num_layers, ntotal,
+    k63A, k36A, k63E, k36E, k3623, k2336, k2636, k3626, kro,
+    Δ_fP, Δ_f_RabiF, Δ_f_RabiB, Δ_f_NTF, Δ_f_NTB,
+    num_freq, layer_unknown, df, f_dist_end, f_dist_ctr, f_dist_ctrB,
+    velocity, f_dist_dir_lasing, f_dist_ref_lasing,
+    gauss_dist, SHBF, SHBB, fp_lasing, fp_ref_lasing,
+    alpha_0, alpha_r, pump_0, pump_IR,
+    Δr, r_int,
+    kwall, MFP, D,
+    kDDmat,
+    ka,
+    niter, lin_solver, model_flag, solstart_flag,
+    backward, ACStark, effectiveL, MultRef, D_factor,
+    f_dirgain_dist, f_refgain_dist, dirgain, refgain,
+    script,
+    evol_t,
+    err_tv,
+    beta13,
+    WiU, WiL,
+    optcavity,
+    rotpopfr
+    )
+end
+
+function compCsCO(JL, JU, h, T, M)
+    cL = compCCO(JL, h, T, M)
+    cL1 = compCCO(JL+1, h, T, M)
+    cU = compCCO(JU, h, T, M)
+    cU1 = compCCO(JU-1, h, T, M)
+    return (cL, cL1, cU, cU1)
+end
+
+function compCCO(JL, h, T, M)
+    # compute fraction of JL in that vibrational level
+    Js = 0:1:100
+    Q = ql = 0.0
+    (B, DJ) = (57.635968, 0.1835058E-6) # in GHz
+    for J in Js
+        Ej = B*J*(J+1) - DJ*J^2*(J+1)^2
+        qj = (2J+1) * exp(-Ej*1e9*h/(1.38064852e-23*T))
+        Q += qj
+        if J == JL
+            ql = qj
+        end
+    end
+    return ql/Q
+end
+
+
+function ΔErCO(J1, J2, V)
+    if V=="V0" && M==35
+        B = 24862.6427e6
+        DJ = 0.057683e6
+        DJK = 0.42441e6
+    elseif V=="V3" && M==35
+        B = 24542.1324e6
+        DJ = 0.055156e6
+        DJK = 0.47788e6
+    elseif V=="V0" && M==34
+        B = 25.5361499e9
+        DJ = 0.000060233e9
+        DJK = 0.000439574e9
+    elseif V=="V3" && M==34
+        B = 25.1975092e9
+        DJ = 5.68788E4
+        DJK = 0.000518083e9
+    end
+    return (B-DJK*K^2)*(J2*(J2+1)-J1*(J1+1)) - DJ*(-J1^2*(J1+1)^2+J2^2*(J2+1)^2)
+end
+
+
+function rotpopfracl(h, T, M, n_rot, f_G_0, f_3_0, J)
+    ctot = 0.0
+    cj = zeros(n_rot)
+    Js = vcat(J, J)
+    for k in 1:n_rot
+        cj[k] = compCCO(Js[k], h, T, M)
+        if k <= n_rot ÷ 2
+            cj[k] *= f_G_0
+        else
+            cj[k] *= f_3_0
+        end
+        ctot += cj[k]
+    end
+    return cj/ctot
+end
