@@ -22,7 +22,7 @@ is reached.  By default, `reltol` is the square root of the precision of `x`,
 """
 function andersonaccel!(g!, x::Union{AbstractVector{R},AbstractVector{Complex{R}}};
                                           m = max(1, min(10, (length(x)+1)÷2)), # max #steps to remember
-                                          norm=Base.norm, # norm to use for stop tolerance
+                                          norm=LinearAlgebra.norm, # norm to use for stop tolerance
                                           reltol::Real = sqrt(eps(real(R))),
                                           abstol::Real=0, maxiter::Int=typemax(Int)) where R <: AbstractFloat
     m < 1 && throw(ArgumentError("m=$m < 1 is not allowed"))
@@ -42,7 +42,7 @@ function andersonaccel!(g!, x::Union{AbstractVector{R},AbstractVector{Complex{R}
                 y[i] = xnew - x[i]
                 x[i] = xnew
             end
-            if LinearAlgebra.norm(y) <= reltol*LinearAlgebra.norm(x) + abstol
+            if norm(y) <= reltol*norm(x) + abstol
                 return x
             end
         end
@@ -116,7 +116,7 @@ function andersonaccel!(g!, x::Union{AbstractVector{R},AbstractVector{Complex{R}
 end
 
 """
-    andersonaccel(g, x; m, norm=Base.norm, reltol=sqrt(ɛ), abstol=0, maxiters)
+    andersonaccel(g, x; m, norm=LinearAlgebra.norm, reltol=sqrt(ɛ), abstol=0, maxiters)
 
 Solve the fixed-point problem \$g(x)=x\$ to given relative and absolute tolerances,
 returning the solution \$x\$, via Anderson acceleration of a fixed-point

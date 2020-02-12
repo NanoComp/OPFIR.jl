@@ -282,7 +282,7 @@ end
 
 function comptaus(nonth_popinv, wi_list)
     tmp = (nonth_popinv) / nonth_popinv[1]
-    a, b = mylinreg(wi_list*1.0, 1 ./ tmp - 1)
+    a, b = mylinreg(wi_list*1.0, 1 ./ tmp .- 1)
     return b
 end
 
