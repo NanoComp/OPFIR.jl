@@ -1,4 +1,4 @@
-type ParamsCO{T<:Real}
+mutable struct ParamsCO{T<:Real}
     radius::T   # radius in cm
     pump_radius::T
     L::T        # length in cm
@@ -487,19 +487,19 @@ function ΔErCO(J1, J2, V)
     return (B-DJK*K^2)*(J2*(J2+1)-J1*(J1+1)) - DJ*(-J1^2*(J1+1)^2+J2^2*(J2+1)^2)
 end
 
-
-function rotpopfracl(h, T, M, n_rot, f_G_0, f_3_0, J)
-    ctot = 0.0
-    cj = zeros(n_rot)
-    Js = vcat(J, J)
-    for k in 1:n_rot
-        cj[k] = compCCO(Js[k], h, T, M)
-        if k <= n_rot ÷ 2
-            cj[k] *= f_G_0
-        else
-            cj[k] *= f_3_0
-        end
-        ctot += cj[k]
-    end
-    return cj/ctot
-end
+#
+# function rotpopfracl(h, T, M, n_rot, f_G_0, f_3_0, J)
+#     ctot = 0.0
+#     cj = zeros(n_rot)
+#     Js = vcat(J, J)
+#     for k in 1:n_rot
+#         cj[k] = compCCO(Js[k], h, T, M)
+#         if k <= n_rot ÷ 2
+#             cj[k] *= f_G_0
+#         else
+#             cj[k] *= f_3_0
+#         end
+#         ctot += cj[k]
+#     end
+#     return cj/ctot
+# end
