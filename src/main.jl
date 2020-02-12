@@ -240,11 +240,11 @@ return lossval
 end
 
 
-function cavityloss(p, llevel, cavitymode; lossfactor=1.0) # in m^-1
+function cavityloss(p, llevel, cavitymode; lossfactor=1.0, Rb=1.0) # in m^-1
     Rback = 1.
     Rfront = (1-efftrans(cavitymode)) * Rback
     αohmic = ohmicloss(p, llevel, cavitymode)
-    αtrans = - log(Rfront*Rback)/(2p.L/100)
+    αtrans = - log(Rfront*Rback * Rb)/(2p.L/100)
     # println("ohmic loss: " * string(αohmic) * " m-1")
     # println("transmission/reflection loss: " * string(αtrans) * " m-1")
     return (αohmic + αtrans) * lossfactor
@@ -306,16 +306,17 @@ end
 
 #################################################################################
 ## compute the output power with mode overlapping ##
-function outpowermode(p, sol, llevel, cavitymode, taus; lossfactor = 1., Δnu = 4e6*(p.pressure/1e3), avg = true)
+function outpowermode(p, sol, llevel, cavitymode, taus; lossfactor = 1., Rb=1.0, Δnu = 4e6*(p.pressure/1e3), avg = true)
     νTHZ = llevel in ['U', "U"] ? p.f_dir_lasing : p.f_ref_lasing
     dν = 0.e6
     νTHZ += dν
     # println(Δnu)
     ΔnuD = p.Δ_f₀D*p.f_dir_lasing/p.f₀
     ΔnuP = Δnu
-    Δnu = sqrt(ΔnuD^2 + ΔnuP^2)
+    # Δnu = sqrt(ΔnuD^2 + ΔnuP^2)
+    Δnu = ΔnuD + ΔnuP
     σν = (p.c/νTHZ)^2/8/π/p.t_spont * 1/pi*Δnu/(Δnu^2 + dν^2)
-    alpha = cavityloss(p, llevel, cavitymode, lossfactor=lossfactor)
+    alpha = cavityloss(p, llevel, cavitymode, lossfactor=lossfactor, Rb=Rb)
     ΔN = totinv(p, sol, llevel)
     Φ0 = (ΔN*σν/alpha-1)/taus/σν
     f = νTHZ

@@ -1,11 +1,14 @@
 using DataFrames, Polynomials, LaTeXStrings
 
-function readpsol(dirlabel, DD::Float64, GKC::Float64, SPT::Float64, J::Int64, pressure::Int64, power::Float64, nlayer::Int64)
-    """readpsol(dirlabel, DD::Float64, GKC::Float64, SPT::Float64, J::Int64, pressure::Int64, power::Float64, nlayer::Int64)
+function readpsol(dirlabel, DD::Float64, GKC::Float64, SPT::Float64, J::Int64, pressure::Int64, power::Float64, nlayer::Int64, llevel)
+    """readpsol(dirlabel, DD::Float64, GKC::Float64, SPT::Float64, J::Int64, pressure::Int64, power::Float64, nlayer::Int64, llevel)
     """
     cd(homedir()*"/.julia/v0.6/OPFIR")
     cd(string(dirlabel))
     filepath = string("p_",pressure,"_power_",power,"_J_",J,"_nlayers_",nlayer, "_DD_",DD,"_GKC_",GKC, "_SPT_", SPT)
+    if llevel in ['L', "L"]
+        filepath = string(filepath, "_L")
+    end
     if !isdir(filepath)
         return 0, 0, 0, 0
         throw(ArgumentError("check the path!"))
@@ -212,7 +215,7 @@ function contourplot(df, J; plotth=false)
         plotth && plot(vcat(20:5:85,88), vcat(45,51,59,66,77,92,108,120,141,154,177,202,223,251,260)/300*0.26, "ko")
         xlabel("pressure")
         ylabel("pump power")
-        title("DD: "*string(dfi[:DD][1])*" "*L" \AA^2, SPT: " * string(dfi[:SPT][1]) *L"\AA^2,  loss factor: " *
+        title("DD: "*string(dfi[:DD][1])*" "*" A2, SPT: " * string(dfi[:SPT][1]) *"A2,  loss factor: " *
         string(dfi[:lossfactor][1]))
         xlim(pressures[1], pressures[end])
         ylim(0.01,0.24)
