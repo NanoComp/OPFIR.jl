@@ -90,6 +90,8 @@ function outputpower(p, level, cavitymode; mumps_solver=0, lossfactor=1.0)
     # σν = (p0.c/νTHZ)^2/8/π/p0.t_spont * 1/pi/p0.Δ_fP
     # Φ = (ΔN*σν/alpha-1)/taus/σν
     # laspower = Φ * (p0.h*νTHZ)/2 * pi * (p0.radius/100)^2 * efftrans(cavitymode)
+    println("output power: ", laspower[1])
+    println()
     return laspower, sol0, p0, taus
 end
 
