@@ -23,8 +23,6 @@ function func(p; sol_start=Array[], mumps_solver=0)
         p.WiL = tmp_Wi[2]
     end
 
-    OPFIRinfo(p, sol_0)
-
     if p.solstart_flag == 1
         max_ele = p.num_freq * p.num_layers * (p.n_rot*(p.n_rot+2) + p.n_vib*(p.n_rot+p.n_vib+2))
         rowind_0 = Array{Float64}(0)
@@ -46,20 +44,26 @@ function func(p; sol_start=Array[], mumps_solver=0)
     return (p, sol_0)
 end
 
-function OPFIRinfo(p, sol)
+function OPFIRinfo(p)
+    println("start problem:")
     println("pressure: ", p.pressure, "mTorr, pump power: ", p.power, "W")
-    println("matrix size is ", size(sol, 1), ", with ", p.num_layers, " radial layers, ",
+    println("matrix size is ", p.num_layers* p.layer_unknown + p.n_vib, ", with ", p.num_layers, " radial layers, ",
     p.num_freq, " velocity subclasses, ", p.n_vib, " vib levels, ", p.n_rot, " rot levels")
     println("pressure and Doppler boradening width is ", p.Δ_fP, "Hz, ", p.Δ_f₀D, "Hz",
     " and frequency width is ", p.f_range, "Hz.")
     println("sigma DD is ", p.σ_DD, "A2, sigma SPT is ", p.σ_SPT, "A2, sigma GKC is ", p.σ_GKC, "A2")
+    println()
 end
 
 function outputpower(p, level, cavitymode; mumps_solver=0, lossfactor=1.0)
     p.WiU = p.WiL = 0.
     wi = vcat(0.0, 0.1, 0.2)
     nonth_popinv = zeros(length(wi))
+
+    OPFIRinfo(p)
+
     (p0, sol0) = func(p, mumps_solver=mumps_solver)
+
     if level in ['U', "U"]
         (nonth_popinv[1], a) = nonthpopinv(p0, sol0)
     else
@@ -82,6 +86,8 @@ function outputpower(p, level, cavitymode; mumps_solver=0, lossfactor=1.0)
         throw(ArgumentError("level can only be L or U!"))
     end
     taus = comptaus(vec(nonth_popinv), wi)*1e-6
+
+    println("taus: ", taus)
 
     laspower = outpowermode(p0, sol0, level, cavitymode, taus, lossfactor=lossfactor)
     # alpha = cavityloss(p0, level, cavitymode)
