@@ -451,3 +451,11 @@ function maxT(n, t)
     end
     return maximum(avgk/avgkernel(0, 1, n, t))
 end
+        
+function pumpthreshold(p, level, cavitymode; mumps_solver=0, lossfactor=1.0, guess=0.1)
+    Pth = nlsolve((fvec, x) -> begin
+                p.power = x[1]
+                fvec[1] = outputpower(p, level, cavitymode, mumps_solver=mumps_solver, lossfactor=lossfactor)[1]
+            end, [guess], iterations=100)
+    return Pth.zeros[1]
+end
