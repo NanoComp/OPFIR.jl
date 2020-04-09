@@ -1,7 +1,7 @@
 using DelimitedFiles
 function viblevelsN2O()
 ## data for vibrational energy levels and degeneracy without E0
-x = readdlm(DEPOT_PATH[1] * "/dev/OPFIR/src/viblevels_N2O.txt", ' ', Float64)
+x = readdlm((@__DIR__) * "/viblevels_N2O.txt", ' ', Float64)
     return x
 end
 
