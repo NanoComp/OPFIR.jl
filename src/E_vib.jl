@@ -1,7 +1,8 @@
 using DelimitedFiles
-function viblevelsN2O()
-## data for vibrational energy levels and degeneracy without E0
-x = readdlm(joinpath(@__DIR__, "viblevels_N2O.txt"), ' ', Float64)
+function viblevels(name)
+    ## data for vibrational energy levels and degeneracy without E0
+    filename = "viblevels_"*name*".txt"
+    x = readdlm(joinpath(@__DIR__, filename), ' ', Float64)
     return x
 end
 

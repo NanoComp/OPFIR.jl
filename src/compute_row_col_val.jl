@@ -8,10 +8,6 @@ function put_row_col_val(p, rowind, colind, value, row, col, val, s)
         push!(value, val)
         return (s+1)
     end
-        # push!(rowind, row)
-        # push!(colind, col)
-        # push!(value, val)
-        # return (s+1)
 end
 
 function compute_row_col_val(rowind, colind, value, p, sol_0)
@@ -215,21 +211,3 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
         end
     end
 end
-
-# function totN0r(p, sol, ri)
-#     tot = 0.
-#     for vi in 1:p.num_freq
-#         rowoffset = p.layer_unknown*(ri-1) + (vi-1)*p.n_rot
-#         tot += sum(sol[rowoffset+1:rowoffset+p.n_rot÷2])
-#     end
-#     return tot + p.ntotal*p.f_G_0
-# end
-
-# function totN3r(p, sol, ri)
-#     tot = 0.
-#     for vi in 1:p.num_freq
-#         rowoffset = p.layer_unknown*(ri-1) + (vi-1)*p.n_rot + p.n_rot÷2
-#         tot += sum(sol[rowoffset+1:rowoffset+p.n_rot÷2])
-#     end
-#     return tot + p.ntotal*p.f_3_0
-# end

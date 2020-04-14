@@ -1,5 +1,5 @@
 
-function func(p; sol_start=Array[], mumps_solver=0)
+function func(p; sol_start=Array[])
     # initiate some of the parameters from alpha_0
     if p.solstart_flag==0
         matrix_0 = 0
@@ -21,9 +21,7 @@ function func(p; sol_start=Array[], mumps_solver=0)
         p.solstart_flag = 1
         p.WiU = tmp_Wi[1]
         p.WiL = tmp_Wi[2]
-    end
 
-    if p.solstart_flag == 1
         max_ele = p.num_freq * p.num_layers * (p.n_rot*(p.n_rot+2) + p.n_vib*(p.n_rot+p.n_vib+2))
         rowind_0 = Array{Float64}(0)
         colind_0 = Array{Float64}(0)
@@ -36,12 +34,48 @@ function func(p; sol_start=Array[], mumps_solver=0)
 
     rel_err = Array{Float64}(undef, 0)
     sol_0 = andersonaccel(x -> begin
-            y = fixedpoint(x, p, matrix_0, lu_mat0, mumps_solver=mumps_solver)
+            y = fixedpoint(x, p, matrix_0, lu_mat0)
             push!(rel_err, LinearAlgebra.norm(y - x) / LinearAlgebra.norm(y))
             y
         end, sol_0, reltol=1e-6, m=10)
 
     return (p, sol_0)
+end
+
+function outputpower(p)
+    p.WiU = p.WiL = 0.
+    wi = vcat(0.0, 0.1, 0.2)
+    nonth_popinv = zeros(length(wi))
+
+    OPFIRinfo(p)
+
+    (p0, sol0) = func(p)
+
+    if p.lasinglevel in ['U', "U"]
+        (nonth_popinv[1], a) = nonthpopinv(p0, sol0)
+    else
+        (a, nonth_popinv[1]) = nonthpopinv(p0, sol0)
+    end
+
+    if p.lasinglevel in ['U', "U"]
+        for j in 1:length(wi)-1
+            p.WiU = wi[j+1]
+            (p, sol) = func(p)
+            (nonth_popinv[j+1], a) = nonthpopinv(p, sol)
+        end
+    elseif p.lasinglevel in ['L', "L"]
+        for j in 1:length(wi)-1
+            p.WiL = wi[j+1]
+            (p, sol) = func(p)
+            (a, nonth_popinv[j+1]) = nonthpopinv(p, sol)
+        end
+    else
+        throw(ArgumentError("level can only be L or U!"))
+    end
+    p0.taus = comptaus(vec(nonth_popinv), wi)*1e-6
+
+    p0.THzpower = outpowermode(p0, sol0)
+    return p0, sol0
 end
 
 function OPFIRinfo(p)
@@ -55,121 +89,15 @@ function OPFIRinfo(p)
     println()
 end
 
-function outputpower(p, level, cavitymode; mumps_solver=0, lossfactor=1.0)
-    p.WiU = p.WiL = 0.
-    wi = vcat(0.0, 0.1, 0.2)
-    nonth_popinv = zeros(length(wi))
-
-    OPFIRinfo(p)
-
-    (p0, sol0) = func(p, mumps_solver=mumps_solver)
-
-    if level in ['U', "U"]
-        (nonth_popinv[1], a) = nonthpopinv(p0, sol0)
-    else
-        (a, nonth_popinv[1]) = nonthpopinv(p0, sol0)
-    end
-
-    if level in ['U', "U"]
-        for j in 1:length(wi)-1
-            p.WiU = wi[j+1]
-            (p, sol) = func(p, mumps_solver=mumps_solver)
-            (nonth_popinv[j+1], a) = nonthpopinv(p, sol)
-        end
-    elseif level in ['L', "L"]
-        for j in 1:length(wi)-1
-            p.WiL = wi[j+1]
-            (p, sol) = func(p, mumps_solver=mumps_solver)
-            (a, nonth_popinv[j+1]) = nonthpopinv(p, sol)
-        end
-    else
-        throw(ArgumentError("level can only be L or U!"))
-    end
-    taus = comptaus(vec(nonth_popinv), wi)*1e-6
-
-    println("taus: ", taus)
-
-    laspower = outpowermode(p0, sol0, level, cavitymode, taus, lossfactor=lossfactor)
-    # alpha = cavityloss(p0, level, cavitymode)
-    # ΔN = totinv(p0, sol0, level)
-    # νTHZ = level=='U' ? p0.f_dir_lasing : p0.f_ref_lasing
-    # σν = (p0.c/νTHZ)^2/8/π/p0.t_spont * 1/pi/p0.Δ_fP
-    # Φ = (ΔN*σν/alpha-1)/taus/σν
-    # laspower = Φ * (p0.h*νTHZ)/2 * pi * (p0.radius/100)^2 * efftrans(cavitymode)
-    println("output power: ", laspower[1])
-    println()
-    return laspower, sol0, p0, taus
-end
-
-#############################################################################
-### time evolution functions
-function func_tevol(p)
-  sol_0 = zeros(p.num_layers * p.layer_unknown)
-  sol_f = zeros(p.num_layers * p.layer_unknown, length(p.evol_t)-1)
-
-  dndt(t, sol) = dndt_p(p, t, sol)
-
-  for i in 1:length(p.evol_t)-1
-    println("t = ", p.evol_t[i])
-    println("L_eff = ", p.L_eff)
-    println("alpha = ", sum(p.alpha_r.*p.r_int)/sum(p.r_int))
-    tspan = [p.evol_t[i]; p.evol_t[i+1]]
-    (t, sol_total) = ode45(dndt, sol_0, tspan; abstol=1e-3, reltol=1e-2)
-    sol_0 = sol_total[end]
-    sol_f[:, i] = sol_total[end]
-
-    if p.model_flag == 2
-      updateTv(p, sol_0)
-      if p.err_tv == true
-        break
-      end
-      updateks(p)
-    end
-  end
-
-  return (p, sol_f)
-end
-
-
-function dndt_p(p, t, sol)
-  max_ele = p.num_freq * p.num_layers * (p.n_rot*(p.n_rot+2) + p.n_vib*(p.n_rot+p.n_vib+2))
-
-  rowind = ones(Int64, max_ele)
-  colind = ones(Int64, max_ele)
-  value = zeros(max_ele)
-  rhs = zeros(p.num_layers*p.layer_unknown)
-
-  update_alpha_from_N!(p, sol)
-  # println(p.alpha_r)
-  update_Param_from_alpha!(p, sol)
-
-  compute_rhs(rhs, p, sol)
-  compute_row_col_val(rowind, colind, value, p, sol)
-
-  matrix = sparse(rowind, colind, value)
-
-  return (matrix*sol + rhs)
-
-end
-
 ###############################################################################
-### functions to compute the population inversion and output power ###
-function total_NuInv(p, sol)
-    invU = zeros(p.num_layers)
-    for k = 1:p.num_layers
-        invU[k] = sum(inv_U_dist_layer(p, sol, k))
-        # invU[k] = Nu_NT_dist_layer(p, sol, k)[1] - p.g_U/p.g_L*Nu_1_NT_dist_layer(p, sol, k)[1]
-    end
-    return sum(p.r_int.*invU)/sum(p.r_int)
-end
-
-function totinv(p, sol, llevel)
+### functions to compute the population inversion ###
+function totinv(p, sol)
     popinv = zeros(p.num_layers)
-    if llevel in ['U', "U"]
+    if p.lasinglevel in ['U', "U"]
         for k = 1:p.num_layers
             popinv[k] = sum(inv_U_dist_layer(p, sol, k))
         end
-    elseif llevel in ['L', "L"]
+    elseif p.lasinglevel in ['L', "L"]
         for k = 1:p.num_layers
             popinv[k] = sum(inv_L_dist_layer(p, sol, k))
         end
@@ -179,6 +107,51 @@ function totinv(p, sol, llevel)
     return sum(p.r_int.*popinv)/sum(p.r_int)
 end
 
+function nonthpopinv(p, sol)
+    invU = zeros(p.num_layers)
+    invL = zeros(p.num_layers)
+    for kl = 1:p.num_layers
+        invU[kl] = sum(Nu_NT_dist_layer(p,sol,kl) - p.g_U/(p.g_U-2)*Nu_1_NT_dist_layer(p,sol,kl))
+        invL[kl] = sum(Nl_1_NT_dist_layer(p,sol,kl) - (p.g_L+2)/p.g_L*Nl_NT_dist_layer(p,sol,kl))
+    end
+    total_invU = sum(p.r_int.*invU)/sum(p.r_int)
+    total_invL = sum(p.r_int.*invL)/sum(p.r_int)
+    return (total_invU, total_invL)
+end
+
+#############################################################
+## cavity loss
+function ohmicloss(p)
+    radius_m = p.radius/100
+    x0 = zerobessel(p.cavitymode)
+    m = parse(Int, p.cavitymode[3])
+
+    resitivityCu = 2.0e-8 # copper resistivity at room temperature;
+    conductivityCu = 1/resitivityCu # copper conductivity at room temperature;
+    mu = 4*pi*1e-7 # magnetic permeability in copper
+
+    eta = 377 # impedance of air in ohms
+    f0 = (p.lasinglevel in ['U', "U"] ? p.f_dir_lasing : p.f_ref_lasing)
+    lambda = p.c/f0 # wavelength in m
+    k0 = 2*pi/lambda # wavevector
+    Rs = sqrt(pi*f0*mu/conductivityCu) # in ohms
+
+    if occursin("TE", p.cavitymode)
+        lossval = Rs/(radius_m*eta*sqrt(1-(x0/k0/radius_m)^2))*
+                ((x0/k0/radius_m)^2+m^2/(x0^2-m^2)) #; % in 1/m
+    elseif contains(p.cavitymode, "TM")
+        lossval = Rs/(radius_m*eta*sqrt(1-(x0/k0/radius_m)^2))
+    end
+    return lossval
+end
+
+function cavityloss(p) # in m^-1
+    Rback = 1.0
+    Rfront = 1 - p.frontmirrorT_THz
+    αohmic = ohmicloss(p)
+    αtrans = - log(Rfront * Rback)/(2p.L/100)
+    return (αohmic + αtrans) * p.lossfactor
+end
 
 function zerobessel(m)
     # mode_num: 1: TE01 / 2: TE12 / 3: TE02 / 4: TE22 / 5: TE11 / 6: TE21 / 7: TM01 / 8: TM11
@@ -195,69 +168,61 @@ function zerobessel(m)
            throw(ArgumentError("Cavity mode entered is not supported yet!"))
 end
 
-function total_NlInv(p, sol)
-    invL = zeros(p.num_layers)
-    for k = 1:p.num_layers
-        invL[k] = sum(inv_L_dist_layer(p, sol, k))
+##################################################
+## linear fit the taus
+function comptaus(nonth_popinv, wi_list)
+    tmp = (nonth_popinv) / nonth_popinv[1]
+    a, b = mylinreg(wi_list*1.0, 1 ./ tmp .- 1)
+    return b
+end
+
+function mylinreg(x, y)
+    return hcat(fill!(similar(x), 1), x) \ y
+end
+###############################################
+function compfraction(p, sol)
+    N0A = N3A = NΣA = 0.
+    for j in 1:p.num_layers
+        N0A += ((sol[p.layer_unknown*j-5] + p.ntotal*p.f_G_0)) * p.r_int[j]
+        N3A += ((sol[p.layer_unknown*j-4] + p.ntotal*p.f_3_0)) * p.r_int[j]
+        NΣA += ((sol[p.layer_unknown*j-3] + p.ntotal*p.f_6_0)) * p.r_int[j]
     end
-    return sum(p.r_int.*invL)/sum(p.r_int)
+    f0 = N0A/sum(N0A+N3A+NΣA)
+    f3 = N3A/sum(N0A+N3A+NΣA)
+    fΣ = NΣA/sum(N0A+N3A+NΣA)
+    return (f0, f3, fΣ)
 end
 
-function nonthpopinv(p, sol)
-    invU = zeros(p.num_layers)
-    invL = zeros(p.num_layers)
-    for kl = 1:p.num_layers
-        invU[kl] = sum(Nu_NT_dist_layer(p,sol,kl) - p.g_U/(p.g_U-2)*Nu_1_NT_dist_layer(p,sol,kl))
-        invL[kl] = sum(Nl_1_NT_dist_layer(p,sol,kl) - (p.g_L+2)/p.g_L*Nl_NT_dist_layer(p,sol,kl))
+
+#################################################################################
+## compute the output power with mode overlapping ##
+function outpowermode(p, sol; Δnu = 4e6*(p.pressure/1e3), avg = true)
+    νTHZ = p.lasinglevel in ['U', "U"] ? p.f_dir_lasing : p.f_ref_lasing
+    ΔnuD = p.Δ_f₀D*p.f_dir_lasing/p.f₀
+    ΔnuP = p.Δ_fP0
+    Δnu = ΔnuD + p.Δ_fP0
+    σν = (p.c/νTHZ)^2/8/π/p.t_spont * 1/pi/Δnu
+
+    p.cavityloss = cavityloss(p)
+    ΔN = totinv(p, sol)
+
+    Φ0 = (ΔN*σν/p.cavityloss-1)/p.taus/σν
+
+    f = νTHZ
+    if avg
+        return Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(p.cavitymode)
+    else
+        Φ = nlsolve((fvec, x) -> begin
+                    fvec[1] = gaincoefmode(x[1], νTHZ, p, sol, p.lasinglevel, p.cavitymode, p.taus, Δnu=ΔnuP) - p.cavityloss
+                end, [Φ0], iterations=100)
+        if Φ.iterations > 99
+            return -1., Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(p.cavitymode)
+        else
+            return Φ.zero[1] * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(p.cavitymode),
+            Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(p.cavitymode)
+        end
     end
-    total_invU = sum(p.r_int.*invU)/sum(p.r_int)
-    total_invL = sum(p.r_int.*invL)/sum(p.r_int)
-    return (total_invU, total_invL)
 end
-
-function popinvth(p, level, cavitymode)
-    ν0 = (p.f_dir_lasing+p.f_ref_lasing)/2
-    lambda = p.c/ν0
-    alpha = cavityloss(p, level, cavitymode) # unit m^-1
-    Nt = 8*pi^2 / lambda^2 * p.t_spont * alpha * sum(p.Δ_f_NTF.*p.r_int)/sum(p.r_int)
-    return Nt
-end
-
-function ohmicloss(p, llevel, cavitymode)
-radius_m = p.radius/100
-x0 = zerobessel(cavitymode)
-m = parse(Int, cavitymode[3])
-
-resitivityCu = 2.0e-8 # copper resistivity at room temperature;
-conductivityCu = 1/resitivityCu # copper conductivity at room temperature;
-mu = 4*pi*1e-7 # magnetic permeability in copper
-
-eta = 377 # impedance of air in ohms
-f0 = (llevel in ['U', "U"] ? p.f_dir_lasing : p.f_ref_lasing)
-lambda = p.c/f0 # wavelength in m
-k0 = 2*pi/lambda # wavevector
-Rs = sqrt(pi*f0*mu/conductivityCu) # in ohms
-
-if occursin("TE", cavitymode)
-    lossval = Rs/(radius_m*eta*sqrt(1-(x0/k0/radius_m)^2))*
-            ((x0/k0/radius_m)^2+m^2/(x0^2-m^2)) #; % in 1/m
-elseif contains(cavitymode, "TM")
-    lossval = Rs/(radius_m*eta*sqrt(1-(x0/k0/radius_m)^2))
-end
-return lossval
-end
-
-
-function cavityloss(p, llevel, cavitymode; lossfactor=1.0, Rb=1.0) # in m^-1
-    Rback = 1.
-    Rfront = (1-efftrans(cavitymode)) * Rback
-    αohmic = ohmicloss(p, llevel, cavitymode)
-    αtrans = - log(Rfront*Rback * Rb)/(2p.L/100)
-    # println("ohmic loss: " * string(αohmic) * " m-1")
-    # println("transmission/reflection loss: " * string(αtrans) * " m-1")
-    return (αohmic + αtrans) * lossfactor
-end
-
 
 function gaincoeffcient(f, Φ, p, sol, taus, level)
     γ = zeros(p.num_freq)
@@ -286,61 +251,6 @@ function gaincoeffcient(f, Φ, p, sol, taus, level)
         end
     end
     return sum(γ)
-end
-
-function comptaus(nonth_popinv, wi_list)
-    tmp = (nonth_popinv) / nonth_popinv[1]
-    a, b = mylinreg(wi_list*1.0, 1 ./ tmp .- 1)
-    return b
-end
-
-function mylinreg(x, y)
-    return hcat(fill!(similar(x), 1), x) \ y
-end
-
-function compfraction(p, sol)
-    N0A = N3A = NΣA = 0.
-    for j in 1:p.num_layers
-        N0A += ((sol[p.layer_unknown*j-5] + p.ntotal*p.f_G_0)) * p.r_int[j]
-        N3A += ((sol[p.layer_unknown*j-4] + p.ntotal*p.f_3_0)) * p.r_int[j]
-        NΣA += ((sol[p.layer_unknown*j-3] + p.ntotal*p.f_6_0)) * p.r_int[j]
-    end
-    f0 = N0A/sum(N0A+N3A+NΣA)
-    f3 = N3A/sum(N0A+N3A+NΣA)
-    fΣ = NΣA/sum(N0A+N3A+NΣA)
-    return (f0, f3, fΣ)
-end
-
-
-#################################################################################
-## compute the output power with mode overlapping ##
-function outpowermode(p, sol, llevel, cavitymode, taus; lossfactor = 1., Rb=1.0, Δnu = 4e6*(p.pressure/1e3), avg = true)
-    νTHZ = llevel in ['U', "U"] ? p.f_dir_lasing : p.f_ref_lasing
-    dν = 0.e6
-    νTHZ += dν
-    # println(Δnu)
-    ΔnuD = p.Δ_f₀D*p.f_dir_lasing/p.f₀
-    ΔnuP = Δnu
-    # Δnu = sqrt(ΔnuD^2 + ΔnuP^2)
-    Δnu = ΔnuD + ΔnuP
-    σν = (p.c/νTHZ)^2/8/π/p.t_spont * 1/pi*Δnu/(Δnu^2 + dν^2)
-    alpha = cavityloss(p, llevel, cavitymode, lossfactor=lossfactor, Rb=Rb)
-    ΔN = totinv(p, sol, llevel)
-    Φ0 = (ΔN*σν/alpha-1)/taus/σν
-    f = νTHZ
-    if avg
-        return Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(cavitymode)
-    else
-        Φ = nlsolve((fvec, x) -> begin
-                    fvec[1] = gaincoefmode(x[1], f, p, sol, llevel, cavitymode, taus, Δnu=ΔnuP) - alpha
-                end, [Φ0], iterations=100)
-        if Φ.iterations > 99
-            return -1., Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(cavitymode)
-        else
-            return Φ.zero[1] * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(cavitymode),
-            Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(cavitymode)
-        end
-    end
 end
 
 function gaincoefmode(Φ, f, p, sol, llevel, cavitymode, taus; Δnu = 4e6*(p.pressure/1e3))
@@ -417,6 +327,7 @@ function gaincoefmode(Φ, f, p, sol, llevel, cavitymode, taus; Δnu = 4e6*(p.pre
     return numerator/denom
 end
 
+####################################################
 function efftrans(cavitymode)
     n = parse(Int, cavitymode[3])
     # println(n)
@@ -436,6 +347,8 @@ function efftrans(cavitymode)
 
 end
 
+###################################################
+# to compute maxT
 function avgkernel(r1, r2, n, t)
     r = linspace(r1, r2, 1001)
     dr = (r2 - r1)/1000
@@ -456,6 +369,14 @@ function maxT(n, t)
         avgk[k] = avgkernel(r0[k], r0[k+1], n, t)
     end
     return maximum(avgk/avgkernel(0, 1, n, t))
+end
+####################################################
+function popinvth(p, level, cavitymode)
+    ν0 = (p.f_dir_lasing+p.f_ref_lasing)/2
+    lambda = p.c/ν0
+    alpha = cavityloss(p) # unit m^-1
+    Nt = 8*pi^2 / lambda^2 * p.t_spont * alpha * sum(p.Δ_f_NTF.*p.r_int)/sum(p.r_int)
+    return Nt
 end
 
 function pumpthreshold(p, level, cavitymode; mumps_solver=0, lossfactor=1.0, guess=0.1)
