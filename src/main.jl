@@ -379,10 +379,10 @@ function popinvth(p, level, cavitymode)
     return Nt
 end
 
-function pumpthreshold(p, level, cavitymode; mumps_solver=0, lossfactor=1.0, guess=0.1)
+function pumpthreshold(p; guess=0.1)
     Pth = nlsolve((fvec, x) -> begin
                 p.power = x[1]
-                fvec[1] = outputpower(p, level, cavitymode, mumps_solver=mumps_solver, lossfactor=lossfactor)[1]
+                fvec[1] = outputpower(p)[1].THzpower
             end, [guess], iterations=100)
     return Pth.zero[1]
 end

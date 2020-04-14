@@ -85,21 +85,21 @@ function LinearMolecule(DefaultT=Float64;
         B = B==-1 ? 0.419*c/1e7 : B # in GHz
         DJ = DJ==-1 ? 17.6e-8*c/1e7 : DJ
         EG, E3 = 0, 2224.0
+        g3 = 1
         dipolemoment = 0.17
         dipolederivative = 0.2457
     elseif name == "HCN"
         M = 27
-        pbroadenwidth = pbroadenwidth==-1 ? 3.2e6 : pbroadenwidth
-        σ_GKC = σ_GKC==-1 ? 15.0 : σ_GKC
-        σ_DD = σ_DD==-1 ? 35.0 : σ_DD
+        pbroadenwidth = pbroadenwidth==-1 ? 18.4e6 : pbroadenwidth
+        σ_GKC = σ_GKC==-1 ? 25.0 : σ_GKC
+        σ_DD = σ_DD==-1 ? 522.0 : σ_DD
         σ_SPT = σ_SPT==-1 ? 15.0 : σ_SPT
-        B = B==-1 ? 66.8 : B
-        DJ = DJ==-1 ? 0 : DJ
-        EG, E3 = 0, 2097.0
-        println("input E3 for HCN!!")
+        B = B==-1 ? 44.3159757 : B
+        DJ = DJ==-1 ? 87.24e-9 : DJ
+        EG, E3 = 0, 1424.0
+        g3 = 2
         dipolemoment = 2.98
-        dipolederivative = 0.1
-        println("input dipole derivative for HCN!")
+        dipolederivative = 0.0493
     elseif name == "CO"
         M = 28
         pbroadenwidth = pbroadenwidth==-1 ? 3.2e6 : pbroadenwidth
@@ -109,6 +109,7 @@ function LinearMolecule(DefaultT=Float64;
         B = B==-1 ? 57.635968 : B
         DJ = DJ==-1 ? 0.1835058E-6 : DJ
         EG, E3 = 0, 2143.0
+        g3 = 1
         dipolemoment = 0.12
         dipolederivative = 0.107555
     end
@@ -150,7 +151,7 @@ function LinearMolecule(DefaultT=Float64;
 
     Q = Qv(T, name)
     f_G_0 = exp(-EG/kBT)/Q
-    f_3_0 = exp(-E3/kBT)/Q
+    f_3_0 = g3*exp(-E3/kBT)/Q
 
     # alpha_0 in m^-1
     totalNL0 = CL * ntotal * f_G_0
@@ -286,14 +287,14 @@ function LinearMolecule(DefaultT=Float64;
     )
 end
 
-function compC(B, DJ, M, T, JL)
+function compC(B, DJ, M, T, JL; nJ=1000)
     # compute fraction of JL in that vibrational level
-    Js = 0:1:1000
+    Js = 0:1:nJ
     Q = ql = 0.0
     # B, DJ = [0.419, 17.6e-8]*2.99792458e8/1e7 # in GHz
     for J in Js
         Ej = B*J*(J+1) - DJ*J^2*(J+1)^2
-        qj = (2J+1) * exp(-Ej*1e9*6.626068e-34/(1.38064852e-23*T))
+        qj = (2J+1) * exp(-Ej*6.626068e-2/(1.38064852*T))
         Q += qj
         if J == JL
             ql = qj
