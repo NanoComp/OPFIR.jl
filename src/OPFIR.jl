@@ -7,11 +7,12 @@ using JLD
 using ODE
 using SparseArrays, LinearAlgebra, StatsBase, SpecialFunctions
 
-for f in ("parameters.jl", "LinearMolecule.jl", "N2O.jl", "main.jl",
-          "anderson_accel.jl", "fixedpoint.jl",
+for f in ("ParamsLinearMolecule.jl", "LinearMolecule.jl",
+          "main.jl", "fixedpoint.jl",
+          "anderson_accel.jl",
           "compute_rhs.jl", "compute_row_col_val.jl",
-          "gain.jl", "pump.jl", "Tv_model.jl", "E_vib.jl",
-          "utils.jl", "three_level_model.jl", "molecules.jl")
+          "gain.jl", "pump.jl", "E_vib.jl",
+          "three_level_model.jl")
     include(f)
 end
 

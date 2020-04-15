@@ -1,6 +1,6 @@
 function μij2_THz(p)
     if p.M == 44
-        return 0.17^2/2
+        return 0.17^2
     end
     if p.M == 28
         return 0.12^2/2
@@ -137,7 +137,7 @@ function PTHz(Pqcl, p; given_α_cell=false, α_given=0.3, Tpinhole = 0.016, mode
     if given_α_cell
         α_cell = α_given
     else
-        α_cell = OPFIR.ohmicloss(p, 'U', "TE01")  - log(1-Tpinhole)/2/(p.L/100)
+        α_cell = OPFIR.ohmicloss(p)  - log(1-Tpinhole)/2/(p.L/100)
     end
     kdd = kddrate(p)
     kw = wallrate(p.v_avg/sqrt(2), p.radius/100, p)
