@@ -94,7 +94,7 @@ function compute_th(p; given_α_cell=false, α_given=0.3, th0=0.1, Tpinhole=0.01
     if given_α_cell
         α_cell = α_given
     else
-        α_cell = OPFIR.ohmicloss(p, 'U', "TE01")  - log(1-Tpinhole)/2/(p.L/100)
+        α_cell = OPFIR.ohmicloss(p)  - log(1-Tpinhole)/2/(p.L/100)
     end
     solvePth = nlsolve((fvec, x) -> begin
         # kw = wallrate(p.v_avg/sqrt(2), p.radius/100, p)
