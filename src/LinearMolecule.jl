@@ -259,7 +259,7 @@ function LinearMolecule(DefaultT=Float64;
 
     cavityloss = 0
 
-    return ParamsLinearMolecule3{DefaultT}(
+    return ParamsLinearMolecule{DefaultT}(
     radius, pump_radius, L, L_eff, T, cavitywall, cavitymode, frontmirrorT_THz,
     frontmirrorT_IR, backmirrorR_IR, cavityloss, lossfactor, lasinglevel,
     h, c, ev, kB, norm_time, NA, mu0, eps0, kBT,

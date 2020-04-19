@@ -1,4 +1,4 @@
-mutable struct ParamsLinearMolecule3{T<:Real}
+mutable struct ParamsLinearMolecule{T<:Real}
     ## cavity property
     radius::T   # radius in cm
     pump_radius::T
