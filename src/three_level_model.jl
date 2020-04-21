@@ -1,6 +1,6 @@
 function μij2_THz(p)
     if p.M == 44
-        return 0.17^2
+        return 0.17^2/2
     end
     if p.M == 28
         return 0.12^2/2
