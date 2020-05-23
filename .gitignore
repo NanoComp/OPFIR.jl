@@ -1,8 +1,0 @@
-model*/*
-.DS_Store
-run_*/
-notebooks/
-Stark_Backward*/
-.gitignore
-3*/
-example/.ipynb_checkpoints/

@@ -26,7 +26,8 @@ function Δfp(p)
 end
 
 function wallrate(u, Rcell, p)
-    return 2u/3Rcell # /(p.pressure/80)
+    kw = p.MFP>p.radius ? 2u/3Rcell : 2/3*u*p.MFP/100/(p.radius/100)^2 # /(p.pressure/80)
+    return kw
 end
 
 function kddrate(p)
