@@ -4,7 +4,7 @@ function ind_offset(p, n)
 end
 # index of the thermal pool U and L are in, i.e., V3 and V0
 function ind_p_U(p, layer)
-    return p.layer_unknown * layer - p.n_vib + 7
+    return p.layer_unknown * layer - p.n_vib + p.v_excited_index
 end
 
 function ind_p_L(p, layer)

@@ -88,6 +88,7 @@ mutable struct ParamsLinearMolecule{T<:Real}
     Q::T        # partition function
     f_G_0::T
     f_3_0::T
+    v_excited_index::Integer
 
     f_dir_lasing::T
     f_ref_lasing::T

@@ -88,6 +88,7 @@ function LinearMolecule(DefaultT=Float64;
         g3 = 1
         dipolemoment = 0.17
         dipolederivative = 0.2457
+        v_excited_index = 7
     elseif name == "HCN"
         M = 27
         pbroadenwidth = pbroadenwidth==-1 ? 18.4e6 : pbroadenwidth
@@ -100,6 +101,7 @@ function LinearMolecule(DefaultT=Float64;
         g3 = 2
         dipolemoment = 2.98
         dipolederivative = 0.0493
+        v_excited_index = 3
     elseif name == "CO"
         M = 28
         pbroadenwidth = pbroadenwidth==-1 ? 3.2e6 : pbroadenwidth
@@ -112,6 +114,7 @@ function LinearMolecule(DefaultT=Float64;
         g3 = 1
         dipolemoment = 0.12
         dipolederivative = 0.107555
+        v_excited_index = 2
     end
 
     Δ_fP0 = pbroadenwidth*(pressure/1000.0) * pbfactor
@@ -273,7 +276,7 @@ function LinearMolecule(DefaultT=Float64;
     f₀, Δ_f₀D, f_offset, f_pump,
     dipolemoment, dipolederivative,
     alpha_0, alpha_r,
-    EG, E3, Q, f_G_0, f_3_0,
+    EG, E3, Q, f_G_0, f_3_0, v_excited_index,
     f_dir_lasing, f_ref_lasing,
     t_spont,
     Js, n_rot, n_vib, cj, frel_vib, kVVmat, n0,

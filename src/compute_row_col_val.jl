@@ -46,7 +46,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             val = - p.pump_IR[vi, ri] * p.CL * p.gauss_dist[vi]
             s = put_row_col_val(p, rowind, colind, value, row, col, val, s)
 
-            col = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 7
+            col = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + p.v_excited_index
             val = p.pump_IR[vi, ri] * p.g_L/p.g_U * p.CU * p.gauss_dist[vi]
             s = put_row_col_val(p, rowind, colind, value, row, col, val, s)
 
@@ -64,7 +64,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             val = p.pump_IR[vi, ri] * p.CL * p.gauss_dist[vi]
             s = put_row_col_val(p, rowind, colind, value, row, col, val, s)
 
-            col = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 7
+            col = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + p.v_excited_index
             val = - p.pump_IR[vi, ri] * p.g_L/p.g_U * p.CU * p.gauss_dist[vi]
             s = put_row_col_val(p, rowind, colind, value, row, col, val, s)
         end
@@ -124,7 +124,7 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             end
         end
         # V3:
-        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 7
+        row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + p.v_excited_index
         for vi in 1:p.num_freq
             for k in 1:p.n_rot÷2
                 col = (ri-1)*p.layer_unknown + (vi-1)*p.n_rot+ p.n_rot÷2 + k
