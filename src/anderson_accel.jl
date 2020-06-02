@@ -1,3 +1,5 @@
+using LinearAlgebra
+
 """
     andersonaccel!(g!, x; m, norm=Base.norm, reltol=sqrt(ɛ), abstol=0, maxiters)
 
@@ -18,11 +20,11 @@ is reached.  By default, `reltol` is the square root of the precision of `x`,
 `abstol` is zero, and `maxiters` is `typemax(Int)`.  `norm` defaults to the built-in
 `norm(x)` function (the L₂ norm), but can be changed via the `norm` keyword.
 """
-function andersonaccel!{R<:AbstractFloat}(g!, x::Union{AbstractVector{R},AbstractVector{Complex{R}}};
+function andersonaccel!(g!, x::Union{AbstractVector{R},AbstractVector{Complex{R}}};
                                           m = max(1, min(10, (length(x)+1)÷2)), # max #steps to remember
-                                          norm=Base.norm, # norm to use for stop tolerance
+                                          norm=LinearAlgebra.norm, # norm to use for stop tolerance
                                           reltol::Real = sqrt(eps(real(R))),
-                                          abstol::Real=0, maxiter::Int=typemax(Int))
+                                          abstol::Real=0, maxiter::Int=typemax(Int)) where R <: AbstractFloat
     m < 1 && throw(ArgumentError("m=$m < 1 is not allowed"))
     reltol < 0 && throw(ArgumentError("reltol=$reltol < 0 is not allowed"))
     abstol < 0 && throw(ArgumentError("abstol=$abstol < 0 is not allowed"))
@@ -30,7 +32,7 @@ function andersonaccel!{R<:AbstractFloat}(g!, x::Union{AbstractVector{R},Abstrac
     m > max(1,n+1) && throw(ArgumentError("m=$m > n-1 = $n-1 is not allowed"))
 
     T = eltype(x)
-    y = Array(T, n)
+    y = Array{T}(undef, n)
 
     if m == 1 # simple fixed-point iteration, no memory
         for k = 1:maxiter
@@ -50,11 +52,11 @@ function andersonaccel!{R<:AbstractFloat}(g!, x::Union{AbstractVector{R},Abstrac
     # pre-allocate all of the arrays we will need.  The
     # goal is to allocate once and re-use the storage
     # during the iteration by operating in-place.
-    f = Array(T, n)
-    X = Array(T, n, m-1)
-    F = Array(T, n, m-1)
-    Q = Array(T, n, m-1) # space for QR factorization
-    γ = Array(T, max(n,m-1)) # not m-1, to store rhs (f) and overwrite in-place via A_ldiv_B!
+    f = Array{T}(undef, n)
+    X = Array{T}(undef, n, m-1)
+    F = Array{T}(undef, n, m-1)
+    Q = Array{T}(undef, n, m-1) # space for QR factorization
+    γ = Array{T}(undef, max(n,m-1)) # not m-1, to store rhs (f) and overwrite in-place via A_ldiv_B!
 
     # first iteration is just x₂ = g(x₁) = y₁
     g!(y, x)
@@ -79,16 +81,16 @@ function andersonaccel!{R<:AbstractFloat}(g!, x::Union{AbstractVector{R},Abstrac
         # construct subarrays to work in-place on a
         # subset of the columns
         mₖ = min(m, k)
-        Xₖ = sub(X, 1:n, 1:mₖ-1)
-        Fₖ = sub(F, 1:n, 1:mₖ-1)
-        γₖ = sub(γ, 1:mₖ-1)
+        Xₖ = view(X, 1:n, 1:mₖ-1)
+        Fₖ = view(F, 1:n, 1:mₖ-1)
+        γₖ = view(γ, 1:mₖ-1)
 
         # use this once Julia issue #13728 is fixed:
-        # Qₖ = sub(Q, 1:n, 1:mₖ-1)
+        # Qₖ = view(Q, 1:n, 1:mₖ-1)
         # QR = qrfact!(copy!(Qₖ, Fₖ), Val{true})
-        QR = m == mₖ ? qrfact!(copy!(Q, Fₖ), Val{true}) : qrfact(Fₖ, Val{true})
-        A_ldiv_B!(QR, γ) # overwrites γₖ in-place with Fₖ \ f
-
+        QR = m == mₖ ? qr!(copyto!(Q, Fₖ), Val(true)) : qr(Fₖ, Val(true))
+        # LinearAlgebra.A_ldiv_B!(QR, γ) # overwrites γₖ in-place with Fₖ \ f
+        LinearAlgebra.ldiv!(QR, γ)
         # We replace columns of F and X with the new
         # data in-place.  Rather than always appending
         # the new data in the last column, we cycle
@@ -114,7 +116,7 @@ function andersonaccel!{R<:AbstractFloat}(g!, x::Union{AbstractVector{R},Abstrac
 end
 
 """
-    andersonaccel(g, x; m, norm=Base.norm, reltol=sqrt(ɛ), abstol=0, maxiters)
+    andersonaccel(g, x; m, norm=LinearAlgebra.norm, reltol=sqrt(ɛ), abstol=0, maxiters)
 
 Solve the fixed-point problem \$g(x)=x\$ to given relative and absolute tolerances,
 returning the solution \$x\$, via Anderson acceleration of a fixed-point
@@ -125,9 +127,9 @@ the "memory" `m` of the algorithm, the relative (`reltol`) and absolute
 (`abstol`) stopping tolerances in the given `norm`, and the maximum
 number of itertions (`maxiters`).
 """
-andersonaccel{T<:Number}(g, x::AbstractVector{T}; kws...) =
-    andersonaccel!((y,x) -> copy!(y, g(x)),
-                   copy!(Array(typeof(float(one(T))), length(x)), x);
+andersonaccel(g, x::AbstractVector{T}; kws...) where T <: Number =
+    andersonaccel!((y,x) -> copyto!(y, g(x)),
+                   copyto!(Array{typeof(float(one(T)))}(undef,length(x)), x);
                    kws...)
 
-andersonaccel{T<:Number}(g, x::T; kws...) = andersonaccel(x -> g(x[1]), [x]; kws...)[1]
+andersonaccel(g, x::T; kws...) where T <: Number = andersonaccel(x -> g(x[1]), [x]; kws...)[1]

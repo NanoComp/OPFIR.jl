@@ -586,13 +586,13 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + 2
 
             val = -non_kvsplit * (N23A + N23_0)
-            s = put_row_col_val(rowind, colind, value, row, row-1, -2.*val, s)
+            s = put_row_col_val(rowind, colind, value, row, row-1, -2. * val, s)
 
             val = -non_kvsplit * N0A_0
-            s = put_row_col_val(rowind, colind, value, row, row+2, -2.*val, s)
+            s = put_row_col_val(rowind, colind, value, row, row+2, -2. * val, s)
 
             val = + non_kvsplit * (N3A + 2 * N3A_0)
-            s = put_row_col_val(rowind, colind, value, row, row, -2.*val, s)
+            s = put_row_col_val(rowind, colind, value, row, row, -2. * val, s)
 
             # V0E:
             row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + p.n_vib÷2 + 1
@@ -622,13 +622,13 @@ function compute_row_col_val(rowind, colind, value, p, sol_0)
             row = (ri-1)*p.layer_unknown + p.num_freq*p.n_rot + p.n_vib÷2 + 2
 
             val = -non_kvsplit * (N23E + N23_0)
-            s = put_row_col_val(rowind, colind, value, row, row-1, -2.*val, s)
+            s = put_row_col_val(rowind, colind, value, row, row-1, -2. * val, s)
 
             val = -non_kvsplit * N0E_0
-            s = put_row_col_val(rowind, colind, value, row, row+2, -2.*val, s)
+            s = put_row_col_val(rowind, colind, value, row, row+2, -2. * val, s)
 
             val = + non_kvsplit * (N3E + 2 * N3E_0)
-            s = put_row_col_val(rowind, colind, value, row, row, -2.*val, s)
+            s = put_row_col_val(rowind, colind, value, row, row, -2. * val, s)
         end
 
     end

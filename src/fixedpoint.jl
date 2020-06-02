@@ -44,7 +44,7 @@ function fixedpoint(sol_0, p, matrix_0, lu_mat0)
     end
 
     println("norm of sol diff = ", norm(sol_1 - sol_0) / norm(sol_1))
-    flush(STDOUT)
+    flush(stdout)
 
     return sol_1
 end

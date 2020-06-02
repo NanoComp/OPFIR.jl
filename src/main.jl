@@ -229,10 +229,10 @@ lambda = p.c/f0 # wavelength in m
 k0 = 2*pi/lambda # wavevector
 Rs = sqrt(pi*f0*mu/conductivityCu) # in ohms
 
-if contains(cavitymode, "TE")
+if occursin("TE", cavitymode)
     lossval = Rs/(radius_m*eta*sqrt(1-(x0/k0/radius_m)^2))*
             ((x0/k0/radius_m)^2+m^2/(x0^2-m^2)) #; % in 1/m
-elseif contains(cavitymode, "TM")
+elseif occursin("TM", cavitymode)
     lossval = Rs/(radius_m*eta*sqrt(1-(x0/k0/radius_m)^2))
 end
 return lossval
@@ -283,10 +283,13 @@ end
 
 function comptaus(nonth_popinv, wi_list)
     tmp = (nonth_popinv) / nonth_popinv[1]
-    a, b = linreg(wi_list*1.0, 1./tmp - 1)
+    a, b = mylinreg(wi_list*1.0, 1 ./ tmp .- 1)
     return b
 end
 
+function mylinreg(x, y)
+    return hcat(fill!(similar(x), 1), x) \ y
+end
 
 function compfraction(p, sol)
     N0A = N3A = NΣA = 0.
@@ -335,18 +338,18 @@ function gaincoefmode(Φ, p, sol, llevel, cavitymode, taus, σν)
     E_sq = 0.
     denom = 0.
     numerator = 0.
-    ϕ_list = linspace(0, 2*pi, 150)
+    ϕ_list = range(0, stop=2*pi, length=150)
     m = parse(Int, cavitymode[3])
     radius_m = p.radius/100
     kρ = zerobessel(cavitymode)/radius_m
     for ri = 1:p.num_layers
         r = p.r_int[ri]
         for ϕ in ϕ_list
-            if contains(cavitymode, "TM") ## TM modes
+            if occursin("TM", cavitymode) ## TM modes
                 Ez = besselj(m, kρ*r) * cos(m*ϕ)
                 Er = derv_bessel(m, kρ*r) * cos(m*ϕ)
                 Eϕ = m/(kρ*r) * besselj(m, kρ*r) * (-sin(m*ϕ))
-            elseif contains(cavitymode, "TE") ## TE modes
+            elseif occursin("TE", cavitymode) ## TE modes
                 Ez = 0
                 Er = m/(kρ*r) * besselj(m, kρ*r) * (-sin(m*ϕ))
                 Eϕ = derv_bessel(m, kρ*r) * cos(m*ϕ)
@@ -364,15 +367,15 @@ function gaincoefmode(Φ, p, sol, llevel, cavitymode, taus, σν)
     E_sq = 0.
     denom = 0.
     numerator = 0.
-    ϕ_list = linspace(0, 2*pi, 150)
+    ϕ_list = range(0, stop=2*pi, length=150)
     for ri = 1:p.num_layers
         r = p.r_int[ri]
         for ϕ in ϕ_list
-            if contains(cavitymode, "TM") ## TM modes
+            if occursin("TM", cavitymode) ## TM modes
                 Ez = besselj(m, kρ*r) * cos(m*ϕ)
                 Er = derv_bessel(m, kρ*r) * cos(m*ϕ)
                 Eϕ = m/(kρ*r) * besselj(m, kρ*r) * (-sin(m*ϕ))
-            elseif contains(cavitymode, "TE") ## TE modes
+            elseif occursin("TE", cavitymode) ## TE modes
                 Ez = 0
                 Er = m/(kρ*r) * besselj(m, kρ*r) * (-sin(m*ϕ))
                 Eϕ = derv_bessel(m, kρ*r) * cos(m*ϕ)
@@ -394,13 +397,13 @@ function efftrans(cavitymode)
     n = parse(Int, cavitymode[3])
     # println(n)
     t = zerobessel(cavitymode)
-    if contains(cavitymode, "TE")
+    if occursin("TE", cavitymode)
         P0 = (t^2-n^2) * besselj(n, t)^2
         t = 0.2*t
         Prad = t^2*(besselj(n-1, t)^2 - besselj(n-2, t)*besselj(n, t)) - 2*n*besselj(n,t)^2
         return Prad/P0
         # return maxT(n, zerobessel(cavitymode))
-    elseif contains(cavitymode, "TM")
+    elseif occursin("TM", cavitymode)
         P0 = t^2 * derv_bessel(n, t)^2
         t = 0.2*t
         Prad = t^2*(besselj(n-1, t)^2 - besselj(n-2, t)*besselj(n, t)) - 2*n*besselj(n,t)^2
@@ -410,7 +413,7 @@ function efftrans(cavitymode)
 end
 
 function avgkernel(r1, r2, n, t)
-    r = linspace(r1, r2, 1001)
+    r = range(r1, stop=r2, length=1001)
     dr = (r2 - r1)/1000
     ker = similar(r)
     for k in 1:length(r)

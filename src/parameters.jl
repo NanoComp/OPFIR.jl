@@ -1,4 +1,4 @@
-type Params{T<:Real}
+mutable struct Params{T<:Real}
     radius::T   # radius in cm
     pump_radius::T
     L::T        # length in cm
@@ -362,23 +362,23 @@ function Params(DefaultT=Float64;
     #### solver/discretization parameters
     ###################################################
     Δr = radius/100 / num_layers # in m
-    r_ext = linspace(0,radius/100,num_layers+1)
+    r_ext = range(0,stop=radius/100, length=num_layers+1)
     r_int = 0.5*(r_ext[1:end-1] + r_ext[2:end]) # in m
 
     f_range = 5*Δ_f₀D
     num_freq = round(Int64,max(50,2*f_range/(Δ_fP/4)))
     df = 2.0 * f_range / num_freq
-    f_dist_end = linspace(-f_range, f_range, num_freq + 1) + f₀
-    f_dist_ctr = f_dist_end[1:end-1] + df/2
+    f_dist_end = range(-f_range, stop=f_range, length=num_freq + 1) .+ f₀
+    f_dist_ctr = f_dist_end[1:end-1] .+ df/2
 
-    velocity = (f_dist_ctr - f₀)/f₀ # in unit c
-    f_dist_dir_lasing = velocity * f_dir_lasing + f_dir_lasing
-    f_dist_ref_lasing = velocity * f_ref_lasing + f_ref_lasing
+    velocity = (f_dist_ctr .- f₀) / f₀ # in unit c
+    f_dist_dir_lasing = velocity * f_dir_lasing .+ f_dir_lasing
+    f_dist_ref_lasing = velocity * f_ref_lasing .+ f_ref_lasing
 
-    f_dist_ctrB = f₀ - f₀ * velocity
+    f_dist_ctrB = f₀ .- f₀ * velocity
 
     norm_dist = Normal(f₀, Δ_f₀D / sqrt(2*log(2)))
-    pdf1 = pdf(norm_dist, f_dist_ctr)
+    pdf1 = pdf.(norm_dist, f_dist_ctr)
     gauss_dist = pdf1 / sum(pdf1)
 
     # assign J levels
@@ -430,8 +430,8 @@ function Params(DefaultT=Float64;
     fp_lasing = f_NT_normalized(f_dist_dir_lasing, Δ_fP, f_dir_lasing, df*f_dir_lasing/f₀) # not used
     fp_ref_lasing = f_NT_normalized(f_dist_ref_lasing, Δ_fP, f_ref_lasing, df*f_ref_lasing/f₀) # not used
 
-    f_dirgain_dist = linspace(f_dir_lasing-40e6, f_dir_lasing+40e6, 500)
-    f_refgain_dist = linspace(f_ref_lasing-40e6, f_ref_lasing+40e6, 500)
+    f_dirgain_dist = range(f_dir_lasing-40e6, stop=f_dir_lasing+40e6, length=500)
+    f_refgain_dist = range(f_ref_lasing-40e6, stop=f_ref_lasing+40e6, length=500)
     dirgain = zeros(size(f_dirgain_dist))
     refgain = zeros(size(f_refgain_dist))
 
@@ -512,7 +512,7 @@ function f_NT_ampl(ν, Δ_f_NT, f_pump)
 end
 
 function f_NT_normalized(ν, Δ_f_NT, f_pump, df)
-    SHB = 1/π * df * Δ_f_NT ./ ((ν - f_pump).^2 + Δ_f_NT^2)
+    SHB = 1/π * df * Δ_f_NT ./ ((ν .- f_pump).^2 .+ Δ_f_NT^2)
     # SHB = SHB/sum(SHB)
     return SHB
 end
