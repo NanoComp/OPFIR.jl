@@ -328,19 +328,19 @@ function gaincoefmode(Φ, f, p, sol, llevel, cavitymode, taus; Δnu = 4e6*(p.pre
 end
 
 ####################################################
-function efftrans(cavitymode)
+function efftrans(cavitymode; r_R=0.2)
     n = parse(Int, cavitymode[3])
     # println(n)
     t = zerobessel(cavitymode)
     if occursin("TE", cavitymode)
         P0 = (t^2-n^2) * besselj(n, t)^2
-        t = 0.2*t
+        t = r_R*t
         Prad = t^2*(besselj(n-1, t)^2 - besselj(n-2, t)*besselj(n, t)) - 2*n*besselj(n,t)^2
         return Prad/P0
         # return maxT(n, zerobessel(cavitymode))
     elseif contains(cavitymode, "TM")
         P0 = t^2 * derv_bessel(n, t)^2
-        t = 0.2*t
+        t = r_R*t
         Prad = t^2*(besselj(n-1, t)^2 - besselj(n-2, t)*besselj(n, t)) - 2*n*besselj(n,t)^2
         return Prad/P0
     end
