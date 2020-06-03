@@ -171,7 +171,7 @@ function LinearMolecule(DefaultT=Float64;
                 dipolemoment^2 * max(JL, JU)/(2JL+1) * 1e-36
     t_spont = 1/EinsteinA
 
-    Js, n_rot = Jlevels(JL, JU, K0)
+    Js, n_rot = Jlevels(JL, JU, K0, nrot_aboveJL)
 
     kDD = 19.8 * pressure * σ_DD/ sqrt(T*M)/1000.0 # 1/microsec
     ka = 19.8 * pressure * σ_SPT/ sqrt(T*M)/1000.0
@@ -315,9 +315,9 @@ function Qv(T, name)
     return Q
 end
 
-function Jlevels(JL, JU, K0)
+function Jlevels(JL, JU, K0, nrot_aboveJL)
     Jmin = 0 #max(K0, JL-N)
-    Jmax = JL + 8
+    Jmax = JL + nrot_aboveJL
     return Jmin:Jmax, (Jmax-Jmin+1)*2
 end
 
