@@ -210,16 +210,16 @@ function outpowermode(p, sol; Δnu = 4e6*(p.pressure/1e3), avg = true)
 
     f = νTHZ
     if avg
-        return Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(p.cavitymode)
+        return Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * p.frontmirrorT_THz
     else
         Φ = nlsolve((fvec, x) -> begin
                     fvec[1] = gaincoefmode(x[1], νTHZ, p, sol, p.lasinglevel, p.cavitymode, p.taus, Δnu=ΔnuP) - p.cavityloss
                 end, [Φ0], iterations=100)
         if Φ.iterations > 99
-            return -1., Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(p.cavitymode)
+            return -1., Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * p.frontmirrorT_THz
         else
-            return Φ.zero[1] * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(p.cavitymode),
-            Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(p.cavitymode)
+            return Φ.zero[1] * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * p.frontmirrorT_THz,
+            Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * p.frontmirrorT_THz
         end
     end
 end
