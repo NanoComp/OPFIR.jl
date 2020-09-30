@@ -241,7 +241,7 @@ end
 
 function cavityloss(p, llevel, cavitymode) # in m^-1
     Rback = 1.
-    Rfront = (1-efftrans(cavitymode)) * Rback
+    Rfront = (1-efftrans(cavitymode, r_cavity=p.radius)) * Rback
     alpha = ohmicloss(p, llevel, cavitymode) - log(Rfront*Rback)/(2p.L/100)
     return alpha
 end
@@ -313,17 +313,17 @@ function outpowermode(p, sol, llevel, cavitymode, taus)
     σν = (p.c/νTHZ)^2/8/π/p.t_spont * 1/pi/Δnu
     # println(σν)
     alpha = cavityloss(p, llevel, cavitymode)
-    println(alpha, ", ", efftrans(cavitymode))
+    println(alpha, ", ", efftrans(cavitymode, r_cavity=p.radius))
     ΔN = totinv(p, sol, llevel)
     Φ0 = (ΔN*σν/alpha-1)/taus/σν
     Φ = nlsolve((x,fvec) -> begin
                 fvec[1] = gaincoefmode(x[1], p, sol, llevel, cavitymode, taus, σν) - alpha
             end, [Φ0], iterations=100)
     if Φ.iterations > 99
-        return -1., Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(cavitymode)
+        return -1., Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(cavitymode, r_cavity=p.radius)
     else
-        return Φ.zero[1] * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(cavitymode),
-        Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(cavitymode)
+        return Φ.zero[1] * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(cavitymode, r_cavity=p.radius),
+        Φ0 * (p.h*νTHZ)/2 * pi * (p.radius/100)^2 * efftrans(cavitymode, r_cavity=p.radius)
     end
 end
 
@@ -393,13 +393,13 @@ function gaincoefmode(Φ, p, sol, llevel, cavitymode, taus, σν)
 end
 
 
-function efftrans(cavitymode)
+function efftrans(cavitymode; r_pinhole=0.05, r_cavity=0.25)
     n = parse(Int, cavitymode[3])
     # println(n)
     t = zerobessel(cavitymode)
     if occursin("TE", cavitymode)
         P0 = (t^2-n^2) * besselj(n, t)^2
-        t = 0.2*t
+        t = (r_pinhole/r_cavity)*t
         Prad = t^2*(besselj(n-1, t)^2 - besselj(n-2, t)*besselj(n, t)) - 2*n*besselj(n,t)^2
         return Prad/P0
         # return maxT(n, zerobessel(cavitymode))

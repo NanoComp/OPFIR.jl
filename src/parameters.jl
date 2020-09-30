@@ -459,6 +459,10 @@ function Params(DefaultT=Float64;
     # kwall = WallRate(radius, pressure, r_int, ntotal, M, T, NA, v_avg, σ_GKC) + 1e-10
     kwall = zeros(num_layers)
 
+    EinsteinA = 64*pi^4/3/(h*1e7)/(c*100)^3 * f_dir_lasing^3 *
+                      1.86^2 * ((JL+1)^2-K0^2)/(JL+1)/(2JL+1) * 1e-36
+    t_spont = 1/EinsteinA
+
     return Params{DefaultT}(radius, pump_radius, L, L_eff, h, c, ev, kB, T, T_vA, T_vE, kBT, M, norm_time,
     σ_GKC, σ_DD, σ_SPT, σ_36, σ_VS,
     v_avg, kvs, #kvsplit,
