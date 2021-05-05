@@ -66,7 +66,7 @@ function IRabsorption(αIR, Pqcl, p; model="TLM", multitrip=true)
     return α
 end
 
-function compute_α(Pqcl, p; model="TLM", multitrip=true)
+function compute_α(Pqcl, p; model="FLM", multitrip=true)
     # compute αIR self consistently
     α = nlsolve((fvec, x) -> begin
                         fvec[1] = IRabsorption(x[1], Pqcl, p, model=model, multitrip=multitrip) - x[1]
@@ -74,13 +74,9 @@ function compute_α(Pqcl, p; model="TLM", multitrip=true)
     return α.zero[1]
 end
 
-function total_IR_abs(Pqcl, p; αIRgiven=false, αIR=0, model="TLM", multitrip=true)
+function total_IR_abs(Pqcl, p; αIRgiven=false, αIR=0, model="FLM", multitrip=true)
     Lcell = p.L/100
-    if multitrip
-        R1 = 0.95
-    else
-        R1 = 0
-    end
+    R1 = p.backmirrorR_IR
     R2 = 0.96*R1
     if !αIRgiven
         αIR = compute_α(Pqcl, p, model=model, multitrip=multitrip)
@@ -91,7 +87,7 @@ function total_IR_abs(Pqcl, p; αIRgiven=false, αIR=0, model="TLM", multitrip=t
     return tot_ir_abs
 end
 
-function compute_th(p; given_α_cell=false, α_given=0.3, th0=0.1, Tpinhole=0.016, model="TLM")
+function compute_th(p; given_α_cell=false, α_given=0.3, th0=0.1, Tpinhole=0.016, model="FLM")
     if given_α_cell
         α_cell = α_given
     else
@@ -111,7 +107,7 @@ function compute_th(p; given_α_cell=false, α_given=0.3, th0=0.1, Tpinhole=0.01
     pth = solvePth.zero[1]
 end
 
-function gaincoeff(Pqcl, p; model="TLM")
+function gaincoeff(Pqcl, p; model="FLM")
     kw = wallrate(p.v_avg/sqrt(2), p.radius/100, p)
     kdd = kddrate(p) #19.8 * p.pressure * p.σ_DD/ sqrt(p.T*p.M)*1e3
     kspt = kSPTrate(p) #p.ka[1]*1e6 #* 0
